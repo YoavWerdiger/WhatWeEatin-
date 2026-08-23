@@ -1,6 +1,8 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState } from "react";
-import { Alert, SafeAreaView, Share, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Share, StyleSheet, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ApiError, api } from "./src/api/client";
 import { AppButton } from "./src/components/AppButton";
 import { CreateSessionScreen } from "./src/screens/CreateSessionScreen";
@@ -15,10 +17,9 @@ type Screen = "home" | "create" | "swipe" | "match";
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [userId, setUserId] = useState<string>("");
+  const [backendReady, setBackendReady] = useState(false);
   const [joinSessionId, setJoinSessionId] = useState("");
 
-  const [latitude, setLatitude] = useState("32.0853");
-  const [longitude, setLongitude] = useState("34.7818");
   const [radiusKm, setRadiusKm] = useState(5);
   const [budgetLevel, setBudgetLevel] = useState(2);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>(["pizza", "sushi"]);
@@ -36,6 +37,7 @@ export default function App() {
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingVote, setLoadingVote] = useState(false);
   const [message, setMessage] = useState<string>("");
+  const autoPickLock = useRef(false);
 
   const currentCandidate = useMemo(() => candidates[0] ?? null, [candidates]);
 
@@ -66,9 +68,11 @@ export default function App() {
         displayName: "Food Friend",
       });
       setUserId(result.user.id);
+      setBackendReady(true);
       setMessage("");
-    } catch (error) {
-      setMessage("Could not connect to backend. Check EXPO_PUBLIC_API_URL.");
+    } catch {
+      setBackendReady(false);
+      setMessage("Backend offline. Run `npm run dev` in the project root.");
     }
   };
 
@@ -79,18 +83,14 @@ export default function App() {
     setTimerTotal(total);
     setSecondsLeft(total);
     setPickyCount(0);
+    autoPickLock.current = false;
     setScreen("swipe");
   };
 
   const handleCreateSession = async () => {
     if (!userId) {
-      setMessage("Please wait a moment, logging in.");
-      return;
-    }
-    const lat = Number(latitude);
-    const lng = Number(longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      setMessage("Location must be valid coordinates.");
+      setMessage("Connecting… try again in a second.");
+      void loginOnce();
       return;
     }
     setLoadingCreate(true);
@@ -98,8 +98,8 @@ export default function App() {
     try {
       const result = await api.createSession({
         hostUserId: userId,
-        locationLat: lat,
-        locationLng: lng,
+        locationLat: 32.0853,
+        locationLng: 34.7818,
         radiusKm,
         budgetLevel,
         timerSeconds: 120,
@@ -122,11 +122,11 @@ export default function App() {
     setLoadingJoin(true);
     setMessage("");
     try {
-      await api.joinSession(joinSessionId, userId);
-      const state = await api.getSessionState(joinSessionId);
-      setSessionId(joinSessionId);
-      setInviteLink(`whatweeatin://join/${joinSessionId}`);
-      await fetchAndStartSwipe(joinSessionId, state.session.timerSeconds);
+      await api.joinSession(joinSessionId.trim(), userId);
+      const state = await api.getSessionState(joinSessionId.trim());
+      setSessionId(joinSessionId.trim());
+      setInviteLink(`whatweeatin://join/${joinSessionId.trim()}`);
+      await fetchAndStartSwipe(joinSessionId.trim(), state.session.timerSeconds);
     } catch (error) {
       setMessage(toErrorMessage(error));
     } finally {
@@ -135,7 +135,7 @@ export default function App() {
   };
 
   const handleVote = async (vote: SwipeVote) => {
-    if (!sessionId || !currentCandidate || !userId) {
+    if (!sessionId || !currentCandidate || !userId || loadingVote) {
       return;
     }
     setLoadingVote(true);
@@ -174,28 +174,30 @@ export default function App() {
   };
 
   const handleAutoPick = async () => {
-    if (!sessionId) {
+    if (!sessionId || autoPickLock.current) {
       return;
     }
+    autoPickLock.current = true;
     try {
       await api.autoPick(sessionId);
       await loadMatch(sessionId);
     } catch (error) {
+      autoPickLock.current = false;
       setMessage(toErrorMessage(error));
     }
   };
 
   const shareInvite = async () => {
-    if (!inviteLink) {
+    if (!sessionId) {
       Alert.alert("No active session", "Start a session first.");
       return;
     }
     try {
       await Share.share({
-        message: `Join my food session now: ${inviteLink}`,
+        message: `Join my What We Eatin’ session: ${sessionId}`,
       });
     } catch {
-      // Ignore share cancellations.
+      // ignore
     }
   };
 
@@ -212,74 +214,72 @@ export default function App() {
     setCandidates([]);
     setMatchResult(null);
     setMessage("");
+    autoPickLock.current = false;
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" />
-      {message ? (
-        <View style={styles.messageBox}>
-          <Text style={styles.messageText}>{message}</Text>
-        </View>
-      ) : null}
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+          <StatusBar style="light" />
+          {message ? (
+            <View style={styles.messageBox}>
+              <Text style={styles.messageText}>{message}</Text>
+            </View>
+          ) : null}
 
-      {screen === "home" && (
-        <HomeScreen
-          joinSessionId={joinSessionId}
-          setJoinSessionId={setJoinSessionId}
-          onCreatePress={() => setScreen("create")}
-          onJoinPress={handleJoinSession}
-          joining={loadingJoin}
-        />
-      )}
+          {screen === "home" && (
+            <HomeScreen
+              joinSessionId={joinSessionId}
+              setJoinSessionId={setJoinSessionId}
+              onCreatePress={() => setScreen("create")}
+              onJoinPress={handleJoinSession}
+              joining={loadingJoin}
+              backendReady={backendReady}
+            />
+          )}
 
-      {screen === "create" && (
-        <CreateSessionScreen
-          latitude={latitude}
-          longitude={longitude}
-          radiusKm={radiusKm}
-          budgetLevel={budgetLevel}
-          selectedCuisines={selectedCuisines}
-          loading={loadingCreate}
-          setLatitude={setLatitude}
-          setLongitude={setLongitude}
-          setRadiusKm={setRadiusKm}
-          setBudgetLevel={setBudgetLevel}
-          toggleCuisine={toggleCuisine}
-          onCreate={handleCreateSession}
-          onBack={() => setScreen("home")}
-        />
-      )}
+          {screen === "create" && (
+            <CreateSessionScreen
+              radiusKm={radiusKm}
+              budgetLevel={budgetLevel}
+              selectedCuisines={selectedCuisines}
+              loading={loadingCreate}
+              setRadiusKm={setRadiusKm}
+              setBudgetLevel={setBudgetLevel}
+              toggleCuisine={toggleCuisine}
+              onCreate={handleCreateSession}
+              onBack={() => setScreen("home")}
+            />
+          )}
 
-      {screen === "swipe" && (
-        <SwipeScreen
-          candidate={currentCandidate}
-          secondsLeft={secondsLeft}
-          totalSeconds={timerTotal}
-          inviteCode={sessionId.slice(0, 8)}
-          pickyCount={pickyCount}
-          onVote={handleVote}
-          onAutoPick={handleAutoPick}
-          onShareInvite={shareInvite}
-          loadingVote={loadingVote}
-        />
-      )}
+          {screen === "swipe" && (
+            <SwipeScreen
+              candidate={currentCandidate}
+              remainingCount={candidates.length}
+              secondsLeft={secondsLeft}
+              totalSeconds={timerTotal}
+              inviteCode={sessionId.slice(0, 8)}
+              pickyCount={pickyCount}
+              onVote={handleVote}
+              onAutoPick={handleAutoPick}
+              onShareInvite={shareInvite}
+              loadingVote={loadingVote}
+            />
+          )}
 
-      {screen === "match" && matchResult && (
-        <MatchScreen
-          result={matchResult}
-          onRestart={() => {
-            restartToHome();
-          }}
-        />
-      )}
+          {screen === "match" && matchResult && (
+            <MatchScreen result={matchResult} onRestart={restartToHome} />
+          )}
 
-      {screen !== "home" && (
-        <View style={styles.footerActions}>
-          <AppButton title="Home" onPress={restartToHome} variant="ghost" />
-        </View>
-      )}
-    </SafeAreaView>
+          {screen === "swipe" || screen === "create" ? (
+            <View style={styles.footerActions}>
+              <AppButton title="Home" onPress={restartToHome} variant="ghost" />
+            </View>
+          ) : null}
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -294,6 +294,10 @@ function toErrorMessage(error: unknown): string {
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -314,7 +318,7 @@ const styles = StyleSheet.create({
   },
   footerActions: {
     position: "absolute",
-    bottom: spacing.md,
+    bottom: spacing.sm,
     alignSelf: "center",
   },
 });

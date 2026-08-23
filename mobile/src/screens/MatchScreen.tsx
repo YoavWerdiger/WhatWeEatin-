@@ -1,4 +1,8 @@
-import { Image, Linking, StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { useEffect } from "react";
+import { ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { AppButton } from "../components/AppButton";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { MatchWithRestaurant } from "../types/app";
@@ -13,39 +17,40 @@ function priceSymbols(priceLevel: number): string {
 }
 
 export function MatchScreen({ result, onRestart }: MatchScreenProps) {
+  useEffect(() => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
+
   const onOrderNow = () => {
-    const query = encodeURIComponent(result.restaurant.name);
+    const query = encodeURIComponent(`${result.restaurant.name} Tel Aviv`);
     const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
     Linking.openURL(url).catch(() => undefined);
   };
 
+  const image =
+    result.restaurant.imageUrl ??
+    "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1400&q=80";
+
   return (
     <View style={styles.screen}>
-      <View style={styles.banner}>
-        <Text style={styles.bannerTitle}>This is what we eatin'</Text>
-        <Text style={styles.bannerSubtitle}>
-          Decided by {result.match.decidedBy === "consensus" ? "full consensus" : "smart auto-pick"}
-        </Text>
-      </View>
-
-      <View style={styles.card}>
-        <Image
-          source={{
-            uri:
-              result.restaurant.imageUrl ??
-              "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1200&q=80",
-          }}
-          style={styles.image}
-        />
-        <View style={styles.body}>
-          <Text style={styles.name}>{result.restaurant.name}</Text>
-          <Text style={styles.meta}>
-            Rating {result.restaurant.rating.toFixed(1)} | {priceSymbols(result.restaurant.priceLevel)} |{" "}
-            {result.restaurant.etaMinutes ?? 20}m
-          </Text>
-          <Text style={styles.hint}>No more overthinking. Tap order and eat.</Text>
-        </View>
-      </View>
+      <ImageBackground source={{ uri: image }} style={styles.hero} resizeMode="cover">
+        <LinearGradient colors={["rgba(8,6,5,0.2)", "rgba(8,6,5,0.92)"]} style={styles.overlay}>
+          <Animated.Text entering={ZoomIn.duration(420)} style={styles.badge}>
+            IT’S A MATCH
+          </Animated.Text>
+          <Animated.View entering={FadeInDown.delay(120).duration(420)}>
+            <Text style={styles.title}>This is what we eatin’</Text>
+            <Text style={styles.name}>{result.restaurant.name}</Text>
+            <Text style={styles.meta}>
+              {result.restaurant.rating.toFixed(1)} ★ · {priceSymbols(result.restaurant.priceLevel)} ·{" "}
+              {result.restaurant.etaMinutes ?? 20}m
+            </Text>
+            <Text style={styles.sub}>
+              {result.match.decidedBy === "consensus" ? "Full consensus. Finally." : "We picked for you. You’re welcome."}
+            </Text>
+          </Animated.View>
+        </LinearGradient>
+      </ImageBackground>
 
       <View style={styles.footer}>
         <AppButton title="Order now" onPress={onOrderNow} variant="success" />
@@ -59,60 +64,52 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bg,
-    padding: spacing.lg,
-    paddingTop: spacing.xl + spacing.sm,
-    justifyContent: "space-between",
   },
-  banner: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+  hero: {
+    flex: 1,
   },
-  bannerTitle: {
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  badge: {
+    alignSelf: "flex-start",
     color: colors.black,
+    backgroundColor: colors.accent,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    fontWeight: "900",
+    marginBottom: spacing.md,
+  },
+  title: {
+    color: colors.textPrimary,
     fontSize: typography.title,
     fontWeight: "900",
   },
-  bannerSubtitle: {
-    color: colors.black,
-    fontSize: typography.label,
-    fontWeight: "700",
-    marginTop: spacing.xs,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    overflow: "hidden",
-    marginTop: spacing.lg,
-    flex: 1,
-  },
-  image: {
-    width: "100%",
-    height: 280,
-  },
-  body: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
   name: {
-    color: colors.textPrimary,
-    fontSize: typography.subtitle,
+    color: colors.primary,
+    fontSize: typography.hero - 4,
     fontWeight: "900",
+    marginTop: spacing.xs,
   },
   meta: {
     color: colors.textSecondary,
     fontSize: typography.label,
-    fontWeight: "600",
+    fontWeight: "700",
+    marginTop: spacing.sm,
   },
-  hint: {
+  sub: {
     color: colors.textSecondary,
     fontSize: typography.body,
+    marginTop: spacing.sm,
   },
   footer: {
     gap: spacing.sm,
-    marginBottom: spacing.lg,
-    marginTop: spacing.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
 });

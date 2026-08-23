@@ -19,15 +19,17 @@ export function RestaurantCard({ candidate }: RestaurantCardProps) {
         source={{
           uri:
             restaurant.imageUrl ??
-            "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80",
         }}
       />
       <View style={styles.body}>
-        <Text style={styles.name}>{restaurant.name}</Text>
-        <Text style={styles.meta}>
-          Rating {restaurant.rating.toFixed(1)}  |  {priceSymbols(restaurant.priceLevel)}  |  {candidate.etaMinutes}m
+        <Text style={styles.name} numberOfLines={1}>
+          {restaurant.name}
         </Text>
-        <Text style={styles.metaSecondary}>{Math.round(candidate.distanceMeters / 100) / 10} km away</Text>
+        <Text style={styles.meta}>
+          {restaurant.rating.toFixed(1)} ★ · {priceSymbols(restaurant.priceLevel)} · {candidate.etaMinutes}m ·{" "}
+          {(candidate.distanceMeters / 1000).toFixed(1)}km
+        </Text>
         <View style={styles.tagRow}>
           {restaurant.cuisineTags.slice(0, 3).map((tag) => (
             <View style={styles.tag} key={`${restaurant.id}-${tag}`}>
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 260,
+    height: 320,
     backgroundColor: colors.surfaceSoft,
   },
   body: {
@@ -59,23 +61,18 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.textPrimary,
-    fontSize: typography.subtitle,
-    fontWeight: "800",
+    fontSize: typography.subtitle + 2,
+    fontWeight: "900",
   },
   meta: {
     color: colors.textSecondary,
     fontSize: typography.label,
-    fontWeight: "600",
-  },
-  metaSecondary: {
-    color: colors.textSecondary,
-    fontSize: typography.tiny,
-    fontWeight: "500",
+    fontWeight: "700",
   },
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   tag: {
     backgroundColor: colors.surfaceSoft,
@@ -88,7 +85,7 @@ const styles = StyleSheet.create({
   tagText: {
     color: colors.textSecondary,
     fontSize: typography.tiny,
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: "capitalize",
   },
 });

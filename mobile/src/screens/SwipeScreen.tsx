@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
-import { RestaurantCard } from "../components/RestaurantCard";
+import { SwipeableCard } from "../components/SwipeableCard";
 import { TimerBar } from "../components/TimerBar";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { Candidate, SwipeVote } from "../types/app";
 
 interface SwipeScreenProps {
   candidate: Candidate | null;
+  remainingCount: number;
   secondsLeft: number;
   totalSeconds: number;
   inviteCode: string;
@@ -19,6 +20,7 @@ interface SwipeScreenProps {
 
 export function SwipeScreen({
   candidate,
+  remainingCount,
   secondsLeft,
   totalSeconds,
   inviteCode,
@@ -32,12 +34,14 @@ export function SwipeScreen({
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.heading}>Pick faster</Text>
-        <Text style={styles.subHeading}>Invite code: {inviteCode}</Text>
+        <Text style={styles.subHeading}>
+          {remainingCount} left · code {inviteCode}
+        </Text>
       </View>
 
       <View style={styles.topBar}>
         <View style={styles.pickyBadge}>
-          <Text style={styles.pickyLabel}>Picky meter</Text>
+          <Text style={styles.pickyLabel}>Who’s the picky one?</Text>
           <Text style={styles.pickyValue}>{pickyCount} rejections</Text>
         </View>
         <AppButton title="Invite" onPress={onShareInvite} variant="secondary" />
@@ -47,49 +51,27 @@ export function SwipeScreen({
 
       <View style={styles.cardWrap}>
         {candidate ? (
-          <RestaurantCard candidate={candidate} />
+          <SwipeableCard
+            key={candidate.id}
+            candidate={candidate}
+            disabled={loadingVote}
+            onVote={onVote}
+          />
         ) : (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No active candidates left</Text>
-            <Text style={styles.emptySubTitle}>Press auto pick and let us decide for you.</Text>
+            <Text style={styles.emptyTitle}>Pool’s empty</Text>
+            <Text style={styles.emptySubTitle}>We don’t care anymore. Auto-pick it.</Text>
           </View>
         )}
       </View>
 
       <View style={styles.actions}>
         <View style={styles.row}>
-          <AppButton
-            title="No"
-            onPress={() => onVote("left_no")}
-            variant="secondary"
-            disabled={!candidate}
-            loading={loadingVote}
-          />
-          <AppButton
-            title="Okay"
-            onPress={() => onVote("neutral")}
-            variant="ghost"
-            disabled={!candidate}
-            loading={loadingVote}
-          />
+          <AppButton title="Nope" onPress={() => onVote("left_no")} variant="secondary" disabled={!candidate || loadingVote} />
+          <AppButton title="Want" onPress={() => onVote("right_want")} disabled={!candidate || loadingVote} />
+          <AppButton title="Must" onPress={() => onVote("up_must")} variant="success" disabled={!candidate || loadingVote} />
         </View>
-        <View style={styles.row}>
-          <AppButton
-            title="Want"
-            onPress={() => onVote("right_want")}
-            variant="primary"
-            disabled={!candidate}
-            loading={loadingVote}
-          />
-          <AppButton
-            title="Must"
-            onPress={() => onVote("up_must")}
-            variant="success"
-            disabled={!candidate}
-            loading={loadingVote}
-          />
-        </View>
-        <AppButton title="We don't care anymore" onPress={onAutoPick} variant="ghost" />
+        <AppButton title="We don’t care anymore" onPress={onAutoPick} variant="ghost" />
       </View>
     </View>
   );
@@ -99,12 +81,12 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bg,
-    padding: spacing.lg,
-    paddingTop: spacing.xl + spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
     gap: spacing.md,
   },
   header: {
-    gap: spacing.xs,
+    gap: 2,
   },
   heading: {
     color: colors.textPrimary,
@@ -114,6 +96,7 @@ const styles = StyleSheet.create({
   subHeading: {
     color: colors.textSecondary,
     fontSize: typography.label,
+    fontWeight: "600",
   },
   topBar: {
     flexDirection: "row",
@@ -164,8 +147,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: spacing.sm,
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: "row",

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { TagChip } from "../components/TagChip";
 import { colors, radius, spacing, typography } from "../theme/tokens";
@@ -6,14 +6,10 @@ import { colors, radius, spacing, typography } from "../theme/tokens";
 const cuisineOptions = ["pizza", "sushi", "burger", "healthy", "middle_eastern", "vegan"];
 
 interface CreateSessionScreenProps {
-  latitude: string;
-  longitude: string;
   radiusKm: number;
   budgetLevel: number;
   selectedCuisines: string[];
   loading: boolean;
-  setLatitude: (value: string) => void;
-  setLongitude: (value: string) => void;
   setRadiusKm: (value: number) => void;
   setBudgetLevel: (value: number) => void;
   toggleCuisine: (value: string) => void;
@@ -24,33 +20,12 @@ interface CreateSessionScreenProps {
 export function CreateSessionScreen(props: CreateSessionScreenProps) {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>What we eatin'?</Text>
-      <Text style={styles.subtitle}>Set the vibe. Keep it simple. Pick faster.</Text>
+      <Text style={styles.brand}>What We Eatin’</Text>
+      <Text style={styles.title}>Set the vibe. Keep it simple.</Text>
+      <Text style={styles.subtitle}>Location locked to Tel Aviv for MVP. Pick preferences and go.</Text>
 
       <View style={styles.block}>
-        <Text style={styles.label}>Location</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.half]}
-            value={props.latitude}
-            onChangeText={props.setLatitude}
-            keyboardType="decimal-pad"
-            placeholder="Lat"
-            placeholderTextColor={colors.textSecondary}
-          />
-          <TextInput
-            style={[styles.input, styles.half]}
-            value={props.longitude}
-            onChangeText={props.setLongitude}
-            keyboardType="decimal-pad"
-            placeholder="Lng"
-            placeholderTextColor={colors.textSecondary}
-          />
-        </View>
-      </View>
-
-      <View style={styles.block}>
-        <Text style={styles.label}>Distance preference</Text>
+        <Text style={styles.label}>How far?</Text>
         <View style={styles.rowWrap}>
           {[2, 5, 8, 12].map((distance) => (
             <TagChip
@@ -69,7 +44,7 @@ export function CreateSessionScreen(props: CreateSessionScreenProps) {
           {[1, 2, 3, 4].map((budget) => (
             <TagChip
               key={budget}
-              label={`$`.repeat(budget)}
+              label={"$".repeat(budget)}
               selected={props.budgetLevel === budget}
               onPress={() => props.setBudgetLevel(budget)}
             />
@@ -78,7 +53,7 @@ export function CreateSessionScreen(props: CreateSessionScreenProps) {
       </View>
 
       <View style={styles.block}>
-        <Text style={styles.label}>Quick food preferences</Text>
+        <Text style={styles.label}>Craving</Text>
         <View style={styles.rowWrap}>
           {cuisineOptions.map((cuisine) => (
             <TagChip
@@ -92,8 +67,8 @@ export function CreateSessionScreen(props: CreateSessionScreenProps) {
       </View>
 
       <View style={styles.footer}>
+        <AppButton title="Let’s Go" onPress={props.onCreate} loading={props.loading} />
         <AppButton title="Back" onPress={props.onBack} variant="ghost" />
-        <AppButton title="Let's Go" onPress={props.onCreate} loading={props.loading} />
       </View>
     </ScrollView>
   );
@@ -106,8 +81,13 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.lg,
-    paddingTop: spacing.xl + spacing.md,
+    paddingTop: spacing.xl,
     gap: spacing.lg,
+  },
+  brand: {
+    color: colors.primary,
+    fontSize: typography.subtitle,
+    fontWeight: "900",
   },
   title: {
     color: colors.textPrimary,
@@ -117,7 +97,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.textSecondary,
     fontSize: typography.body,
-    marginTop: spacing.xs,
+    marginTop: -spacing.sm,
   },
   block: {
     backgroundColor: colors.surface,
@@ -132,29 +112,12 @@ const styles = StyleSheet.create({
     fontSize: typography.label,
     marginBottom: spacing.sm,
   },
-  row: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
   rowWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
   },
-  half: {
-    flex: 1,
-  },
-  input: {
-    backgroundColor: colors.surfaceSoft,
-    borderColor: colors.border,
-    borderWidth: 1,
-    color: colors.textPrimary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    fontSize: typography.body,
-  },
   footer: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     gap: spacing.sm,
   },
 });
