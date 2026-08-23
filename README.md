@@ -125,3 +125,36 @@ test/session.e2e.test.ts
 - כרגע ה-persistence בזיכרון (למהירות MVP). הסכמה המלאה ב-`db/schema.sql`.
 - Login endpoint הוא MVP stub; בפרודקשן צריך אימות token אמיתי מול Apple/Google/Phone.
 - Google Places פעיל כשיש `GOOGLE_PLACES_API_KEY`, אחרת fallback לדאטה mock לפיתוח.
+
+## Mobile App (Expo) - Design Optimized MVP UI
+
+נוסף פרויקט מובייל תחת `mobile/` עם UX מעוצב לזרימת:
+- Home
+- Create Session
+- Swipe Decision
+- Match Result
+
+### מה שודרג בעיצוב
+- שפת מותג מהירה ו"חברית" עם טון מעט ציני
+- צבעוניות ממוקדת: Orange/Red + שחור/לבן + ירוק להצלחה
+- רכיבי UI עקביים: כפתורים, chips, card, timer bar
+- הפחתת friction: בחירות מהירות, טיימר בולט, CTA ברורים
+- אלמנט חברתי: Picky meter בזמן אמת
+
+### הרצת המובייל עם Expo Go
+```bash
+cd mobile
+cp .env.example .env
+# ערוך EXPO_PUBLIC_API_URL ל-IP של המחשב שלך, למשל:
+# EXPO_PUBLIC_API_URL=http://192.168.1.20:3000
+npm install
+npm run start -- --tunnel
+```
+
+ואז לסרוק QR ב-Expo Go בטלפון.
+
+### בדיקת TypeScript במובייל
+```bash
+cd mobile
+npm run typecheck
+```
