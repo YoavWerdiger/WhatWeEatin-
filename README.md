@@ -141,17 +141,25 @@ test/session.e2e.test.ts
 - הפחתת friction: בחירות מהירות, טיימר בולט, CTA ברורים
 - אלמנט חברתי: Picky meter בזמן אמת
 
-### הרצת המובייל עם Expo Go
+### הרצת המובייל (iOS Simulator על Mac)
 ```bash
-cd mobile
-cp .env.example .env
-# ערוך EXPO_PUBLIC_API_URL ל-IP של המחשב שלך, למשל:
-# EXPO_PUBLIC_API_URL=http://192.168.1.20:3000
+# טרמינל 1 — Backend
 npm install
-npm run start -- --tunnel
+npm run dev
+
+# טרמינל 2 — Expo
+cd mobile
+npm install
+cp .env.example .env   # כבר מוגדר ל-localhost:3000 ל-iOS Simulator
+npm run dev            # או: npm run start -- --clear
 ```
 
-ואז לסרוק QR ב-Expo Go בטלפון.
+ב-Expo לחץ `i` לפתיחת iOS Simulator.
+
+#### ערכי EXPO_PUBLIC_API_URL
+- iOS Simulator: `http://localhost:3000`
+- Android Emulator: `http://10.0.2.2:3000`
+- טלפון פיזי: `http://<IP-של-המק>:3000`
 
 ### בדיקת TypeScript במובייל
 ```bash
