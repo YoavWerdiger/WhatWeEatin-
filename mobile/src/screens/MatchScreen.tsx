@@ -1,7 +1,6 @@
 import * as Haptics from "expo-haptics";
-import { useEffect } from "react";
-import { ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
+import { useEffect, useRef } from "react";
+import { Animated, ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AppButton } from "../components/AppButton";
 import { colors, radius, spacing, typography } from "../theme/tokens";
@@ -17,9 +16,16 @@ function priceSymbols(priceLevel: number): string {
 }
 
 export function MatchScreen({ result, onRestart }: MatchScreenProps) {
+  const scale = useRef(new Animated.Value(0.86)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
+    Animated.parallel([
+      Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
+      Animated.timing(fade, { toValue: 1, duration: 320, useNativeDriver: true }),
+    ]).start();
+  }, [fade, scale]);
 
   const onOrderNow = () => {
     const query = encodeURIComponent(`${result.restaurant.name} Tel Aviv`);
@@ -35,10 +41,8 @@ export function MatchScreen({ result, onRestart }: MatchScreenProps) {
     <View style={styles.screen}>
       <ImageBackground source={{ uri: image }} style={styles.hero} resizeMode="cover">
         <LinearGradient colors={["rgba(8,6,5,0.2)", "rgba(8,6,5,0.92)"]} style={styles.overlay}>
-          <Animated.Text entering={ZoomIn.duration(420)} style={styles.badge}>
-            IT’S A MATCH
-          </Animated.Text>
-          <Animated.View entering={FadeInDown.delay(120).duration(420)}>
+          <Animated.View style={{ opacity: fade, transform: [{ scale }] }}>
+            <Text style={styles.badge}>IT’S A MATCH</Text>
             <Text style={styles.title}>This is what we eatin’</Text>
             <Text style={styles.name}>{result.restaurant.name}</Text>
             <Text style={styles.meta}>
@@ -46,7 +50,9 @@ export function MatchScreen({ result, onRestart }: MatchScreenProps) {
               {result.restaurant.etaMinutes ?? 20}m
             </Text>
             <Text style={styles.sub}>
-              {result.match.decidedBy === "consensus" ? "Full consensus. Finally." : "We picked for you. You’re welcome."}
+              {result.match.decidedBy === "consensus"
+                ? "Full consensus. Finally."
+                : "We picked for you. You’re welcome."}
             </Text>
           </Animated.View>
         </LinearGradient>

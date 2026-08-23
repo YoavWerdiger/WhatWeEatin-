@@ -1,15 +1,13 @@
 import * as Haptics from "expo-haptics";
-import { useEffect } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
+import { useEffect, useRef } from "react";
+import {
+  Animated,
+  Dimensions,
+  PanResponder,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Candidate, SwipeVote } from "../types/app";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { RestaurantCard } from "./RestaurantCard";
@@ -25,93 +23,102 @@ interface SwipeableCardProps {
 }
 
 export function SwipeableCard({ candidate, disabled = false, onVote }: SwipeableCardProps) {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const leaving = useSharedValue(0);
+  const position = useRef(new Animated.ValueXY()).current;
+  const locked = useRef(false);
 
   useEffect(() => {
-    translateX.value = 0;
-    translateY.value = 0;
-    leaving.value = 0;
-  }, [candidate.id, leaving, translateX, translateY]);
+    locked.current = false;
+    position.setValue({ x: 0, y: 0 });
+  }, [candidate.id, position]);
 
-  const finish = (vote: SwipeVote) => {
+  const finish = (vote: SwipeVote, toX: number, toY: number) => {
+    if (locked.current) {
+      return;
+    }
+    locked.current = true;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onVote(vote);
+    Animated.timing(position, {
+      toValue: { x: toX, y: toY },
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => onVote(vote));
   };
 
-  const pan = Gesture.Pan()
-    .enabled(!disabled)
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-    })
-    .onEnd((event) => {
-      if (event.translationY < -SWIPE_Y) {
-        leaving.value = 1;
-        translateY.value = withTiming(-700, { duration: 220 }, () => {
-          runOnJS(finish)("up_must");
-        });
-        return;
-      }
-      if (event.translationX > SWIPE_X) {
-        leaving.value = 1;
-        translateX.value = withTiming(width * 1.3, { duration: 220 }, () => {
-          runOnJS(finish)("right_want");
-        });
-        return;
-      }
-      if (event.translationX < -SWIPE_X) {
-        leaving.value = 1;
-        translateX.value = withTiming(-width * 1.3, { duration: 220 }, () => {
-          runOnJS(finish)("left_no");
-        });
-        return;
-      }
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-    });
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      {
-        rotate: `${interpolate(translateX.value, [-width, 0, width], [-12, 0, 12])}deg`,
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        !disabled && (Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6),
+      onPanResponderMove: Animated.event([null, { dx: position.x, dy: position.y }], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (_, gesture) => {
+        if (disabled || locked.current) {
+          return;
+        }
+        if (gesture.dy < -SWIPE_Y) {
+          finish("up_must", gesture.dx, -700);
+          return;
+        }
+        if (gesture.dx > SWIPE_X) {
+          finish("right_want", width * 1.3, gesture.dy);
+          return;
+        }
+        if (gesture.dx < -SWIPE_X) {
+          finish("left_no", -width * 1.3, gesture.dy);
+          return;
+        }
+        Animated.spring(position, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: true,
+        }).start();
       },
-    ],
-  }));
+    }),
+  ).current;
 
-  const wantStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [20, SWIPE_X], [0, 1], "clamp"),
-  }));
-
-  const nopeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [-SWIPE_X, -20], [1, 0], "clamp"),
-  }));
-
-  const mustStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateY.value, [-SWIPE_Y, -30], [1, 0], "clamp"),
-  }));
+  const rotate = position.x.interpolate({
+    inputRange: [-width, 0, width],
+    outputRange: ["-12deg", "0deg", "12deg"],
+  });
+  const wantOpacity = position.x.interpolate({
+    inputRange: [20, SWIPE_X],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const nopeOpacity = position.x.interpolate({
+    inputRange: [-SWIPE_X, -20],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const mustOpacity = position.y.interpolate({
+    inputRange: [-SWIPE_Y, -30],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
 
   return (
-    <GestureDetector gesture={pan}>
-      <Animated.View style={[styles.wrap, cardStyle]}>
-        <RestaurantCard candidate={candidate} />
-        <Animated.View style={[styles.stamp, styles.want, wantStyle]}>
-          <Text style={styles.wantText}>WANT</Text>
-        </Animated.View>
-        <Animated.View style={[styles.stamp, styles.nope, nopeStyle]}>
-          <Text style={styles.nopeText}>NOPE</Text>
-        </Animated.View>
-        <Animated.View style={[styles.stamp, styles.must, mustStyle]}>
-          <Text style={styles.mustText}>MUST</Text>
-        </Animated.View>
-        <View style={styles.hintRow}>
-          <Text style={styles.hint}>← No · Want → · ↑ Must</Text>
-        </View>
+    <Animated.View
+      style={[
+        styles.wrap,
+        {
+          transform: [{ translateX: position.x }, { translateY: position.y }, { rotate }],
+        },
+      ]}
+      {...panResponder.panHandlers}
+    >
+      <RestaurantCard candidate={candidate} />
+      <Animated.View style={[styles.stamp, styles.want, { opacity: wantOpacity }]}>
+        <Text style={styles.wantText}>WANT</Text>
       </Animated.View>
-    </GestureDetector>
+      <Animated.View style={[styles.stamp, styles.nope, { opacity: nopeOpacity }]}>
+        <Text style={styles.nopeText}>NOPE</Text>
+      </Animated.View>
+      <Animated.View style={[styles.stamp, styles.must, { opacity: mustOpacity }]}>
+        <Text style={styles.mustText}>MUST</Text>
+      </Animated.View>
+      <View style={styles.hintRow}>
+        <Text style={styles.hint}>← No · Want → · ↑ Must</Text>
+      </View>
+    </Animated.View>
   );
 }
 

@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Share, StyleSheet, Text, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ApiError, api } from "./src/api/client";
 import { AppButton } from "./src/components/AppButton";
@@ -218,68 +217,66 @@ export default function App() {
   };
 
   return (
-    <GestureHandlerRootView style={styles.root}>
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-          <StatusBar style="light" />
-          {message ? (
-            <View style={styles.messageBox}>
-              <Text style={styles.messageText}>{message}</Text>
-            </View>
-          ) : null}
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <StatusBar style="light" />
+        {message ? (
+          <View style={styles.messageBox}>
+            <Text style={styles.messageText}>{message}</Text>
+          </View>
+        ) : null}
 
-          {screen === "home" && (
-            <HomeScreen
-              joinSessionId={joinSessionId}
-              setJoinSessionId={setJoinSessionId}
-              onCreatePress={() => setScreen("create")}
-              onJoinPress={handleJoinSession}
-              joining={loadingJoin}
-              backendReady={backendReady}
-            />
-          )}
+        {screen === "home" && (
+          <HomeScreen
+            joinSessionId={joinSessionId}
+            setJoinSessionId={setJoinSessionId}
+            onCreatePress={() => setScreen("create")}
+            onJoinPress={handleJoinSession}
+            joining={loadingJoin}
+            backendReady={backendReady}
+          />
+        )}
 
-          {screen === "create" && (
-            <CreateSessionScreen
-              radiusKm={radiusKm}
-              budgetLevel={budgetLevel}
-              selectedCuisines={selectedCuisines}
-              loading={loadingCreate}
-              setRadiusKm={setRadiusKm}
-              setBudgetLevel={setBudgetLevel}
-              toggleCuisine={toggleCuisine}
-              onCreate={handleCreateSession}
-              onBack={() => setScreen("home")}
-            />
-          )}
+        {screen === "create" && (
+          <CreateSessionScreen
+            radiusKm={radiusKm}
+            budgetLevel={budgetLevel}
+            selectedCuisines={selectedCuisines}
+            loading={loadingCreate}
+            setRadiusKm={setRadiusKm}
+            setBudgetLevel={setBudgetLevel}
+            toggleCuisine={toggleCuisine}
+            onCreate={handleCreateSession}
+            onBack={() => setScreen("home")}
+          />
+        )}
 
-          {screen === "swipe" && (
-            <SwipeScreen
-              candidate={currentCandidate}
-              remainingCount={candidates.length}
-              secondsLeft={secondsLeft}
-              totalSeconds={timerTotal}
-              inviteCode={sessionId.slice(0, 8)}
-              pickyCount={pickyCount}
-              onVote={handleVote}
-              onAutoPick={handleAutoPick}
-              onShareInvite={shareInvite}
-              loadingVote={loadingVote}
-            />
-          )}
+        {screen === "swipe" && (
+          <SwipeScreen
+            candidate={currentCandidate}
+            remainingCount={candidates.length}
+            secondsLeft={secondsLeft}
+            totalSeconds={timerTotal}
+            inviteCode={sessionId.slice(0, 8)}
+            pickyCount={pickyCount}
+            onVote={handleVote}
+            onAutoPick={handleAutoPick}
+            onShareInvite={shareInvite}
+            loadingVote={loadingVote}
+          />
+        )}
 
-          {screen === "match" && matchResult && (
-            <MatchScreen result={matchResult} onRestart={restartToHome} />
-          )}
+        {screen === "match" && matchResult && (
+          <MatchScreen result={matchResult} onRestart={restartToHome} />
+        )}
 
-          {screen === "swipe" || screen === "create" ? (
-            <View style={styles.footerActions}>
-              <AppButton title="Home" onPress={restartToHome} variant="ghost" />
-            </View>
-          ) : null}
-        </SafeAreaView>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+        {screen === "swipe" || screen === "create" ? (
+          <View style={styles.footerActions}>
+            <AppButton title="Home" onPress={restartToHome} variant="ghost" />
+          </View>
+        ) : null}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -294,10 +291,6 @@ function toErrorMessage(error: unknown): string {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
   safeArea: {
     flex: 1,
     backgroundColor: colors.bg,
