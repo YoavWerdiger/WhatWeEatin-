@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "What We Eatin'",
+    "slug": "what-we-eatin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "whatweeatin",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.whatweeatin.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to find restaurants that deliver to you.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["com.whatweeatin.app"]
+          }
+        ],
+        "LSApplicationQueriesSchemes": [
+          "wolt",
+          "tenbis",
+          "tenbisapp"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.whatweeatin.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow What We Eatin' to use your location to find restaurants that deliver to you."
+        }
+      ],
+      "expo-localization"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "13009f1b-e276-4768-bde2-556b8473a780"
+      },
+      "router": {}
+    },
+    "updates": {
+      "url": "https://u.expo.dev/13009f1b-e276-4768-bde2-556b8473a780"
+    },
+    "owner": "yoavwerdiger"
+  }
+}

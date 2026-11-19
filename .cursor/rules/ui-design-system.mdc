@@ -1,0 +1,117 @@
+---
+description: Professional mobile UI design system - dark premium aesthetic
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Mobile UI Design System — Dark Premium Aesthetic
+
+When building screens, follow these principles precisely. Every screen must look like a polished, shipped product — not a prototype.
+
+## Color Palette
+
+- **Background**: Deep dark with a subtle color tint (not pure #000). Example: `#0a0f0a` or `#0d1117` — gives depth without feeling flat.
+- **Surface / Cards**: Semi-transparent layers over background using `rgba()`. Example: `rgba(255,255,255,0.06)` to `rgba(255,255,255,0.10)`. NEVER use solid gray cards.
+- **Primary accent**: A single bold color (green `#2d6a4f`, blue `#1d4ed8`, etc.) used sparingly — active tabs, CTAs, key icons only.
+- **Text primary**: `#FFFFFF` or `#F5F5F5` — high contrast on dark.
+- **Text secondary**: `#9CA3AF` or `rgba(255,255,255,0.55)` — timestamps, subtitles, metadata.
+- **Borders**: Extremely subtle or none. If needed: `rgba(255,255,255,0.08)`.
+
+## Typography Hierarchy
+
+- **Page title**: Bold, 26-32px, white. One per screen at the top.
+- **Subtitle / description**: Regular weight, 14-16px, secondary color. Right below the title.
+- **Card title**: Semi-bold, 16-18px, white.
+- **Card metadata**: Regular, 12-13px, secondary color.
+- **Tab labels**: Medium weight, 14px. Active tab = white/primary, inactive = secondary.
+- **Bottom nav labels**: 10-11px, secondary color. Active = primary accent.
+- For RTL languages (Hebrew/Arabic): always set `writingDirection: 'rtl'` and `textAlign: 'right'`.
+
+## Spacing & Layout
+
+- **Screen horizontal padding**: 16-20px consistently.
+- **Vertical spacing between sections**: 20-28px.
+- **Card internal padding**: 14-18px.
+- **Between cards in a list**: 12-16px gap.
+- NEVER crowd elements. Generous whitespace = premium feel.
+- Use `SafeAreaView` and respect device notch/status bar.
+
+## Cards & Surfaces
+
+- **Border radius**: 14-20px for cards, 24-30px for pill buttons/tabs.
+- **Background**: Semi-transparent (`rgba(255,255,255,0.06)`), or use `backdrop-filter: blur()` for glass effect.
+- **Shadow**: None or very subtle on dark themes. Depth comes from layered transparency, not shadows.
+- **Image cards**: Full-bleed images inside rounded cards. Overlay gradient (`linear-gradient(transparent, rgba(0,0,0,0.7))`) for text readability on images.
+
+## Tabs / Segmented Controls
+
+- Container: Horizontal `ScrollView` or `FlatList`, single row.
+- Shape: Pill-shaped (full border-radius).
+- Active state: Filled with primary accent color, white text.
+- Inactive state: Transparent background, secondary text color.
+- Spacing between pills: 8-10px.
+
+```tsx
+// Example pill tab style
+const activeTab = {
+  backgroundColor: '#2d6a4f',
+  paddingHorizontal: 18,
+  paddingVertical: 8,
+  borderRadius: 24,
+};
+const inactiveTab = {
+  backgroundColor: 'transparent',
+  paddingHorizontal: 18,
+  paddingVertical: 8,
+  borderRadius: 24,
+};
+```
+
+## Bottom Tab Bar
+
+- Background: Matches screen background or slightly elevated surface.
+- Border top: `rgba(255,255,255,0.08)` — barely visible.
+- Icons: 22-26px, use outline style when inactive, filled when active.
+- Active icon color: Primary accent.
+- Labels below icons: 10-11px.
+- Height: 60-80px including safe area.
+
+## Buttons & Interactive Elements
+
+- **Primary CTA**: Filled with accent color, rounded (12-16px radius), 48-52px height, bold white text.
+- **Secondary actions**: Ghost/outline style or icon-only.
+- **Icon buttons** (like, share): 36-40px touch target, subtle background on press.
+- Always provide haptic feedback consideration with `opacity` or `scale` on press.
+
+## Animations & Transitions
+
+- Use `Animated` API or `react-native-reanimated` for smooth transitions.
+- Screen transitions: Slide or fade, 200-300ms.
+- List items: Staggered fade-in on load.
+- Tab switching: Smooth underline or background color transition.
+- Keep all animations under 300ms for snappy feel.
+
+## Images & Media
+
+- Always use `borderRadius` matching the parent card.
+- Aspect ratio for news/content cards: 16:9 or 3:2.
+- Use placeholder/skeleton loading states (shimmer effect) while images load.
+- Overlay text on images requires a gradient scrim.
+
+## Header Area
+
+- Title section at the top of each screen with generous top padding.
+- Pattern: Bold title + lighter subtitle underneath.
+- Optional: Frosted glass / semi-transparent container for the header block.
+- No harsh dividers — use spacing and background layers to separate header from content.
+
+## Anti-Patterns — NEVER Do These
+
+- NEVER use pure white backgrounds or bright cards on dark theme.
+- NEVER use default system fonts without size/weight hierarchy.
+- NEVER place text directly on images without a gradient overlay.
+- NEVER use sharp corners (0 radius) on cards or buttons.
+- NEVER leave the status bar unstyled (use `light-content` on dark themes).
+- NEVER use inconsistent padding across the screen.
+- NEVER use more than 2-3 accent colors — keep the palette tight.
+- NEVER skip loading/empty states — always design for all states.

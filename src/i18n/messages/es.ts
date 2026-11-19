@@ -1,0 +1,237 @@
+import type { Messages } from './en';
+
+export const es: Messages = {
+  'common.back': '← Atrás',
+  'common.ok': 'OK',
+  'common.leave': '← Salir de la sesión',
+  'common.loading': 'Cargando...',
+
+  'home.title': '¿Qué\ncomemos?',
+  'home.subtitle':
+    'Decidan qué comer con sus amigos.\nSin discusiones interminables.',
+  'home.createSession': 'Crear sesión 🎉',
+  'home.joinSession': 'Unirse a sesión',
+  'home.tagline': '⚡ Decidan en menos de 60 segundos',
+  'home.account': 'Cuenta',
+  'home.guestHint': 'Invitado — toca para iniciar sesión',
+  'home.signedIn': 'Conectado',
+  'home.longPressSignOut': 'Mantén pulsado para cerrar sesión',
+
+  'auth.title': '¿Qué comemos?',
+  'auth.subtitleLogin':
+    'Inicia sesión para guardar tu perfil y sincronizar sesiones.',
+  'auth.subtitleRegister':
+    'Crea una cuenta para organizar y unirte con tu identidad.',
+  'auth.continueGoogle': 'Continuar con Google',
+  'auth.configHint':
+    'Configura EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID en .env y reinicia Metro.',
+  'auth.or': 'o',
+  'auth.name': 'Nombre',
+  'auth.email': 'Correo',
+  'auth.password': 'Contraseña',
+  'auth.placeholderName': 'Tu nombre',
+  'auth.placeholderEmail': 'correo@ejemplo.com',
+  'auth.placeholderPasswordRegister': 'Al menos 6 caracteres',
+  'auth.placeholderPasswordLogin': '••••••',
+  'auth.signIn': 'Iniciar sesión',
+  'auth.createAccount': 'Crear cuenta',
+  'auth.switchToRegister': '¿Sin cuenta? Regístrate',
+  'auth.switchToLogin': '¿Ya tienes cuenta? Inicia sesión',
+  'auth.skipGuest': 'Omitir — continuar como invitado →',
+  'auth.googlePolicyHint':
+    'Google bloqueó el inicio de sesión. Expo Go: solo cliente Web — redirección "{{expoProxy}}" y origen "https://auth.expo.io" (no whatweeatin://). TestFlight: crea un cliente OAuth iOS (bundle com.whatweeatin.app) y configura EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID en EAS. Consentimiento OAuth → añade tu Gmail como usuario de prueba.',
+  'auth.errorEmptyFields': 'Introduce tu correo y contraseña.',
+  'auth.errorInvalidCredential': 'Correo o contraseña incorrectos.',
+  'auth.errorGoogleCredential':
+    'Falló el inicio con Google en Firebase. Activa Google en Authentication → Sign-in method y usa el mismo Web client ID en Expo y Firebase.',
+  'auth.errorGoogleFailed': 'Falló el inicio con Google. Inténtalo de nuevo.',
+  'auth.errorOperationNotAllowed':
+    'Este método de acceso está desactivado en Firebase. Consola → Authentication → Sign-in method: activa Email/Password, Google y/o Anonymous.',
+  'auth.errorEmailInUse': 'Ese correo ya está en uso.',
+  'auth.errorInvalidEmail': 'Dirección de correo no válida.',
+  'auth.errorWeakPassword': 'La contraseña es demasiado débil (mín. 6 caracteres).',
+  'auth.errorUserNotFound': 'No hay usuario con ese correo.',
+  'auth.errorWrongPassword': 'Contraseña incorrecta.',
+  'auth.errorTooManyRequests': 'Demasiados intentos. Prueba más tarde.',
+  'auth.errorNetwork': 'Error de red. Comprueba tu conexión.',
+  'auth.errorAccountExistsDifferent':
+    'Ya existe una cuenta con este correo con otro método de acceso.',
+  'auth.errorUserDisabled': 'Esta cuenta ha sido desactivada.',
+  'auth.errorGeneric': 'Algo salió mal. Inténtalo de nuevo.',
+
+  'account.title': 'Cuenta',
+  'account.subtitle':
+    'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',
+  'account.displayName': 'Nombre visible',
+  'account.email': 'Correo',
+  'account.emailNotSet': 'No definido (invitado)',
+  'account.signInMethod': 'Método de acceso',
+  'account.providerGoogle': 'Google',
+  'account.providerEmail': 'Correo',
+  'account.providerGuest': 'Invitado',
+  'account.userId': 'ID de usuario',
+  'account.signInUpgrade': 'Iniciar sesión con correo o Google',
+  'account.signOut': 'Cerrar sesión',
+  'account.language': 'Idioma de la app',
+  'account.languageHint':
+    'Se aplica en toda la app. El hebreo y el árabe usan diseño de derecha a izquierda.',
+
+  'ads.sponsored': 'Patrocinado',
+  'ads.placeholderHint':
+    'Espacio publicitario (placeholder). AdMob real requiere development build — no Expo Go.',
+  'ads.placeholderReady':
+    'Espacio listo — conectar BannerAd tras enlazar el SDK nativo.',
+
+  'create.heroEyebrow': 'SESIÓN GRUPAL',
+  'create.heroTitle': 'Eres el anfitrión',
+  'create.heroSub':
+    'Elige lo estricta que es la sala y comparte tu código. Tus amigos se unen desde el móvil y deslizan juntos.',
+  'create.yourName': 'Tu nombre',
+  'create.namePlaceholder': 'Introduce tu nombre',
+  'create.gameRules': 'Reglas del juego',
+  'create.gameMode': 'Modo de juego',
+  'create.modeSwipe': 'Deslizar',
+  'create.modeSwipeHint':
+    'Likes clásicos hasta que el grupo haga match.',
+  'create.modeRoulette': 'Ruleta del hambre',
+  'create.modeRouletteHint':
+    'Sin deslizar — el anfitrión gira y se elige un restaurante para todos.',
+  'create.modeSelected': 'Modo: {{mode}}',
+  'create.roundTimer': 'Temporizador de ronda',
+  'create.roundTimerHint':
+    'Aplica cuando el anfitrión empieza a deslizar. Desactivado = sin cuenta atrás.',
+  'create.timerOff': 'Off',
+  'create.switchUnanimousTitle': 'Todos confirman “seguir explorando”',
+  'create.switchUnanimousSub':
+    'Tras un match, cada jugador debe aceptar antes de seguir deslizando.',
+  'create.switchLobbyTitle': 'Comprobación en el lobby',
+  'create.switchLobbySub':
+    'Cada persona pulsa “Listo” antes de que el anfitrión pueda empezar la ronda.',
+  'create.filters': '🎯 Filtros de restaurantes',
+  'create.createBtn': 'Crear sesión 🎉',
+  'create.sessionCode': 'CÓDIGO DE SESIÓN',
+  'create.findingRestaurants': 'Buscando restaurantes cerca de ti...',
+  'create.restaurantsFound': '{{count}} restaurantes encontrados',
+  'create.sourceSample': 'Ejemplo',
+  'create.shareCode': 'Compartir código',
+  'create.letsGo': '¡Vamos! →',
+  'create.shareMessage': '¡Únete a mi sesión de What We Eatin! Código: {{code}}',
+
+  'join.title': 'Unirse a sesión',
+  'join.subtitle': 'Introduce el código que te compartió un amigo',
+  'join.yourName': 'Tu nombre',
+  'join.namePlaceholder': 'Introduce tu nombre',
+  'join.sessionCode': 'Código de sesión',
+  'join.codePlaceholder': 'ABC123',
+  'join.button': 'Unirse a sesión →',
+  'join.alertTitle': 'Sesión no encontrada',
+  'join.alertBody': 'Revisa el código e inténtalo de nuevo.',
+
+  'lobby.title': 'Lobby de sesión',
+  'lobby.codeLabel': 'CÓDIGO',
+  'lobby.players': 'Jugadores',
+  'lobby.spots': 'Sitios',
+  'lobby.timer': 'Temporizador',
+  'lobby.timerOff': 'Off',
+  'lobby.timerMin': '{{m}} min',
+  'lobby.timerMmSs': '{{m}}:{{s}}',
+  'lobby.rulesTitle': 'Cómo funciona esta sala',
+  'lobby.ruleLobbyReady':
+    '• Todos pulsan “Listo” antes de que el anfitrión empiece.',
+  'lobby.ruleLobbySkip':
+    '• El anfitrión puede empezar en cuanto haya suficientes jugadores.',
+  'lobby.ruleUnanimous':
+    '• Tras un match, todos deben aceptar para seguir explorando.',
+  'lobby.ruleAnyone': '• Cualquiera puede descartar un match y seguir deslizando.',
+  'lobby.ruleTimerOn':
+    '• Cuenta atrás de {{timer}}; si se acaba el tiempo, elegimos automáticamente.',
+  'lobby.ruleTimerOff': '• Sin temporizador de ronda — tomad vuestro tiempo.',
+  'lobby.playersSection': 'Jugadores',
+  'lobby.readyTap': 'Pulsa cuando estés listo',
+  'lobby.readyDone': '✓ Listo',
+  'lobby.waitHostCanStart': '¿Todos aquí? Empezad cuando queráis.',
+  'lobby.waitNeedPlayers': 'Esperando al menos {{min}} jugadores…',
+  'lobby.waitGuest': 'Esperando a que el anfitrión empiece…',
+  'lobby.btnNeedPlayers': 'Hacen falta {{min}}+ jugadores',
+  'lobby.btnWaitAll': 'Esperando a todos…',
+  'lobby.btnStart': '¡Vamos! 🚀',
+  'lobby.guestHint':
+    'Ya estás dentro. El anfitrión empezará la ronda de deslizamiento para el grupo.',
+  'lobby.alertAlmostTitle': 'Casi listo',
+  'lobby.alertAlmostBody':
+    'Todos deben pulsar “Listo” antes de que puedas empezar.',
+  'lobby.modeActive': 'Modo · {{mode}}',
+  'lobby.modeSwipe': 'Deslizar',
+  'lobby.modeRoulette': 'Ruleta del hambre',
+
+  'roulette.title': 'Ruleta del hambre',
+  'roulette.subtitle':
+    'El anfitrión gira el carrete. Todos ven el mismo ganador.',
+  'roulette.spin': 'Girar 🎰',
+  'roulette.spinning': 'Girando…',
+  'roulette.waitingHost': 'Esperando a que el anfitrión gire…',
+  'roulette.landed': '¡Cayendo en {{name}}!',
+
+  'swipe.finishedTitle': '¡Todo deslizado!',
+  'swipe.finishedSubtitle': 'Esperando a que el grupo termine...',
+  'swipe.duelKicker': 'Ronda 2',
+  'swipe.duelTitle': '¿Quién se queda?',
+  'swipe.duelRound': 'Enfrentamiento {{current}} de {{total}}',
+  'swipe.champion': 'Campeón',
+  'swipe.challenger': 'Retador',
+  'swipe.duelCancel': 'Cancelar — volver a la lista',
+  'swipe.pickyTitle': 'Sois exigentes. Respeto.',
+  'swipe.pickySub':
+    'A todos os gustaron {{count}} sitios — no elegiremos por vosotros. Ronda 2: un solo ganador.',
+  'swipe.duelCtaTitle': 'Cara a cara',
+  'swipe.duelCtaHint': 'Enfrentamientos hasta que quede uno',
+  'swipe.orList': 'O elige uno de la lista',
+  'swipe.oneOverlap': 'Un acuerdo claro — toca para confirmarlo',
+  'swipe.aiTitle': 'Ya nos da igual',
+  'swipe.aiHint': 'Deja que la IA elija el mejor match',
+  'swipe.aiSmall': '🤷 Ya nos da igual',
+  'swipe.orderTitle': 'Pedir ahora',
+  'swipe.orderBody': 'Abriendo {{name}}...',
+
+  'swipeActions.pass': 'Pasar',
+  'swipeActions.like': 'Me gusta',
+
+  'match.title': '¡Esto es lo que comemos!',
+  'match.agreedOne': '¡1 persona de acuerdo!',
+  'match.agreedMany': '¡{{count}} personas de acuerdo!',
+  'match.keepBrowsingTitle': '¿Seguir explorando?',
+  'match.keepBrowsingHint':
+    'Todos deben confirmar antes de seguir deslizando.',
+  'match.playersIn': '{{done}}/{{total}} jugadores',
+  'match.youSuffix': ' (tú)',
+  'match.sourceWolt': 'Pedir en Wolt',
+  'match.sourceTenbis': 'Pedir en 10bis',
+  'match.sourceGoogle': 'Ver restaurante',
+  'match.sourceMock': 'Pedir ahora',
+  'match.orderNow': 'Pedir ahora 🛒',
+  'match.waitingOthers': 'Esperando a los demás…',
+  'match.iWantKeepBrowsing': 'Quiero seguir explorando',
+  'match.keepBrowsing': 'Seguir explorando',
+
+  'filters.cuisine': '🍽️ Cocina',
+  'filters.cuisineHint': 'Elige categorías (vacío = todas)',
+  'filters.showMore': 'Ver más ({{count}})',
+  'filters.showLess': 'Ver menos',
+  'filters.vibe': '🎯 Ambiente',
+  'filters.maxPrice': '💰 Precio máximo',
+  'filters.priceBudget': 'Económico',
+  'filters.priceModerate': 'Moderado',
+  'filters.pricePricey': 'Caro',
+  'filters.priceSplurge': 'Lujo',
+  'filters.kosher': '✡️ Solo kosher',
+  'filters.kosherHint': 'Mostrar restaurantes etiquetados como kosher',
+
+  'alerts.sessionUpdate': 'Actualización de sesión',
+
+  'participant.empty': 'Todos salieron — esta sesión está vacía.',
+  'participant.hostTag': '{{name}} (el anfitrión)',
+  'participant.singleLeft': 'Atención — {{name}} salió de la sesión.',
+  'participant.multiLeft': 'Ups — {{names}} salieron de la sesión.',
+  'participant.soloSuffix':
+    ' Ahora estás solo — sigue o vuelve al inicio.',
+};

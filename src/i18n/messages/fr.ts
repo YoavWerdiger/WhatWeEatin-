@@ -1,0 +1,239 @@
+import type { Messages } from './en';
+
+export const fr: Messages = {
+  'common.back': '← Retour',
+  'common.ok': 'OK',
+  'common.leave': '← Quitter la session',
+  'common.loading': 'Chargement...',
+
+  'home.title': 'On mange\nquoi ?',
+  'home.subtitle':
+    'Décidez quoi manger entre amis.\nFini les débats interminables.',
+  'home.createSession': 'Créer une session 🎉',
+  'home.joinSession': 'Rejoindre une session',
+  'home.tagline': '⚡ Décidez en moins de 60 secondes',
+  'home.account': 'Compte',
+  'home.guestHint': 'Invité — appuyez pour vous connecter',
+  'home.signedIn': 'Connecté',
+  'home.longPressSignOut': 'Appui long pour vous déconnecter',
+
+  'auth.title': 'On mange quoi ?',
+  'auth.subtitleLogin':
+    'Connectez-vous pour enregistrer votre profil et synchroniser les sessions.',
+  'auth.subtitleRegister':
+    'Créez un compte pour héberger et rejoindre avec votre identité.',
+  'auth.continueGoogle': 'Continuer avec Google',
+  'auth.configHint':
+    'Définissez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID dans .env et redémarrez Metro.',
+  'auth.or': 'ou',
+  'auth.name': 'Nom',
+  'auth.email': 'E-mail',
+  'auth.password': 'Mot de passe',
+  'auth.placeholderName': 'Votre nom',
+  'auth.placeholderEmail': 'email@exemple.com',
+  'auth.placeholderPasswordRegister': 'Au moins 6 caractères',
+  'auth.placeholderPasswordLogin': '••••••',
+  'auth.signIn': 'Connexion',
+  'auth.createAccount': 'Créer un compte',
+  'auth.switchToRegister': 'Pas de compte ? Inscription',
+  'auth.switchToLogin': 'Déjà un compte ? Connexion',
+  'auth.skipGuest': 'Passer — continuer en invité →',
+  'auth.googlePolicyHint':
+    'Google a bloqué la connexion. Expo Go : client Web uniquement — redirection "{{expoProxy}}" et origine "https://auth.expo.io" (pas whatweeatin://). TestFlight : créez un client OAuth iOS (bundle com.whatweeatin.app) et définissez EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID dans EAS. Consentement OAuth → ajoutez votre Gmail comme utilisateur test.',
+  'auth.errorEmptyFields': 'Saisissez votre e-mail et mot de passe.',
+  'auth.errorInvalidCredential': 'E-mail ou mot de passe incorrect.',
+  'auth.errorGoogleCredential':
+    'Échec de la connexion Google côté Firebase. Activez Google dans Authentication → Sign-in method et utilisez le même Web client ID dans Expo et Firebase.',
+  'auth.errorGoogleFailed': 'Échec de la connexion Google. Réessayez.',
+  'auth.errorOperationNotAllowed':
+    'Cette méthode de connexion est désactivée dans Firebase. Console → Authentication → Sign-in method : activez Email/Password, Google et/ou Anonymous.',
+  'auth.errorEmailInUse': 'Cet e-mail est déjà utilisé.',
+  'auth.errorInvalidEmail': 'Adresse e-mail invalide.',
+  'auth.errorWeakPassword': 'Mot de passe trop faible (min. 6 caractères).',
+  'auth.errorUserNotFound': 'Aucun utilisateur pour cet e-mail.',
+  'auth.errorWrongPassword': 'Mot de passe incorrect.',
+  'auth.errorTooManyRequests': 'Trop de tentatives. Réessayez plus tard.',
+  'auth.errorNetwork': 'Erreur réseau. Vérifiez votre connexion.',
+  'auth.errorAccountExistsDifferent':
+    'Un compte existe déjà avec cet e-mail via une autre méthode.',
+  'auth.errorUserDisabled': 'Ce compte a été désactivé.',
+  'auth.errorGeneric': 'Une erreur est survenue. Réessayez.',
+
+  'account.title': 'Compte',
+  'account.subtitle':
+    'Vous êtes connecté avec Firebase Auth. Les sessions utilisent votre ID utilisateur pour l’hôte et la synchro temps réel quand c’est configuré.',
+  'account.displayName': 'Nom affiché',
+  'account.email': 'E-mail',
+  'account.emailNotSet': 'Non défini (invité)',
+  'account.signInMethod': 'Méthode de connexion',
+  'account.providerGoogle': 'Google',
+  'account.providerEmail': 'E-mail',
+  'account.providerGuest': 'Invité',
+  'account.userId': 'ID utilisateur',
+  'account.signInUpgrade': 'Se connecter avec e-mail ou Google',
+  'account.signOut': 'Déconnexion',
+  'account.language': "Langue de l'app",
+  'account.languageHint':
+    "S'applique partout dans l'app. L'hébreu et l'arabe utilisent une mise en page de droite à gauche.",
+
+  'ads.sponsored': 'Sponsorisé',
+  'ads.placeholderHint':
+    'Emplacement pub (placeholder). AdMob réel nécessite un development build — pas Expo Go.',
+  'ads.placeholderReady':
+    'Emplacement prêt — branchez BannerAd après liaison du SDK natif.',
+
+  'create.heroEyebrow': 'SESSION DE GROUPE',
+  'create.heroTitle': 'Vous êtes l’hôte',
+  'create.heroSub':
+    'Choisissez la rigueur de la salle, puis partagez votre code. Les amis rejoignent depuis leur téléphone et swipent ensemble.',
+  'create.yourName': 'Votre nom',
+  'create.namePlaceholder': 'Entrez votre nom',
+  'create.gameRules': 'Règles du jeu',
+  'create.gameMode': 'Mode de jeu',
+  'create.modeSwipe': 'Swipe',
+  'create.modeSwipeHint':
+    'Likes classiques jusqu’à ce que le groupe matche.',
+  'create.modeRoulette': 'Roulette faim',
+  'create.modeRouletteHint':
+    'Pas de swipe — l’hôte tourne et un resto est tiré pour tout le monde.',
+  'create.modeSelected': 'Mode : {{mode}}',
+  'create.roundTimer': 'Minuteur de manche',
+  'create.roundTimerHint':
+    "S'applique quand l'hôte commence à swiper. Désactivé = pas de compte à rebours.",
+  'create.timerOff': 'Off',
+  'create.switchUnanimousTitle': 'Tout le monde confirme « continuer à parcourir »',
+  'create.switchUnanimousSub':
+    'Après un match, chaque joueur doit accepter avant de swiper à nouveau.',
+  'create.switchLobbyTitle': 'Contrôle prêt dans le lobby',
+  'create.switchLobbySub':
+    'Chacun appuie sur « Je suis prêt » avant que l’hôte puisse lancer la manche.',
+  'create.filters': '🎯 Filtres restaurants',
+  'create.createBtn': 'Créer une session 🎉',
+  'create.sessionCode': 'CODE DE SESSION',
+  'create.findingRestaurants': 'Recherche de restaurants près de vous...',
+  'create.restaurantsFound': '{{count}} restaurants trouvés',
+  'create.sourceSample': 'Exemple',
+  'create.shareCode': 'Partager le code',
+  'create.letsGo': 'C’est parti ! →',
+  'create.shareMessage':
+    'Rejoins ma session What We Eatin ! Code : {{code}}',
+
+  'join.title': 'Rejoindre une session',
+  'join.subtitle': 'Entrez le code partagé par un ami',
+  'join.yourName': 'Votre nom',
+  'join.namePlaceholder': 'Entrez votre nom',
+  'join.sessionCode': 'Code de session',
+  'join.codePlaceholder': 'ABC123',
+  'join.button': 'Rejoindre la session →',
+  'join.alertTitle': 'Session introuvable',
+  'join.alertBody': 'Vérifiez le code et réessayez.',
+
+  'lobby.title': 'Lobby de session',
+  'lobby.codeLabel': 'CODE',
+  'lobby.players': 'Joueurs',
+  'lobby.spots': 'Lieux',
+  'lobby.timer': 'Minuteur',
+  'lobby.timerOff': 'Off',
+  'lobby.timerMin': '{{m}} min',
+  'lobby.timerMmSs': '{{m}}:{{s}}',
+  'lobby.rulesTitle': 'Fonctionnement de la salle',
+  'lobby.ruleLobbyReady':
+    '• Tout le monde appuie sur « Je suis prêt » avant que l’hôte commence.',
+  'lobby.ruleLobbySkip':
+    '• L’hôte peut démarrer dès qu’il y a assez de joueurs.',
+  'lobby.ruleUnanimous':
+    '• Après un match, tout le monde doit accepter pour continuer à parcourir.',
+  'lobby.ruleAnyone':
+    '• N’importe qui peut fermer un match et continuer à swiper.',
+  'lobby.ruleTimerOn':
+    '• Compte à rebours {{timer}}, puis choix auto si le temps est écoulé.',
+  'lobby.ruleTimerOff': '• Pas de minuteur de manche — prenez votre temps.',
+  'lobby.playersSection': 'Joueurs',
+  'lobby.readyTap': 'Appuyez quand vous êtes prêt',
+  'lobby.readyDone': '✓ Prêt',
+  'lobby.waitHostCanStart': 'Tout le monde est là ? Commencez quand vous voulez.',
+  'lobby.waitNeedPlayers': 'En attente d’au moins {{min}} joueurs…',
+  'lobby.waitGuest': 'En attente du démarrage par l’hôte…',
+  'lobby.btnNeedPlayers': 'Il faut {{min}}+ joueurs',
+  'lobby.btnWaitAll': 'En attente de tout le monde…',
+  'lobby.btnStart': 'C’est parti ! 🚀',
+  'lobby.guestHint':
+    'Vous êtes dedans. L’hôte lancera la manche de swipe pour le groupe.',
+  'lobby.alertAlmostTitle': 'Presque',
+  'lobby.alertAlmostBody':
+    'Tout le monde doit appuyer sur « Je suis prêt » avant de commencer.',
+  'lobby.modeActive': 'Mode · {{mode}}',
+  'lobby.modeSwipe': 'Swipe',
+  'lobby.modeRoulette': 'Roulette faim',
+
+  'roulette.title': 'Roulette faim',
+  'roulette.subtitle':
+    'L’hôte fait tourner le cylindre. Tout le monde voit le même gagnant.',
+  'roulette.spin': 'Tourner 🎰',
+  'roulette.spinning': 'Ça tourne…',
+  'roulette.waitingHost': 'En attente que l’hôte tourne…',
+  'roulette.landed': 'On tombe sur {{name}} !',
+
+  'swipe.finishedTitle': 'Tout est swipé !',
+  'swipe.finishedSubtitle': 'En attente que le groupe termine...',
+  'swipe.duelKicker': 'Manche 2',
+  'swipe.duelTitle': 'Qui reste ?',
+  'swipe.duelRound': 'Duel {{current}} sur {{total}}',
+  'swipe.champion': 'Champion',
+  'swipe.challenger': 'Challenger',
+  'swipe.duelCancel': 'Annuler — retour à la liste',
+  'swipe.pickyTitle': 'Vous êtes difficiles. Respect.',
+  'swipe.pickySub':
+    'Vous avez tous aimé {{count}} lieux — on ne choisit pas à votre place. Manche 2 : un seul gagnant.',
+  'swipe.duelCtaTitle': 'Face à face',
+  'swipe.duelCtaHint': 'Duels jusqu’à ce qu’il n’en reste qu’un',
+  'swipe.orList': 'Ou choisissez dans la liste',
+  'swipe.oneOverlap': 'Un accord clair — appuyez pour valider',
+  'swipe.aiTitle': 'On s’en fiche',
+  'swipe.aiHint': 'Laissez l’IA choisir le meilleur match',
+  'swipe.aiSmall': '🤷 On s’en fiche',
+  'swipe.orderTitle': 'Commander',
+  'swipe.orderBody': 'Ouverture de {{name}}...',
+
+  'swipeActions.pass': 'Passer',
+  'swipeActions.like': "J'aime",
+
+  'match.title': 'Voilà ce qu’on mange !',
+  'match.agreedOne': '1 personne d’accord !',
+  'match.agreedMany': '{{count}} personnes d’accord !',
+  'match.keepBrowsingTitle': 'Continuer à parcourir ?',
+  'match.keepBrowsingHint':
+    'Tout le monde doit confirmer avant de continuer à swiper.',
+  'match.playersIn': '{{done}}/{{total}} joueurs',
+  'match.youSuffix': ' (vous)',
+  'match.sourceWolt': 'Commander sur Wolt',
+  'match.sourceTenbis': 'Commander sur 10bis',
+  'match.sourceGoogle': 'Voir le restaurant',
+  'match.sourceMock': 'Commander',
+  'match.orderNow': 'Commander 🛒',
+  'match.waitingOthers': 'En attente des autres…',
+  'match.iWantKeepBrowsing': 'Je veux continuer à parcourir',
+  'match.keepBrowsing': 'Continuer à parcourir',
+
+  'filters.cuisine': '🍽️ Cuisine',
+  'filters.cuisineHint': 'Choisissez des catégories (vide = tout)',
+  'filters.showMore': 'Voir plus ({{count}})',
+  'filters.showLess': 'Voir moins',
+  'filters.vibe': '🎯 Ambiance',
+  'filters.maxPrice': '💰 Prix max',
+  'filters.priceBudget': 'Éco',
+  'filters.priceModerate': 'Modéré',
+  'filters.pricePricey': 'Cher',
+  'filters.priceSplurge': 'Luxe',
+  'filters.kosher': '✡️ Casher uniquement',
+  'filters.kosherHint': 'Afficher les restaurants étiquetés casher',
+
+  'alerts.sessionUpdate': 'Mise à jour de session',
+
+  'participant.empty': 'Tout le monde est parti — cette session est vide.',
+  'participant.hostTag': '{{name}} (l’hôte)',
+  'participant.singleLeft': 'Info — {{name}} a quitté la session.',
+  'participant.multiLeft': 'Oups — {{names}} ont quitté la session.',
+  'participant.soloSuffix':
+    ' Vous êtes seul maintenant — continuez ou rentrez.',
+};
