@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  TouchableOpacity,
+  View,
   Text,
   StyleSheet,
   ViewStyle,
@@ -10,7 +10,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, continuous } from '../../theme/spacing';
+import { PressableScale } from './PressableScale';
 
 interface ButtonProps {
   title: string;
@@ -44,10 +45,11 @@ export function Button({
   };
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={handlePress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.base,
         styles[variant],
@@ -57,37 +59,46 @@ export function Button({
         style,
       ]}
     >
-      {loading ? (
+      {/* Label stays laid out while loading so the button never changes width */}
+      <View style={[styles.row, loading && styles.hidden]}>
+        {icon}
+        <Text
+          style={[
+            styles.text,
+            styles[`text_${variant}`],
+            styles[`text_${size}`],
+            icon ? { marginStart: spacing.sm } : undefined,
+            textStyle,
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
+      {loading && (
         <ActivityIndicator
-          color={variant === 'primary' ? colors.textInverse : colors.primary}
+          style={StyleSheet.absoluteFill}
+          color={variant === 'primary' || variant === 'danger' ? colors.textInverse : colors.primary}
           size="small"
         />
-      ) : (
-        <>
-          {icon}
-          <Text
-            style={[
-              styles.text,
-              styles[`text_${variant}`],
-              styles[`text_${size}`],
-              icon ? { marginLeft: spacing.sm } : undefined,
-              textStyle,
-            ]}
-          >
-            {title}
-          </Text>
-        </>
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: borderRadius.full,
+    ...continuous,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hidden: {
+    opacity: 0,
   },
   fullWidth: {
     width: '100%',
@@ -111,7 +122,7 @@ const styles = StyleSheet.create({
 
   size_sm: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
   },
   size_md: {
     paddingHorizontal: spacing.lg,

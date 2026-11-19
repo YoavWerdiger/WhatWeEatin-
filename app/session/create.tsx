@@ -1,23 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
-  Animated,
   Share,
   ActivityIndicator,
   ScrollView,
   Switch,
+  Pressable,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  Easing,
+  FadeIn,
+  Keyframe,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { spacing, borderRadius, shadows } from '../../src/theme/spacing';
-import { Button } from '../../src/components/ui/Button';
+import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
+import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
@@ -30,10 +38,23 @@ import {
 } from '../../src/utils/constants';
 
 const GAME_MODES: GameMode[] = ['swipe', 'roulette'];
+const TIMER_OPTIONS = TIMER_OPTION_VALUES.filter((v) => v !== 0);
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+
+// The code card arrives from just below full size — never from nothing.
+const codeEnter = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.96 }, { translateY: 8 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }, { translateY: 0 }], easing: EASE_OUT },
+}).duration(320);
+
+// Strip the arrow glyphs the copy uses for its text buttons.
+const plain = (s: string) => s.replace(/[→←]/g, '').trim();
 
 export default function CreateSessionScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, setName } = useUserStore();
   const authUser = useAuthStore((s) => s.user);
   const {
@@ -68,16 +89,12 @@ export default function CreateSessionScreen() {
   const [requireUnanimousKeepBrowsing, setRequireUnanimousKeepBrowsing] =
     useState(true);
   const [requireLobbyReady, setRequireLobbyReady] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const codeAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: withTiming(showFilters ? '180deg' : '0deg', { duration: 200, easing: EASE_OUT }) },
+    ],
+  }));
 
   const activeFilterCount =
     filters.cuisines.length +
@@ -105,6 +122,10 @@ export default function CreateSessionScreen() {
     }
   };
 
+  // Segment 0 is "off"; the rest map onto TIMER_OPTIONS.
+  const timerLabels = [t('create.timerOff'), ...TIMER_OPTIONS.map(formatTimerChipLabel)];
+  const timerIndex = timerDuration === 0 ? 0 : TIMER_OPTIONS.indexOf(timerDuration as never) + 1;
+
   const handleCreate = async () => {
     setName(displayName);
     const hostId = firebaseUid || authUser?.uid || user.id;
@@ -117,13 +138,6 @@ export default function CreateSessionScreen() {
     setSessionCode(code);
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-    Animated.spring(codeAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 5,
-      useNativeDriver: true,
-    }).start();
 
     await loadRestaurants(filters);
   };
@@ -143,7 +157,7 @@ export default function CreateSessionScreen() {
   };
 
   const restaurantCount = session?.restaurants.length || 0;
-  const isReady = sessionCode && !isLoadingRestaurants && restaurantCount > 0;
+  const isReady = !!sessionCode && !isLoadingRestaurants && restaurantCount > 0;
 
   const sourceCounts = session?.restaurants.reduce(
     (acc, r) => {
@@ -160,170 +174,155 @@ export default function CreateSessionScreen() {
     router.back();
   };
 
+  const bottomBarHeight = 64 + Math.max(insets.bottom, spacing.md);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <GlassIconButton
+          systemImage="chevron.backward"
+          accessibilityLabel={plain(t('common.back'))}
+          onPress={handleBackFromCreate}
+        />
+      </View>
+
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomBarHeight + spacing.lg }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackFromCreate}>
-          <Text style={styles.backText}>{t('common.back')}</Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.pageTitle}>{t('create.heroTitle')}</Text>
+          <Text style={styles.pageSub}>{t('create.heroSub')}</Text>
+        </View>
 
-        <Text style={styles.pageTitle}>{t('create.heroTitle')}</Text>
-        <Text style={styles.pageSub}>{t('create.heroSub')}</Text>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('create.yourName')}</Text>
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>{t('create.yourName')}</Text>
+          <View style={styles.card}>
             <TextInput
               style={styles.input}
               value={displayName}
               onChangeText={setDisplayName}
               placeholder={t('create.namePlaceholder')}
               placeholderTextColor={colors.textMuted}
+              editable={!sessionCode}
+              returnKeyType="done"
+              autoCorrect={false}
+              textContentType="nickname"
             />
           </View>
         </View>
 
         {!sessionCode && (
-          <View style={styles.settingsCard}>
-            <Text style={styles.settingsSectionLabel}>{t('create.gameMode')}</Text>
-            <View style={styles.timerChipRow}>
-              {GAME_MODES.map((mode) => (
-                <TouchableOpacity
-                  key={mode}
-                  style={[
-                    styles.timerChip,
-                    gameMode === mode && styles.timerChipSelected,
-                  ]}
-                  onPress={() => handleSelectGameMode(mode)}
-                  activeOpacity={0.85}
-                >
-                  <Text
-                    style={[
-                      styles.timerChipText,
-                      gameMode === mode && styles.timerChipTextSelected,
-                    ]}
-                  >
-                    {modeTitle(mode)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.switchSub}>{modeHint(gameMode)}</Text>
+          <>
+            <View style={styles.group}>
+              <Text style={styles.groupLabel}>{t('create.gameMode')}</Text>
+              <View style={[styles.card, styles.cardPadded]}>
+                <SegmentedControl
+                  values={GAME_MODES.map(modeTitle)}
+                  selectedIndex={GAME_MODES.indexOf(gameMode)}
+                  onChange={(e) => handleSelectGameMode(GAME_MODES[e.nativeEvent.selectedSegmentIndex])}
+                  tintColor={colors.primary}
+                />
+                <Text style={styles.hint}>{modeHint(gameMode)}</Text>
 
-            {gameMode !== 'roulette' && (
-              <>
-                <Text style={[styles.settingsSectionLabel, styles.settingsGap]}>
-                  {t('create.roundTimer')}
-                </Text>
-                <View style={styles.timerChipRow}>
-                  {TIMER_OPTION_VALUES.map((value) => (
-                    <TouchableOpacity
-                      key={value}
-                      style={[
-                        styles.timerChip,
-                        timerDuration === value && styles.timerChipSelected,
-                      ]}
-                      onPress={() => {
+                {gameMode !== 'roulette' && (
+                  <>
+                    <View style={styles.separator} />
+                    <Text style={styles.rowTitle}>{t('create.roundTimer')}</Text>
+                    <SegmentedControl
+                      values={timerLabels}
+                      selectedIndex={timerIndex}
+                      onChange={(e) => {
                         void Haptics.selectionAsync();
-                        setTimerDuration(value);
+                        const i = e.nativeEvent.selectedSegmentIndex;
+                        setTimerDuration(i === 0 ? 0 : TIMER_OPTIONS[i - 1]);
                       }}
-                      activeOpacity={0.85}
-                    >
-                      <Text
-                        style={[
-                          styles.timerChipText,
-                          timerDuration === value && styles.timerChipTextSelected,
-                        ]}
-                      >
-                        {value === 0
-                          ? t('create.timerOff')
-                          : formatTimerChipLabel(value)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
-
-            <View style={styles.switchRow}>
-              <View style={styles.switchLabelCol}>
-                <Text style={styles.switchTitle}>{t('create.switchUnanimousTitle')}</Text>
-                <Text style={styles.switchSub}>{t('create.switchUnanimousSub')}</Text>
-              </View>
-              <Switch
-                value={requireUnanimousKeepBrowsing}
-                onValueChange={setRequireUnanimousKeepBrowsing}
-                trackColor={{ true: colors.primary + 'AA', false: colors.border }}
-                thumbColor={colors.surfaceElevated}
-              />
-            </View>
-
-            <View style={styles.switchRow}>
-              <View style={styles.switchLabelCol}>
-                <Text style={styles.switchTitle}>{t('create.switchLobbyTitle')}</Text>
-                <Text style={styles.switchSub}>{t('create.switchLobbySub')}</Text>
-              </View>
-              <Switch
-                value={requireLobbyReady}
-                onValueChange={setRequireLobbyReady}
-                trackColor={{ true: colors.primary + 'AA', false: colors.border }}
-                thumbColor={colors.surfaceElevated}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Filter Toggle */}
-        {!sessionCode && (
-          <View style={styles.filterBlock}>
-            <TouchableOpacity
-              style={styles.filterToggle}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setShowFilters(!showFilters);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.filterToggleText}>
-                {t('create.filters')}
-                {activeFilterCount > 0 && (
-                  <Text style={styles.filterBadge}> ({activeFilterCount})</Text>
+                      tintColor={colors.primary}
+                    />
+                  </>
                 )}
-              </Text>
-              <Text style={styles.filterToggleArrow}>
-                {showFilters ? '▲' : '▼'}
-              </Text>
-            </TouchableOpacity>
-
-            {showFilters && (
-              <View style={styles.filterSection}>
-                <FilterPicker filters={filters} onChange={setFilters} />
               </View>
-            )}
-          </View>
+            </View>
+
+            <View style={styles.group}>
+              <View style={styles.card}>
+                <View style={styles.switchRow}>
+                  <View style={styles.switchLabelCol}>
+                    <Text style={styles.rowTitle}>{t('create.switchUnanimousTitle')}</Text>
+                    <Text style={styles.hint}>{t('create.switchUnanimousSub')}</Text>
+                  </View>
+                  <Switch
+                    value={requireUnanimousKeepBrowsing}
+                    onValueChange={setRequireUnanimousKeepBrowsing}
+                    trackColor={{ true: colors.primary, false: undefined }}
+                  />
+                </View>
+                <View style={[styles.separator, styles.separatorInset]} />
+                <View style={styles.switchRow}>
+                  <View style={styles.switchLabelCol}>
+                    <Text style={styles.rowTitle}>{t('create.switchLobbyTitle')}</Text>
+                    <Text style={styles.hint}>{t('create.switchLobbySub')}</Text>
+                  </View>
+                  <Switch
+                    value={requireLobbyReady}
+                    onValueChange={setRequireLobbyReady}
+                    trackColor={{ true: colors.primary, false: undefined }}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.group}>
+              <View style={styles.card}>
+                <Pressable
+                  style={({ pressed }) => [styles.disclosureRow, pressed && styles.rowPressed]}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setShowFilters((v) => !v);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: showFilters }}
+                >
+                  <Text style={styles.rowTitle}>{t('create.filters')}</Text>
+                  <View style={styles.disclosureEnd}>
+                    {activeFilterCount > 0 && (
+                      <View style={styles.countPill}>
+                        <Text style={styles.countPillText}>{activeFilterCount}</Text>
+                      </View>
+                    )}
+                    <Animated.View style={chevronStyle}>
+                      <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+                    </Animated.View>
+                  </View>
+                </Pressable>
+
+                {showFilters && (
+                  <Animated.View entering={FadeIn.duration(180)} style={styles.filterSection}>
+                    <FilterPicker filters={filters} onChange={setFilters} />
+                  </Animated.View>
+                )}
+              </View>
+            </View>
+          </>
         )}
 
-        {!sessionCode ? (
-          <Button
-            title={t('create.createBtn')}
-            onPress={handleCreate}
-            variant="primary"
-            size="lg"
-            fullWidth
-            disabled={!displayName.trim()}
-          />
-        ) : (
-          <Animated.View
-            style={[styles.codeContainer, { transform: [{ scale: codeAnim }] }]}
-          >
+        {sessionCode && (
+          <Animated.View entering={codeEnter} style={[styles.card, styles.codeCard]}>
             <Text style={styles.codeLabel}>{t('create.sessionCode')}</Text>
-            <Text style={styles.codeValue}>{sessionCode}</Text>
+            <View style={styles.codeRow}>
+              <Text style={styles.codeValue} selectable accessibilityLabel={sessionCode.split('').join(' ')}>
+                {sessionCode}
+              </Text>
+              <GlassIconButton
+                systemImage="square.and.arrow.up"
+                accessibilityLabel={t('create.shareCode')}
+                onPress={handleShare}
+                size={40}
+              />
+            </View>
 
             {session && (
               <Text style={styles.modeSelectedLine}>
@@ -331,274 +330,240 @@ export default function CreateSessionScreen() {
               </Text>
             )}
 
+            <View style={styles.separator} />
+
             {isLoadingRestaurants ? (
-              <View style={styles.loadingSection}>
+              <View style={styles.statusRow}>
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.loadingText}>{t('create.findingRestaurants')}</Text>
-                {userLocation?.city && (
-                  <Text style={styles.locationText}>
-                    📍 {userLocation.city}
-                  </Text>
-                )}
+                <Text style={styles.statusText}>{t('create.findingRestaurants')}</Text>
               </View>
             ) : (
-              <View style={styles.readySection}>
-                {userLocation?.city && (
-                  <View style={styles.locationBadge}>
-                    <Text style={styles.locationBadgeText}>
-                      📍 {userLocation.city}
-                    </Text>
-                  </View>
-                )}
-
+              <Animated.View entering={FadeIn.duration(200)} style={styles.readySection}>
                 <Text style={styles.restaurantCountText}>
                   {t('create.restaurantsFound', { count: restaurantCount })}
                 </Text>
-
-                {sourceCounts && (
-                  <View style={styles.sourceRow}>
-                    {sourceCounts.wolt && (
-                      <View style={[styles.sourceBadge, { backgroundColor: '#00C2E8' + '22' }]}>
-                        <Text style={[styles.sourceBadgeText, { color: '#00A8D0' }]}>
-                          Wolt · {sourceCounts.wolt}
-                        </Text>
-                      </View>
-                    )}
-                    {sourceCounts.tenbis && (
-                      <View style={[styles.sourceBadge, { backgroundColor: '#FF6900' + '22' }]}>
-                        <Text style={[styles.sourceBadgeText, { color: '#E05E00' }]}>
-                          10bis · {sourceCounts.tenbis}
-                        </Text>
-                      </View>
-                    )}
-                    {sourceCounts.google && (
-                      <View style={[styles.sourceBadge, { backgroundColor: '#4285F4' + '22' }]}>
-                        <Text style={[styles.sourceBadgeText, { color: '#3B78DC' }]}>
-                          Google · {sourceCounts.google}
-                        </Text>
-                      </View>
-                    )}
-                    {sourceCounts.mock && (
-                      <View style={[styles.sourceBadge, { backgroundColor: colors.primaryMuted }]}>
-                        <Text style={[styles.sourceBadgeText, { color: colors.primary }]}>
-                          {t('create.sourceSample')} · {sourceCounts.mock}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {loadError && (
-                  <Text style={styles.errorText}>{loadError}</Text>
-                )}
-              </View>
+                <View style={styles.sourceRow}>
+                  {userLocation?.city && (
+                    <View style={styles.sourceBadge}>
+                      <Ionicons name="location" size={12} color={colors.textSecondary} />
+                      <Text style={styles.sourceBadgeText}>{userLocation.city}</Text>
+                    </View>
+                  )}
+                  {sourceCounts?.wolt ? (
+                    <View style={styles.sourceBadge}>
+                      <Text style={styles.sourceBadgeText}>Wolt · {sourceCounts.wolt}</Text>
+                    </View>
+                  ) : null}
+                  {sourceCounts?.tenbis ? (
+                    <View style={styles.sourceBadge}>
+                      <Text style={styles.sourceBadgeText}>10bis · {sourceCounts.tenbis}</Text>
+                    </View>
+                  ) : null}
+                  {sourceCounts?.google ? (
+                    <View style={styles.sourceBadge}>
+                      <Text style={styles.sourceBadgeText}>Google · {sourceCounts.google}</Text>
+                    </View>
+                  ) : null}
+                  {sourceCounts?.mock ? (
+                    <View style={styles.sourceBadge}>
+                      <Text style={styles.sourceBadgeText}>
+                        {t('create.sourceSample')} · {sourceCounts.mock}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                {loadError && <Text style={styles.errorText}>{loadError}</Text>}
+              </Animated.View>
             )}
-
-            <View style={styles.codeActions}>
-              <Button
-                title={t('create.shareCode')}
-                onPress={handleShare}
-                variant="secondary"
-                size="md"
-              />
-              <Button
-                title={isReady ? t('create.letsGo') : t('common.loading')}
-                onPress={handleStart}
-                variant="primary"
-                size="lg"
-                fullWidth
-                disabled={!isReady}
-                loading={isLoadingRestaurants}
-              />
-            </View>
           </Animated.View>
         )}
-      </Animated.View>
       </ScrollView>
+
+      {/* Floating action bar — content scrolls underneath the glass */}
+      <View
+        pointerEvents="box-none"
+        style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
+      >
+        {!sessionCode ? (
+          <GlassButton
+            title={t('create.createBtn')}
+            onPress={handleCreate}
+            disabled={!displayName.trim()}
+          />
+        ) : (
+          <GlassButton
+            title={isReady ? plain(t('create.letsGo')) : t('common.loading')}
+            onPress={handleStart}
+            disabled={!isReady}
+            loading={isLoadingRestaurants}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  header: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+    alignItems: 'flex-start',
+  },
   scrollView: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
-  content: { flex: 1, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl },
-  backButton: { marginBottom: spacing.lg, alignSelf: 'flex-start' },
-  backText: { ...typography.bodyMedium, color: colors.textSecondary },
+  content: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.lg,
+  },
   pageTitle: {
     ...typography.heroTitle,
     color: colors.text,
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 34,
+    lineHeight: 40,
+    paddingHorizontal: spacing.xs,
   },
   pageSub: {
     ...typography.body,
     color: colors.textSecondary,
     marginTop: spacing.xs,
-    marginBottom: spacing.xl,
     lineHeight: 22,
+    paddingHorizontal: spacing.xs,
   },
-  form: { gap: spacing.lg, marginBottom: spacing.lg },
-  settingsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
-  },
-  settingsSectionLabel: {
-    ...typography.bodySemiBold,
-    color: colors.text,
-  },
-  settingsGap: {
-    marginTop: spacing.sm,
-  },
-  timerChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  timerChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  timerChipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  timerChipText: {
+
+  // Grouped, inset sections — the iOS Settings rhythm
+  group: { gap: spacing.sm },
+  groupLabel: {
     ...typography.captionMedium,
     color: colors.textSecondary,
+    paddingHorizontal: spacing.md,
   },
-  timerChipTextSelected: {
-    color: colors.primaryDark,
-    fontWeight: '700',
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    ...continuous,
+    overflow: 'hidden',
   },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+  cardPadded: {
+    padding: spacing.md,
+    gap: spacing.sm + 2,
   },
-  switchLabelCol: { flex: 1, gap: 4 },
-  switchTitle: {
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+    alignSelf: 'stretch',
+  },
+  separatorInset: {
+    marginStart: spacing.md,
+  },
+  rowTitle: {
     ...typography.bodySemiBold,
     color: colors.text,
-    fontSize: 15,
+    fontSize: 16,
   },
-  switchSub: {
+  hint: {
     ...typography.caption,
     color: colors.textMuted,
     lineHeight: 18,
   },
-  inputGroup: { gap: spacing.sm },
-  label: { ...typography.bodySemiBold, color: colors.text },
+
   input: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
     ...typography.body,
     color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  codeContainer: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-    ...shadows.lg,
-  },
-  codeLabel: { ...typography.label, color: colors.textMuted, fontSize: 10 },
-  codeValue: {
-    ...typography.heroTitle,
-    color: colors.primary,
-    fontSize: 40,
-    letterSpacing: 8,
-  },
-  modeSelectedLine: {
-    ...typography.bodySemiBold,
-    color: colors.primary,
-    textAlign: 'center',
-  },
-
-  loadingSection: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
-  loadingText: { ...typography.captionMedium, color: colors.textSecondary },
-  locationText: { ...typography.caption, color: colors.textMuted },
-
-  readySection: { alignItems: 'center', gap: spacing.sm },
-  locationBadge: {
-    backgroundColor: colors.primaryMuted,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.full,
+    paddingVertical: 14,
+    textAlign: 'auto',
   },
-  locationBadgeText: { ...typography.captionMedium, color: colors.primary },
-  restaurantCountText: {
-    ...typography.bodySemiBold,
-    color: colors.text,
-  },
-  sourceRow: {
+
+  switchRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  sourceBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
-  },
-  sourceBadgeText: { ...typography.captionMedium, fontSize: 11 },
-  errorText: { ...typography.caption, color: colors.warning, textAlign: 'center' },
-
-  codeActions: { width: '100%', gap: spacing.md, alignItems: 'center', marginTop: spacing.sm },
-
-  filterBlock: {
-    marginBottom: spacing.lg,
+    alignItems: 'center',
     gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
   },
-  filterToggle: {
+  switchLabelCol: { flex: 1, gap: 2 },
+
+  disclosureRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 16,
   },
-  filterToggleText: {
-    ...typography.bodySemiBold,
-    color: colors.text,
+  rowPressed: { backgroundColor: colors.borderLight },
+  disclosureEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  countPill: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 7,
+    borderRadius: 11,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  filterBadge: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  filterToggleArrow: {
+  countPillText: {
+    ...typography.captionMedium,
+    color: colors.textInverse,
     fontSize: 12,
-    color: colors.textMuted,
+    lineHeight: 16,
+    fontVariant: ['tabular-nums'],
   },
   filterSection: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+
+  codeCard: {
+    alignItems: 'center',
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
+    gap: spacing.md,
+  },
+  codeLabel: { ...typography.captionMedium, color: colors.textSecondary },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  codeValue: {
+    ...typography.heroTitle,
+    color: colors.text,
+    fontSize: 44,
+    lineHeight: 50,
+    letterSpacing: 6,
+    fontVariant: ['tabular-nums'],
+  },
+  modeSelectedLine: {
+    ...typography.captionMedium,
+    color: colors.primaryDark,
+    textAlign: 'center',
+  },
+
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
+  statusText: { ...typography.captionMedium, color: colors.textSecondary },
+
+  readySection: { alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
+  restaurantCountText: { ...typography.bodySemiBold, color: colors.text },
+  sourceRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'center',
+  },
+  sourceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.background,
+  },
+  sourceBadgeText: { ...typography.captionMedium, fontSize: 12, color: colors.textSecondary },
+  errorText: { ...typography.caption, color: colors.warning, textAlign: 'center' },
+
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
   },
 });
