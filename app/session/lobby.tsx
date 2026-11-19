@@ -1,19 +1,19 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Animated,
   Alert,
+  ScrollView,
+  Share,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { spacing, borderRadius } from '../../src/theme/spacing';
-import { Button } from '../../src/components/ui/Button';
+import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
+import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
 import { UserList } from '../../src/components/UserList';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -22,9 +22,12 @@ import { useParticipantNoticeAlert } from '../../src/hooks/useParticipantNoticeA
 import { SESSION, getPlayRouteForGameMode } from '../../src/utils/constants';
 import { useTranslation } from '../../src/i18n/t';
 
+const plain = (s: string) => s.replace(/[→←✓🚀]/g, '').trim();
+
 export default function LobbyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useUserStore();
   const initAuth = useSessionStore((s) => s.initAuth);
   const firebaseUid = useSessionStore((s) => s.firebaseUid);
@@ -32,7 +35,6 @@ export default function LobbyScreen() {
   const toggleLobbyReady = useSessionStore((s) => s.toggleLobbyReady);
   const { session, startSwiping } = useSessionStore();
   useParticipantNoticeAlert();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     void initAuth();
@@ -49,14 +51,6 @@ export default function LobbyScreen() {
       router.replace('/');
     }
   }, [session, router]);
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   if (!session) {
     return null;
@@ -90,6 +84,12 @@ export default function LobbyScreen() {
     router.replace('/');
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({ message: t('create.shareMessage', { code: session.code }) });
+    } catch {}
+  };
+
   const isHost =
     !isFirebaseConfigured() || (myUid != null && session.hostId === myUid);
   const canStart = session.users.length >= SESSION.MIN_USERS;
@@ -98,6 +98,7 @@ export default function LobbyScreen() {
     !session.requireLobbyReady ||
     session.users.every((u) => readySet.has(u.id));
   const imReady = readySet.has(myUid);
+  const readyCount = session.users.filter((u) => readySet.has(u.id)).length;
 
   const formatTimer = (sec: number) => {
     if (sec <= 0) return t('lobby.timerOff');
@@ -108,78 +109,102 @@ export default function LobbyScreen() {
       : t('lobby.timerMmSs', { m, s: s.toString().padStart(2, '0') });
   };
 
+  const status = !canStart
+    ? t('lobby.waitNeedPlayers', { min: SESSION.MIN_USERS })
+    : !allReady
+      ? `${readyCount}/${session.users.length} · ${t('lobby.btnWaitAll')}`
+      : isHost
+        ? t('lobby.waitHostCanStart')
+        : t('lobby.waitGuest');
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={handleLeaveLobby} hitSlop={12}>
-            <Text style={styles.leaveText}>{t('common.leave')}</Text>
-          </TouchableOpacity>
-          <View style={styles.codePill}>
-            <Text style={styles.codeValue}>{session.code}</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.topBar}>
+        <GlassIconButton
+          systemImage="xmark"
+          accessibilityLabel={plain(t('common.leave'))}
+          onPress={handleLeaveLobby}
+        />
+        <GlassIconButton
+          systemImage="square.and.arrow.up"
+          accessibilityLabel={t('create.shareCode')}
+          onPress={handleShare}
+        />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: 180 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.codeBlock}>
+          <Text style={styles.codeLabel}>{t('lobby.title')}</Text>
+          <Text
+            style={styles.codeValue}
+            selectable
+            accessibilityLabel={session.code.split('').join(' ')}
+          >
+            {session.code}
+          </Text>
+          <View style={styles.metaRow}>
+            <MetaChip label={modeLabel} />
+            <MetaChip label={`${session.restaurants.length} ${t('lobby.spots')}`} />
+            <MetaChip label={formatTimer(session.timerDuration)} />
           </View>
         </View>
 
-        <Text style={styles.metaLine}>
-          {session.users.length} {t('lobby.players')} · {session.restaurants.length}{' '}
-          {t('lobby.spots')} · {formatTimer(session.timerDuration)}
-        </Text>
-        <Text style={styles.modeLine}>
-          {t('lobby.modeActive', { mode: modeLabel })}
-        </Text>
-
-        <View style={styles.players}>
-          <UserList users={session.users} />
+        <View style={styles.group}>
+          <View style={styles.groupHeader}>
+            <Text style={styles.groupLabel}>{t('lobby.playersSection')}</Text>
+            <Text style={styles.groupCount}>{session.users.length}</Text>
+          </View>
+          <UserList
+            users={session.users}
+            readyIds={session.requireLobbyReady ? readySet : undefined}
+          />
         </View>
+      </ScrollView>
 
+      <View
+        pointerEvents="box-none"
+        style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
+      >
+        <Text style={styles.status} accessibilityLiveRegion="polite">
+          {status}
+        </Text>
         {session.requireLobbyReady && (
-          <TouchableOpacity
-            style={[styles.readyButton, imReady && styles.readyButtonActive]}
+          <GlassButton
+            title={plain(imReady ? t('lobby.readyDone') : t('lobby.readyTap'))}
+            prominent={!imReady}
+            color={colors.accentDark}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               toggleLobbyReady(myUid);
             }}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[styles.readyButtonText, imReady && styles.readyButtonTextActive]}
-            >
-              {imReady ? t('lobby.readyDone') : t('lobby.readyTap')}
-            </Text>
-          </TouchableOpacity>
+          />
         )}
-
-        <View style={styles.footer}>
-          {isHost ? (
-            <>
-              {!canStart || (session.requireLobbyReady && !allReady) ? (
-                <Text style={styles.hint}>
-                  {!canStart
-                    ? t('lobby.waitNeedPlayers', { min: SESSION.MIN_USERS })
-                    : t('lobby.waitHostCanStart')}
-                </Text>
-              ) : null}
-              <Button
-                title={
-                  !canStart
-                    ? t('lobby.btnNeedPlayers', { min: SESSION.MIN_USERS })
-                    : session.requireLobbyReady && !allReady
-                      ? t('lobby.btnWaitAll')
-                      : t('lobby.btnStart')
-                }
-                onPress={handleStart}
-                variant="primary"
-                size="lg"
-                fullWidth
-                disabled={!canStart || (session.requireLobbyReady && !allReady)}
-              />
-            </>
-          ) : (
-            <Text style={styles.guestHint}>{t('lobby.guestHint')}</Text>
-          )}
-        </View>
-      </Animated.View>
+        {isHost && (
+          <GlassButton
+            title={
+              !canStart
+                ? t('lobby.btnNeedPlayers', { min: SESSION.MIN_USERS })
+                : !allReady
+                  ? t('lobby.btnWaitAll')
+                  : plain(t('lobby.btnStart'))
+            }
+            onPress={handleStart}
+            disabled={!canStart || !allReady}
+          />
+        )}
+      </View>
     </SafeAreaView>
+  );
+}
+
+function MetaChip({ label }: { label: string }) {
+  return (
+    <View style={styles.metaChip}>
+      <Text style={styles.metaChipText}>{label}</Text>
+    </View>
   );
 }
 
@@ -188,80 +213,82 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
   topBar: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  leaveText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
-  codePill: {
-    backgroundColor: colors.primaryMuted,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  content: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.xl,
+  },
+
+  codeBlock: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+  },
+  codeLabel: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
   },
   codeValue: {
-    ...typography.bodySemiBold,
-    color: colors.primary,
-    letterSpacing: 3,
+    ...typography.heroTitle,
+    color: colors.text,
+    fontSize: 52,
+    lineHeight: 58,
+    letterSpacing: 8,
+    fontVariant: ['tabular-nums'],
   },
-  metaLine: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: spacing.xs,
   },
-  modeLine: {
-    ...typography.captionMedium,
-    color: colors.primary,
-    marginBottom: spacing.xl,
-  },
-  players: {
-    flex: 1,
-  },
-  readyButton: {
-    alignSelf: 'stretch',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+  metaChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: borderRadius.full,
+    ...continuous,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-    alignItems: 'center',
   },
-  readyButtonActive: {
-    borderColor: colors.accent,
-    backgroundColor: 'rgba(46, 204, 113, 0.12)',
-  },
-  readyButtonText: {
-    ...typography.bodySemiBold,
+  metaChipText: {
+    ...typography.captionMedium,
     color: colors.textSecondary,
   },
-  readyButtonTextActive: {
-    color: colors.accentDark,
+
+  group: { gap: spacing.sm },
+  groupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
   },
-  footer: {
-    paddingVertical: spacing.lg,
-    gap: spacing.md,
+  groupLabel: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
   },
-  hint: {
-    ...typography.caption,
+  groupCount: {
+    ...typography.captionMedium,
     color: colors.textMuted,
-    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
-  guestHint: {
-    ...typography.body,
+
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  status: {
+    ...typography.caption,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
   },
 });

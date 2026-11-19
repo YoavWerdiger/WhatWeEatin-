@@ -34,7 +34,7 @@ export function GlassButton({
       matchContents={{ vertical: true, horizontal: !fullWidth }}
       seedColor={prominent ? color : colors.text}
       layoutDirection={I18nManager.isRTL ? 'rightToLeft' : 'leftToRight'}
-      style={[fullWidth && { width: '100%' }, style] as StyleProp<ViewStyle>}
+      style={[fullWidth && { width: '100%' }, disabled && !loading && { opacity: 0.45 }, style] as StyleProp<ViewStyle>}
     >
       <Button
         onPress={() => {

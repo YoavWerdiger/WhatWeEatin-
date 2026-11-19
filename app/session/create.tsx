@@ -171,7 +171,8 @@ export default function CreateSessionScreen() {
     if (session) {
       leaveSession(firebaseUid || authUser?.uid || user.id);
     }
-    router.back();
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   };
 
   const bottomBarHeight = 64 + Math.max(insets.bottom, spacing.md);

@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { SessionUser } from '../types';
 import { Avatar } from './ui/Avatar';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { spacing, borderRadius, shadows } from '../theme/spacing';
+import { spacing, borderRadius, continuous } from '../theme/spacing';
 
 const AVATAR_COLORS = [
   '#FF6B35', '#2ECC71', '#3498DB', '#9B59B6',
@@ -14,9 +16,11 @@ const AVATAR_COLORS = [
 interface UserListProps {
   users: SessionUser[];
   compact?: boolean;
+  /** Lobby ready-check: shows a check per player when provided. */
+  readyIds?: Set<string>;
 }
 
-export function UserList({ users, compact = false }: UserListProps) {
+export function UserList({ users, compact = false, readyIds }: UserListProps) {
   if (compact) {
     return (
       <View style={styles.compactContainer}>
@@ -36,48 +40,71 @@ export function UserList({ users, compact = false }: UserListProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} layout={LinearTransition.duration(220)}>
       {users.map((user, i) => (
-        <View key={user.id} style={styles.userRow}>
-          <Avatar
-            name={user.name}
-            color={user.avatar || AVATAR_COLORS[i % AVATAR_COLORS.length]}
-            size={44}
-            isOnline={user.isOnline}
-          />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userStatus}>
-              {user.hasFinishedSwiping
-                ? '✅ Done swiping'
-                : user.isOnline
-                ? '🟢 Online'
-                : '⚪ Offline'}
-            </Text>
-          </View>
-          {user.votesCount > 0 && (
-            <View style={styles.voteBadge}>
-              <Text style={styles.voteCount}>{user.votesCount} votes</Text>
+        // Someone joining is an occasional, meaningful event — let it arrive.
+        <Animated.View
+          key={user.id}
+          entering={FadeInDown.duration(260).withInitialValues({ transform: [{ translateY: 6 }] })}
+          exiting={FadeOut.duration(150)}
+          layout={LinearTransition.duration(220)}
+        >
+          {i > 0 && <View style={styles.separator} />}
+          <View style={styles.userRow}>
+            <Avatar
+              name={user.name}
+              color={user.avatar || AVATAR_COLORS[i % AVATAR_COLORS.length]}
+              size={40}
+              isOnline={user.isOnline}
+            />
+            <View style={styles.userInfo}>
+              <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
+              <Text style={styles.userStatus}>
+                {user.hasFinishedSwiping
+                  ? 'Done swiping'
+                  : user.isOnline
+                  ? 'Online'
+                  : 'Offline'}
+              </Text>
             </View>
-          )}
-        </View>
+            {user.votesCount > 0 && (
+              <View style={styles.voteBadge}>
+                <Text style={styles.voteCount}>{user.votesCount} votes</Text>
+              </View>
+            )}
+            {readyIds && (
+              <Ionicons
+                name={readyIds.has(user.id) ? 'checkmark-circle' : 'ellipse-outline'}
+                size={24}
+                color={readyIds.has(user.id) ? colors.accent : colors.border}
+                accessibilityLabel={readyIds.has(user.id) ? 'Ready' : 'Not ready'}
+              />
+            )}
+          </View>
+        </Animated.View>
       ))}
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    ...continuous,
+    overflow: 'hidden',
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+    marginStart: spacing.md + 40 + spacing.md,
   },
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
     gap: spacing.md,
-    ...shadows.sm,
   },
   userInfo: {
     flex: 1,
@@ -95,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryMuted,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
   },
   voteCount: {
     ...typography.captionMedium,
