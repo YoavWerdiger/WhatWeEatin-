@@ -8,13 +8,17 @@ export const spacing = {
   xxxl: 64,
 } as const;
 
+// Pair with `continuous` (iOS squircle corners) on anything with a radius.
 export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 28,
+  card: 32,
   full: 9999,
 } as const;
+
+export const continuous = { borderCurve: 'continuous' } as const;
 
 export const shadows = {
   sm: {
