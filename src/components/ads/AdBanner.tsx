@@ -91,11 +91,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   label: {
-    ...typography.captionMedium,
+    ...typography.caption2,
     color: colors.textMuted,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    fontSize: 10,
   },
   hint: {
     ...typography.caption,
@@ -108,9 +105,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   devMeta: {
-    ...typography.caption,
+    ...typography.caption2,
     color: colors.textMuted,
-    fontSize: 9,
     marginTop: 2,
   },
 });

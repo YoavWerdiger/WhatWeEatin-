@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
 import { Restaurant, VoteType } from '../types';
 import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 import { useTranslation } from '../i18n/t';
 import { borderRadius } from '../theme/spacing';
 import { SESSION, ANIMATION } from '../utils/constants';
@@ -360,15 +361,11 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '18deg' }],
   },
   likeStampText: {
-    fontSize: 38,
-    fontWeight: '900',
+    ...typography.largeTitle,
     color: colors.accent,
-    letterSpacing: 2,
   },
   nopeStampText: {
-    fontSize: 38,
-    fontWeight: '900',
+    ...typography.largeTitle,
     color: colors.danger,
-    letterSpacing: 2,
   },
 });

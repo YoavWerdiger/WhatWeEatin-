@@ -200,10 +200,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   title: {
-    ...typography.heroTitle,
+    ...typography.display,
     color: colors.text,
-    fontSize: 48,
-    lineHeight: 52,
   },
   subtitle: {
     ...typography.body,
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 12,
     borderRadius: borderRadius.full,
     gap: spacing.sm,
     ...shadows.sm,

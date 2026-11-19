@@ -32,7 +32,9 @@ export function GlassButton({
   return (
     <Host
       matchContents={{ vertical: true, horizontal: !fullWidth }}
-      seedColor={prominent ? color : colors.text}
+      // glassProminent always draws a white label, so tint with the deeper orange
+      // (white on it is 5.2:1; on the bright brand orange only 2.8:1).
+      seedColor={prominent ? (color === colors.primary ? colors.primaryDark : color) : colors.text}
       layoutDirection={I18nManager.isRTL ? 'rightToLeft' : 'leftToRight'}
       style={[fullWidth && { width: '100%' }, disabled && !loading && { opacity: 0.45 }, style] as StyleProp<ViewStyle>}
     >
@@ -51,7 +53,13 @@ export function GlassButton({
       >
         <HStack spacing={8} modifiers={[frame(fullWidth ? { maxWidth: FILL } : {})]}>
           {loading ? <ProgressView /> : null}
-          <Text modifiers={[font({ weight: 'semibold', size: 17 })]}>{title}</Text>
+          <Text
+            modifiers={[
+              font({ weight: 'semibold', size: 17 }),
+            ]}
+          >
+            {title}
+          </Text>
         </HStack>
       </Button>
     </Host>

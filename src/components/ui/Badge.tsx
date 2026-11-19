@@ -28,7 +28,7 @@ export function Badge({ text, variant = 'default' }: BadgeProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.sm + 2,
+    paddingHorizontal: 12,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },

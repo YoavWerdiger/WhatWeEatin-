@@ -418,10 +418,8 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   pageTitle: {
-    ...typography.heroTitle,
+    ...typography.largeTitle,
     color: colors.text,
-    fontSize: 34,
-    lineHeight: 40,
     paddingHorizontal: spacing.xs,
   },
   pageSub: {
@@ -447,7 +445,7 @@ const styles = StyleSheet.create({
   },
   cardPadded: {
     padding: spacing.md,
-    gap: spacing.sm + 2,
+    gap: 12,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
@@ -458,9 +456,8 @@ const styles = StyleSheet.create({
     marginStart: spacing.md,
   },
   rowTitle: {
-    ...typography.bodySemiBold,
+    ...typography.body,
     color: colors.text,
-    fontSize: 16,
   },
   hint: {
     ...typography.caption,
@@ -472,7 +469,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 12,
     textAlign: 'auto',
   },
 
@@ -481,7 +478,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   switchLabelCol: { flex: 1, gap: 2 },
 
@@ -497,18 +494,17 @@ const styles = StyleSheet.create({
   countPill: {
     minWidth: 22,
     height: 22,
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
     borderRadius: 11,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   countPillText: {
-    ...typography.captionMedium,
-    color: colors.textInverse,
-    fontSize: 12,
-    lineHeight: 16,
+    ...typography.caption1,
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
+    color: colors.onPrimary,
   },
   filterSection: {
     paddingHorizontal: spacing.md,
@@ -523,12 +519,10 @@ const styles = StyleSheet.create({
   codeLabel: { ...typography.captionMedium, color: colors.textSecondary },
   codeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   codeValue: {
-    ...typography.heroTitle,
+    ...typography.code,
+    fontSize: 40,
+    lineHeight: 48,
     color: colors.text,
-    fontSize: 44,
-    lineHeight: 50,
-    letterSpacing: 6,
-    fontVariant: ['tabular-nums'],
   },
   modeSelectedLine: {
     ...typography.captionMedium,
@@ -544,19 +538,19 @@ const styles = StyleSheet.create({
   sourceRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
     justifyContent: 'center',
   },
   sourceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
     backgroundColor: colors.background,
   },
-  sourceBadgeText: { ...typography.captionMedium, fontSize: 12, color: colors.textSecondary },
+  sourceBadgeText: { ...typography.footnote, color: colors.textSecondary },
   errorText: { ...typography.caption, color: colors.warning, textAlign: 'center' },
 
   bottomBar: {

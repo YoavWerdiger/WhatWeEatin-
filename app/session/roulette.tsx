@@ -325,14 +325,11 @@ const styles = StyleSheet.create({
   },
   codeValue: {
     ...typography.bodySemiBold,
-    color: colors.primary,
-    letterSpacing: 3,
+    color: colors.primaryDark,
   },
   title: {
-    ...typography.heroTitle,
+    ...typography.title1,
     color: colors.text,
-    fontSize: 28,
-    lineHeight: 34,
   },
   subtitle: {
     ...typography.body,
@@ -375,9 +372,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reelName: {
-    ...typography.bodySemiBold,
+    ...typography.callout,
     color: colors.text,
-    fontSize: 16,
   },
   reelMeta: {
     ...typography.caption,
@@ -396,7 +392,7 @@ const styles = StyleSheet.create({
   },
   landedText: {
     ...typography.bodySemiBold,
-    color: colors.primary,
+    color: colors.primaryDark,
     textAlign: 'center',
     marginTop: spacing.lg,
   },

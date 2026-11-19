@@ -3,15 +3,6 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, ActivityIndicator, View } from 'react-native';
-import {
-  useFonts,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
-  Inter_900Black,
-} from '@expo-google-fonts/inter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { colors } from '../src/theme/colors';
 import { useAuthStore } from '../src/store/authStore';
@@ -56,15 +47,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const initAuth = useAuthStore((s) => s.init);
 
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    Inter_900Black,
-  });
-
   useEffect(() => {
     const unsubscribe = initAuth();
     return unsubscribe;
@@ -81,8 +63,6 @@ export default function RootLayout() {
   useEffect(() => {
     void initializeAds();
   }, []);
-
-  if (!fontsLoaded) return null;
 
   return (
     <QueryClientProvider client={queryClient}>

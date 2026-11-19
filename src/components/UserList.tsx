@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   voteCount: {
     ...typography.captionMedium,
-    color: colors.primary,
+    color: colors.primaryDark,
   },
 
   compactContainer: {

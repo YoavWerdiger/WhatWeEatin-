@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Restaurant, RestaurantSource } from '../types';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -10,6 +11,7 @@ import { PRICE_LABELS } from '../utils/constants';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export const CARD_WIDTH = SCREEN_WIDTH - spacing.lg * 2;
 export const CARD_HEIGHT = CARD_WIDTH * 1.35;
+const META_ICON = 'rgba(255,255,255,0.85)';
 
 const SOURCE_CONFIG: Record<RestaurantSource, { label: string; color: string; bg: string }> = {
   wolt: { label: 'Wolt', color: '#00A8D0', bg: 'rgba(0,200,232,0.25)' },
@@ -75,24 +77,24 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
 
           <View style={styles.metaRow}>
             <View style={styles.metaChip}>
-              <Text style={styles.metaEmoji}>🕐</Text>
+              <Ionicons name="time-outline" size={14} color={META_ICON} />
               <Text style={styles.metaText}>{restaurant.deliveryTime}</Text>
             </View>
             <View style={styles.metaChip}>
-              <Text style={styles.metaEmoji}>💰</Text>
+              <Ionicons name="wallet-outline" size={14} color={META_ICON} />
               <Text style={styles.metaText}>
                 {PRICE_LABELS[restaurant.priceLevel]}
               </Text>
             </View>
             {restaurant.deliveryFee && (
               <View style={styles.metaChip}>
-                <Text style={styles.metaEmoji}>🚚</Text>
+                <Ionicons name="bicycle-outline" size={14} color={META_ICON} />
                 <Text style={styles.metaText}>{restaurant.deliveryFee}</Text>
               </View>
             )}
             {!restaurant.deliveryFee && restaurant.distance && (
               <View style={styles.metaChip}>
-                <Text style={styles.metaEmoji}>📍</Text>
+                <Ionicons name="location-outline" size={14} color={META_ICON} />
                 <Text style={styles.metaText}>{restaurant.distance}</Text>
               </View>
             )}
@@ -121,15 +123,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 14,
     right: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 8,
     zIndex: 5,
   },
   sourceText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    ...typography.caption1,
+    fontWeight: '600',
   },
   gradient: {
     ...StyleSheet.absoluteFill,
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   infoContainer: {
-    gap: 6,
+    gap: 8,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -147,21 +148,21 @@ const styles = StyleSheet.create({
   },
   cuisineBadge: {
     backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
   },
   cuisineText: {
-    ...typography.captionMedium,
+    ...typography.caption1,
+    fontWeight: '500',
     color: '#FFFFFF',
-    fontSize: 12,
   },
   openBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: 'rgba(46,204,113,0.22)',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
   },
@@ -172,34 +173,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#2ECC71',
   },
   openText: {
-    ...typography.captionMedium,
+    ...typography.caption1,
+    fontWeight: '500',
     color: '#2ECC71',
-    fontSize: 12,
   },
   name: {
-    ...typography.title,
+    ...typography.title1,
     color: '#FFFFFF',
-    fontSize: 26,
-    lineHeight: 30,
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   stars: {
+    ...typography.footnote,
     color: '#FFD700',
-    fontSize: 14,
-    letterSpacing: 1,
   },
   ratingNum: {
-    ...typography.bodySemiBold,
+    ...typography.subheadline,
+    fontWeight: '600',
     color: '#FFFFFF',
-    fontSize: 15,
   },
   separator: {
+    ...typography.subheadline,
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 14,
   },
   reviewCount: {
     ...typography.caption,
@@ -207,7 +205,7 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 4,
   },
   metaChip: {
@@ -219,12 +217,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-  metaEmoji: {
-    fontSize: 12,
-  },
   metaText: {
-    ...typography.captionMedium,
+    ...typography.caption1,
+    fontWeight: '500',
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 12,
   },
 });

@@ -267,10 +267,10 @@ export function MatchAnimation({
                 {result.restaurant.deliveryTime}
                 {` · ${PRICE_LABELS[result.restaurant.priceLevel] ?? '$$'}`}
                 {result.restaurant.deliveryFee
-                  ? ` · 🚚 ${result.restaurant.deliveryFee}`
+                  ? ` · ${result.restaurant.deliveryFee}`
                   : ''}
                 {result.restaurant.distance
-                  ? ` · 📍 ${result.restaurant.distance}`
+                  ? ` · ${result.restaurant.distance}`
                   : ''}
                 {result.restaurant.minimumOrder
                   ? ` · min ${result.restaurant.minimumOrder}`
@@ -462,14 +462,11 @@ const styles = StyleSheet.create({
     width: CONTENT_WIDTH,
   },
   matchTitle: {
-    ...typography.heroTitle,
+    ...typography.largeTitle,
     color: '#FFFFFF',
     textAlign: 'center',
-    fontSize: 34,
-    lineHeight: 40,
-    letterSpacing: -0.8,
     marginBottom: spacing.lg,
-    // clear the floating close button on both sides
+    // clear the floating close button on both sides,
     paddingHorizontal: 44,
   },
   restaurantCard: {
@@ -486,7 +483,7 @@ const styles = StyleSheet.create({
   },
   restaurantInfo: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 12,
     gap: 2,
   },
   nameRow: {
@@ -502,8 +499,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   sourceBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
+    ...typography.caption2,
+    fontWeight: '600',
     color: colors.primary,
   },
   restaurantName: {
@@ -522,7 +519,7 @@ const styles = StyleSheet.create({
   },
   agreedUsers: {
     alignItems: 'center',
-    gap: spacing.xs + 2,
+    gap: spacing.sm,
   },
   agreedTitle: {
     ...typography.bodyMedium,
@@ -540,7 +537,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     width: '100%',
-    gap: spacing.xs + 2,
+    gap: spacing.sm,
     alignItems: 'center',
   },
   unanimousBox: {
@@ -548,15 +545,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
-    gap: spacing.xs + 2,
+    gap: spacing.sm,
   },
   unanimousTitle: {
-    ...typography.bodySemiBold,
+    ...typography.subheadline,
+    fontWeight: '600',
     color: '#FFFFFF',
-    fontSize: 15,
     textAlign: 'center',
   },
   unanimousHint: {
@@ -577,8 +574,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unanimousChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
     backgroundColor: 'rgba(255,255,255,0.12)',
     maxWidth: '100%',
@@ -589,9 +586,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(46, 204, 113, 0.5)',
   },
   unanimousChipText: {
-    ...typography.captionMedium,
+    ...typography.caption1,
+    fontWeight: '500',
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 12,
   },
   unanimousChipTextDone: {
     color: '#B8F5D0',

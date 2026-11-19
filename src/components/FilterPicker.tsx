@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   expandToggleText: {
-    ...typography.captionMedium,
-    color: colors.primary,
-    fontSize: 13,
+    ...typography.footnote,
+    fontWeight: '500',
+    color: colors.primaryDark,
   },
   chip: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
@@ -256,12 +256,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   chipText: {
-    ...typography.captionMedium,
+    ...typography.subheadline,
     color: colors.textSecondary,
-    fontSize: 14,
   },
   chipTextSelected: {
-    color: colors.primary,
+    color: colors.primaryDark,
     fontWeight: '600',
   },
 
@@ -272,7 +271,7 @@ const styles = StyleSheet.create({
   priceChip: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
@@ -284,17 +283,16 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   priceLabel: {
-    ...typography.bodySemiBold,
+    ...typography.subheadline,
+    fontWeight: '600',
     color: colors.textMuted,
-    fontSize: 14,
   },
   priceLabelActive: {
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   priceDesc: {
-    ...typography.caption,
+    ...typography.caption2,
     color: colors.textMuted,
-    fontSize: 10,
   },
   priceDescActive: {
     color: colors.primaryDark,

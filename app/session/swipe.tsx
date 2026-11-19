@@ -473,12 +473,12 @@ const styles = StyleSheet.create({
   closeIcon: {
     fontSize: 16,
     color: colors.textSecondary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   cardCounter: {
     backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: borderRadius.sm,
     ...shadows.sm,
   },
@@ -488,9 +488,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   counterText: {
-    ...typography.bodySemiBold,
+    ...typography.subheadline,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
     color: colors.text,
-    fontSize: 14,
   },
   counterTotal: {
     color: colors.textMuted,
@@ -528,8 +529,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   shortlistTitleBold: {
-    ...typography.subtitle,
-    fontSize: 22,
+    ...typography.title2,
     color: colors.text,
     textAlign: 'center',
   },
@@ -551,13 +551,12 @@ const styles = StyleSheet.create({
     ...shadows.md,
   },
   duelCtaTitle: {
-    ...typography.button,
-    color: colors.textInverse,
-    fontSize: 18,
+    ...typography.headline,
+    color: colors.onPrimary,
   },
   duelCtaHint: {
     ...typography.caption,
-    color: 'rgba(255,255,255,0.88)',
+    color: 'rgba(28,28,30,0.8)',
     textAlign: 'center',
   },
   orDivider: {
@@ -571,12 +570,9 @@ const styles = StyleSheet.create({
     ...typography.captionMedium,
     color: colors.superlike,
     textAlign: 'center',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   duelTitle: {
-    ...typography.title,
-    fontSize: 24,
+    ...typography.title2,
     textAlign: 'center',
     color: colors.text,
   },
@@ -611,28 +607,23 @@ const styles = StyleSheet.create({
     borderColor: colors.superlike + '99',
   },
   duelVs: {
-    ...typography.captionMedium,
+    ...typography.caption1,
+    fontWeight: '500',
     color: colors.textMuted,
     marginBottom: spacing.xs,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
   },
   duelName: {
-    ...typography.bodySemiBold,
-    fontSize: 16,
+    ...typography.headline,
     color: colors.text,
-    lineHeight: 22,
   },
   duelCuisine: {
     ...typography.caption,
     color: colors.textMuted,
-    marginTop: 6,
+    marginTop: 4,
   },
   vsGlyph: {
+    ...typography.headline,
     alignSelf: 'center',
-    fontFamily: fontFamilies.black,
-    fontSize: 18,
     color: colors.textMuted,
   },
   duelCancel: {
@@ -645,8 +636,8 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   shortlistTitle: {
-    ...typography.bodySemiBold,
-    fontSize: 15,
+    ...typography.subheadline,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
   },
@@ -665,8 +656,7 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   shortlistName: {
-    ...typography.subtitle,
-    fontSize: 17,
+    ...typography.headline,
     color: colors.text,
   },
   shortlistMeta: {

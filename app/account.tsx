@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   back: { marginBottom: spacing.lg },
   backText: { ...typography.bodyMedium, color: colors.textSecondary },
-  title: { ...typography.heroTitle, color: colors.text, fontSize: 32, marginBottom: spacing.xl },
+  title: { ...typography.largeTitle, color: colors.text, marginBottom: spacing.xl },
   card: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
@@ -126,15 +126,15 @@ const styles = StyleSheet.create({
   value: { ...typography.bodySemiBold, color: colors.text, marginTop: 4 },
   badge: {
     alignSelf: 'flex-start',
-    marginTop: 6,
+    marginTop: 4,
     backgroundColor: colors.primaryMuted,
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
   },
   badgeText: {
     ...typography.captionMedium,
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   langCard: {
     backgroundColor: colors.surface,
@@ -177,6 +177,6 @@ const styles = StyleSheet.create({
   },
   langCheck: {
     ...typography.bodySemiBold,
-    color: colors.primary,
+    color: colors.primaryDark,
   },
 });

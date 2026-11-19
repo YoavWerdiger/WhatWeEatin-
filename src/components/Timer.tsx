@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
+import { typography, fontFamilies } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
 
 interface TimerProps {
@@ -99,19 +99,21 @@ const styles = StyleSheet.create({
   },
   timerBadge: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
   compactBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
     minWidth: 52,
     alignItems: 'center',
   },
   timerText: {
-    ...typography.bodySemiBold,
+    ...typography.subheadline,
+    fontFamily: fontFamilies.mono,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
     color: '#FFFFFF',
-    fontSize: 14,
   },
 });

@@ -21,7 +21,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors } from '../../src/theme/colors';
-import { typography } from '../../src/theme/typography';
+import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
 import { useSessionStore } from '../../src/store/sessionStore';
@@ -224,10 +224,8 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   title: {
-    ...typography.heroTitle,
+    ...typography.largeTitle,
     color: colors.text,
-    fontSize: 34,
-    lineHeight: 40,
     paddingHorizontal: spacing.xs,
   },
   subtitle: {
@@ -252,7 +250,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
 
   // Codes read left-to-right in every locale
@@ -279,10 +277,9 @@ const styles = StyleSheet.create({
     borderColor: colors.danger,
   },
   codeChar: {
-    ...typography.title,
+    ...typography.title1,
+    fontFamily: fontFamilies.mono,
     color: colors.text,
-    fontSize: 26,
-    lineHeight: 32,
   },
   hiddenInput: {
     position: 'absolute',

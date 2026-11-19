@@ -412,9 +412,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   title: {
-    ...typography.heroTitle,
+    ...typography.largeTitle,
     color: colors.text,
-    fontSize: 32,
     textAlign: 'center',
   },
   subtitle: {
@@ -428,7 +427,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: borderRadius.full,
     gap: spacing.sm,
     borderWidth: 1,
@@ -437,7 +436,7 @@ const styles = StyleSheet.create({
   },
   googleIcon: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#4285F4',
   },
   googleText: {
@@ -491,7 +490,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 12,
     ...typography.body,
     color: colors.text,
     borderWidth: 1,
@@ -521,7 +520,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     ...typography.button,
-    color: colors.textInverse,
+    color: colors.onPrimary,
   },
 
   switchModeButton: {
@@ -530,7 +529,7 @@ const styles = StyleSheet.create({
   },
   switchModeText: {
     ...typography.bodyMedium,
-    color: colors.primary,
+    color: colors.primaryDark,
   },
 
   skipButton: {

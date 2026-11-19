@@ -77,7 +77,13 @@ export function Button({
       {loading && (
         <ActivityIndicator
           style={StyleSheet.absoluteFill}
-          color={variant === 'primary' || variant === 'danger' ? colors.textInverse : colors.primary}
+          color={
+            variant === 'primary'
+              ? colors.onPrimary
+              : variant === 'danger'
+                ? colors.textInverse
+                : colors.primaryDark
+          }
           size="small"
         />
       )}
@@ -122,7 +128,7 @@ const styles = StyleSheet.create({
 
   size_sm: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 12,
   },
   size_md: {
     paddingHorizontal: spacing.lg,
@@ -130,20 +136,20 @@ const styles = StyleSheet.create({
   },
   size_lg: {
     paddingHorizontal: spacing.xl,
-    paddingVertical: 18,
+    paddingVertical: 16,
   },
 
   text: {
     ...typography.button,
   },
   text_primary: {
-    color: colors.textInverse,
+    color: colors.onPrimary,
   },
   text_secondary: {
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   text_ghost: {
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   text_danger: {
     color: colors.textInverse,
@@ -156,6 +162,5 @@ const styles = StyleSheet.create({
   },
   text_lg: {
     ...typography.button,
-    fontSize: 18,
   },
 });
