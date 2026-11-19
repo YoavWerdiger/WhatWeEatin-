@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'flex-end',
     paddingBottom: spacing.lg + 4,
     paddingHorizontal: spacing.lg,

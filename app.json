@@ -7,12 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "whatweeatin",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.whatweeatin.app",
@@ -21,7 +15,9 @@
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["com.whatweeatin.app"]
+            "CFBundleURLSchemes": [
+              "com.whatweeatin.app"
+            ]
           }
         ],
         "LSApplicationQueriesSchemes": [
@@ -60,7 +56,17 @@
           "locationWhenInUsePermission": "Allow What We Eatin' to use your location to find restaurants that deliver to you."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "imageWidth": 200
+        }
+      ]
     ],
     "extra": {
       "eas": {
