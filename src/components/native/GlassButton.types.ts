@@ -18,5 +18,7 @@ export interface GlassIconButtonProps {
   onPress: () => void;
   accessibilityLabel: string;
   size?: number;
+  /** Icon color — use a light one over dark backgrounds. */
+  color?: string;
   style?: StyleProp<ViewStyle>;
 }

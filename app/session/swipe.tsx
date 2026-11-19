@@ -429,6 +429,7 @@ export default function SwipeScreen() {
           result={displayedMatch}
           onContinue={handleMatchContinue}
           onOrderNow={handleOrderNow}
+          onLeave={handleLeave}
           requireUnanimousKeepBrowsing={session.requireUnanimousKeepBrowsing}
           sessionUsers={session.users}
           keepBrowsingApprovedBy={session.keepBrowsingApprovedBy ?? []}

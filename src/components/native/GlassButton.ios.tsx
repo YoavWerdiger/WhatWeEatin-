@@ -64,10 +64,11 @@ export function GlassIconButton({
   onPress,
   accessibilityLabel,
   size = 44,
+  color = colors.text,
   style,
 }: GlassIconButtonProps) {
   return (
-    <Host matchContents seedColor={colors.text} style={style}>
+    <Host matchContents seedColor={color} style={style}>
       <Button
         systemImage={systemImage as SFSymbol}
         label={accessibilityLabel}

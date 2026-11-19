@@ -284,6 +284,7 @@ export default function RouletteScreen() {
           result={displayedMatch}
           onContinue={handleKeepBrowsing}
           onOrderNow={handleOrderNow}
+          onLeave={handleLeave}
           requireUnanimousKeepBrowsing={session.requireUnanimousKeepBrowsing}
           sessionUsers={session.users}
           keepBrowsingApprovedBy={session.keepBrowsingApprovedBy}

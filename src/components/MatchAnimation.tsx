@@ -16,6 +16,7 @@ import { typography } from '../theme/typography';
 import { borderRadius, spacing, shadows } from '../theme/spacing';
 import { Button } from './ui/Button';
 import { Avatar } from './ui/Avatar';
+import { GlassIconButton } from './native/GlassButton';
 import { useTranslation } from '../i18n/t';
 import { SOURCE_LABELS, PRICE_LABELS } from '../utils/constants';
 import { openRestaurantLink } from '../utils/openRestaurantLink';
@@ -27,6 +28,8 @@ interface MatchAnimationProps {
   result: MatchResult;
   onContinue: () => void;
   onOrderNow: () => void;
+  /** Leave the session from the result screen (the overlay hides the screen's own header). */
+  onLeave?: () => void;
   /** When true, show who still needs to confirm "keep browsing". */
   requireUnanimousKeepBrowsing?: boolean;
   sessionUsers?: SessionUser[];
@@ -41,6 +44,7 @@ export function MatchAnimation({
   result,
   onContinue,
   onOrderNow,
+  onLeave,
   requireUnanimousKeepBrowsing = false,
   sessionUsers = [],
   keepBrowsingApprovedBy = [],
@@ -391,14 +395,41 @@ export function MatchAnimation({
               disabled={alreadyApproved}
               style={styles.continueBtn}
             />
+            {onLeave && (
+              <Button
+                title={t('common.leave').replace(/[→←]/g, '').trim()}
+                onPress={onLeave}
+                variant="ghost"
+                size="sm"
+                textStyle={styles.leaveText}
+              />
+            )}
           </View>
         </RNAnimated.View>
       </ScrollView>
+      {onLeave && (
+        <View style={[styles.closeButton, { top: Math.max(insets.top, spacing.sm) + spacing.xs }]}>
+          <GlassIconButton
+            systemImage="xmark"
+            accessibilityLabel={t('common.leave').replace(/[→←]/g, '').trim()}
+            onPress={onLeave}
+            color="#FFFFFF"
+          />
+        </View>
+      )}
     </RNAnimated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  closeButton: {
+    position: 'absolute',
+    start: spacing.md,
+    zIndex: 10,
+  },
+  leaveText: {
+    color: 'rgba(255,255,255,0.6)',
+  },
   container: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -438,6 +469,8 @@ const styles = StyleSheet.create({
     lineHeight: 40,
     letterSpacing: -0.8,
     marginBottom: spacing.lg,
+    // clear the floating close button on both sides
+    paddingHorizontal: 44,
   },
   restaurantCard: {
     backgroundColor: colors.surface,

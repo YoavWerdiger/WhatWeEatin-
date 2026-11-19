@@ -43,6 +43,7 @@ export function GlassIconButton({
   onPress,
   accessibilityLabel,
   size = 44,
+  color = colors.text,
   style,
 }: GlassIconButtonProps) {
   return (
@@ -55,10 +56,11 @@ export function GlassIconButton({
       style={[
         styles.icon,
         { width: size, height: size, borderRadius: size / 2 },
+        color !== colors.text && styles.iconOnDark,
         style,
       ]}
     >
-      <Ionicons name={SF_TO_IONICONS[systemImage] ?? 'ellipse'} size={size * 0.45} color={colors.text} />
+      <Ionicons name={SF_TO_IONICONS[systemImage] ?? 'ellipse'} size={size * 0.45} color={color} />
     </PressableScale>
   );
 }
@@ -70,5 +72,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+  },
+  iconOnDark: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'transparent',
   },
 });
