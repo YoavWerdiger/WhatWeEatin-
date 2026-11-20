@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -80,10 +80,16 @@ export function TimeDial({
   const progress = useSharedValue(toFraction(value));
   const dragging = useSharedValue(false);
   const last = useRef(value);
+  // What the dial shows while dragging. Kept local so a tick re-renders only the
+  // dial, not the screen around it — that delay is what made the haptic feel late.
+  const [shown, setShown] = useState(value);
 
   // Follow outside changes, but never fight the finger.
   useEffect(() => {
-    if (!dragging.get()) progress.set(withSpring(toFraction(value), SETTLE));
+    if (dragging.get()) return;
+    last.current = value;
+    setShown(value);
+    progress.set(withSpring(toFraction(value), SETTLE));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
@@ -94,24 +100,33 @@ export function TimeDial({
     return Math.min(max, Math.max(min, Math.round(raw / step) * step));
   };
 
+  // Haptic first, then the smallest possible UI update.
+  const tick = useCallback((seconds: number) => {
+    if (seconds === last.current) return;
+    const crossesUnlimited = seconds === 0 || last.current === 0;
+    last.current = seconds;
+    // Ratchet: a crisp tick per step, a firmer one at the unlimited edge.
+    if (crossesUnlimited) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    else void Haptics.selectionAsync();
+    setShown(seconds);
+  }, []);
+
+  // The screen hears about the value once, when the finger lifts.
+  const release = useCallback((seconds: number) => onChange(seconds), [onChange]);
+
   const commit = useCallback(
     (seconds: number) => {
-      if (seconds === last.current) return;
-      const enteringUnlimited = seconds === 0 || last.current === 0;
-      last.current = seconds;
-      // Ratchet: a light tick per step, a firmer one at the unlimited edge.
-      if (enteringUnlimited) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      else void Haptics.selectionAsync();
+      tick(seconds);
       onChange(seconds);
     },
-    [onChange],
+    [tick, onChange],
   );
 
   // Fires only when the stepped value changes — not every frame.
   useAnimatedReaction(
     () => toSeconds(progress.get()),
     (s, prev) => {
-      if (prev !== null && s !== prev) scheduleOnRN(commit, s);
+      if (prev !== null && s !== prev) scheduleOnRN(tick, s);
     },
   );
 
@@ -134,6 +149,7 @@ export function TimeDial({
       dragging.set(false);
       const s = toSeconds(progress.get());
       progress.set(withSpring(s === 0 ? 1 : ((s - min) / (max - min)) * TIMED, SETTLE));
+      scheduleOnRN(release, s);
     });
 
   const arcProps = useAnimatedProps(() => ({ d: arcPath(progress.get()) }));
@@ -151,7 +167,7 @@ export function TimeDial({
   const minuteMarks = [];
   for (let s = 60; s <= max; s += 60) minuteMarks.push(toFraction(s));
 
-  const isUnlimited = value === 0;
+  const isUnlimited = shown === 0;
 
   return (
     <GestureDetector gesture={pan}>
@@ -160,15 +176,15 @@ export function TimeDial({
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
-        accessibilityValue={{ text: isUnlimited ? unlimitedLabel : formatClock(value) }}
+        accessibilityValue={{ text: isUnlimited ? unlimitedLabel : formatClock(shown) }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => {
           if (isUnlimited) {
             if (e.nativeEvent.actionName === 'decrement') commit(max);
             return;
           }
-          if (e.nativeEvent.actionName === 'increment') commit(value + step > max ? 0 : value + step);
-          if (e.nativeEvent.actionName === 'decrement') commit(Math.max(min, value - step));
+          if (e.nativeEvent.actionName === 'increment') commit(shown + step > max ? 0 : shown + step);
+          if (e.nativeEvent.actionName === 'decrement') commit(Math.max(min, shown - step));
         }}
       >
         <Svg width={SIZE} height={SIZE}>
@@ -202,7 +218,7 @@ export function TimeDial({
         {/* The number owns the exact centre; the caption hangs below it without pushing it up */}
         <View style={styles.center} pointerEvents="none">
           <Text style={styles.value} allowFontScaling={false}>
-            {isUnlimited ? '∞' : formatClock(value)}
+            {isUnlimited ? '∞' : formatClock(shown)}
           </Text>
         </View>
         {isUnlimited && (
