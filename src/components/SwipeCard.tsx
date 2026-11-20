@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -47,19 +47,34 @@ interface SwipeCardProps {
 export function SwipeCard({ restaurant }: SwipeCardProps) {
   const stars = '★'.repeat(Math.floor(restaurant.rating));
   const src = SOURCE_CONFIG[restaurant.source];
+  // Some sources have no photo (empty string) or a dead link — show a placeholder, not an empty card
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  const hasImage = !!restaurant.image && failedUri !== restaurant.image;
 
   return (
     <View style={styles.card}>
       {/* expo-image: memory+disk cache, so a prefetched photo shows instantly */}
-      <Image
-        source={{ uri: restaurant.image }}
-        style={styles.image}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        priority="high"
-        transition={0}
-        recyclingKey={restaurant.id}
-      />
+      {hasImage ? (
+        <Image
+          source={{ uri: restaurant.image }}
+          style={styles.image}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="high"
+          transition={0}
+          recyclingKey={restaurant.id}
+          onError={() => setFailedUri(restaurant.image)}
+        />
+      ) : (
+        <LinearGradient
+          colors={[colors.primaryLight, colors.primary, colors.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.image, styles.placeholder]}
+        >
+          <Ionicons name="restaurant" size={72} color="rgba(255,255,255,0.85)" />
+        </LinearGradient>
+      )}
 
       {restaurant.source !== 'mock' && (
         <View style={styles.sourceBadge} pointerEvents="none">
@@ -153,6 +168,11 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  placeholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: CARD_HEIGHT * 0.25,
   },
   // Centred across the top of the card
   sourceBadge: {

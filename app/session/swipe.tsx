@@ -11,6 +11,7 @@ import { Animated,
 } from 'react-native';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as ExpoImage } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -258,6 +259,20 @@ export default function SwipeScreen() {
 
   return (
     <View style={styles.root}>
+      {/* Backdrop: the current restaurant's photo, blurred (like the match screen), crossfading per card */}
+      {!isFinished && session.restaurants[currentCardIndex]?.image ? (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <ExpoImage
+            source={{ uri: session.restaurants[currentCardIndex].image }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            blurRadius={40}
+            cachePolicy="memory-disk"
+            transition={300}
+          />
+          <View style={[StyleSheet.absoluteFill, styles.backdropVeil]} />
+        </View>
+      ) : null}
       {/* Native nav bar — system Liquid Glass on iOS 26; hidden under the match overlay */}
       <Stack.Screen
         options={{
@@ -484,7 +499,8 @@ function DuelCard({
 }
 
 const styles = StyleSheet.create({
-  deck: { flex: 1 },
+  // flex:1 keeps the hidden deck in place under a match; center so the card sits mid-area, not at the top
+  deck: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   deckHidden: { opacity: 0 },
   gameControls: {
     position: 'absolute',
@@ -503,7 +519,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  // Light veil keeps the dark header text and the glass controls legible over any photo
+  backdropVeil: {
     backgroundColor: colors.background,
+    opacity: 0.55,
   },
   header: {
     flexDirection: 'row',
