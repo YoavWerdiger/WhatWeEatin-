@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useState, forwardRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -16,6 +16,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
+import { CardBack } from './CardBack';
 import { Glass } from './ui/Glass';
 import { Ionicons } from '@expo/vector-icons';
 import { Restaurant, VoteType } from '../types';
@@ -37,6 +38,7 @@ const OFFSCREEN_X = SCREEN_WIDTH * 1.4;
 const SNAP_BACK = { duration: 400, dampingRatio: 0.8 };
 const THROW = { duration: 350, dampingRatio: 1, overshootClamping: true };
 const BUTTON_SWIPE_DURATION = 320;
+const FLIP = { duration: 500, dampingRatio: 0.8 };
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
 const STACK_CARDS = SESSION.CARD_STACK_SIZE;
@@ -205,7 +207,7 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
               restaurant={restaurant}
               absIndex={currentIndex + stackIndex}
               stackIndex={stackIndex}
-              gesture={stackIndex === 0 ? panGesture : idleGesture}
+              gesture={stackIndex === 0 ? panGesture : undefined}
               likeLabel={t('swipeActions.like')}
               passLabel={t('swipeActions.pass')}
               {...shared}
@@ -217,13 +219,12 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
   },
 );
 
-const idleGesture = Gesture.Pan().enabled(false);
-
 interface DeckCardProps {
   restaurant: Restaurant;
   absIndex: number;
   stackIndex: number;
-  gesture: ReturnType<typeof Gesture.Pan>;
+  /** The swipe gesture — only the top card gets one. */
+  gesture?: ReturnType<typeof Gesture.Pan>;
   likeLabel: string;
   passLabel: string;
   translateX: SharedValue<number>;
@@ -248,6 +249,30 @@ function DeckCard({
   gone,
   reduceMotion,
 }: DeckCardProps) {
+  // Tap to turn the card over and read about the place; swiping still works either side.
+  const flip = useSharedValue(0);
+  const [flipped, setFlipped] = useState(false);
+  const onFlip = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setFlipped(true);
+  }, []);
+  const tap = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd((_e, success) => {
+      if (!success) return;
+      flip.set(withSpring(flip.get() > 0.5 ? 0 : 1, FLIP));
+      scheduleOnRN(onFlip);
+    });
+  // Each card owns its gestures; a resting card gets a disabled one.
+  const cardGesture = gesture ? Gesture.Race(gesture, tap) : Gesture.Pan().enabled(false);
+
+  const frontStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 1200 }, { rotateY: `${flip.get() * 180}deg` }],
+  }));
+  const backStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 1200 }, { rotateY: `${180 + flip.get() * 180}deg` }],
+  }));
+
   const style = useAnimatedStyle(() => {
     const topIndex = absIndex - stackIndex;
     const ownsOffsets = owner.get() === topIndex;
@@ -294,8 +319,12 @@ function DeckCard({
   });
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector gesture={cardGesture}>
       <Animated.View style={[styles.cardWrapper, style]}>
+        <Animated.View style={[styles.face, backStyle]} pointerEvents={flipped ? 'auto' : 'none'}>
+          <CardBack restaurant={restaurant} active={flipped} />
+        </Animated.View>
+        <Animated.View style={[styles.face, styles.front, frontStyle]} pointerEvents="box-none">
         <SwipeCard restaurant={restaurant} />
         <Animated.View style={[styles.overlayStamp, styles.likeStamp, likeStyle]} pointerEvents="none">
           <Glass radius={999} scheme="dark" tint="rgba(34, 163, 90, 0.75)" style={styles.stampGlass}>
@@ -308,6 +337,7 @@ function DeckCard({
             <Ionicons name="close" size={22} color="#FFFFFF" />
             <Text style={styles.stampText}>{passLabel}</Text>
           </Glass>
+        </Animated.View>
         </Animated.View>
       </Animated.View>
     </GestureDetector>
@@ -324,6 +354,8 @@ const styles = StyleSheet.create({
   cardWrapper: {
     position: 'absolute',
   },
+  face: { backfaceVisibility: 'hidden' },
+  front: { position: 'absolute', top: 0, left: 0 },
 
   overlayStamp: {
     position: 'absolute',
