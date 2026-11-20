@@ -440,18 +440,18 @@ function DemoTile({
       >
         {preview}
         <View style={styles.modeText}>
-          <View style={styles.modeTitleRow}>
-            <Text style={styles.optionTitle}>{title}</Text>
-            <Ionicons
-              name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-              size={22}
-              color={selected ? colors.primary : colors.border}
-            />
-          </View>
+          <Text style={styles.optionTitle}>{title}</Text>
           <Text style={styles.optionHint} numberOfLines={4}>
             {hint}
           </Text>
         </View>
+        {/* Selection sits under the text, so long titles never push it out */}
+        <Ionicons
+          name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+          size={24}
+          color={selected ? colors.primary : colors.border}
+          style={styles.modeCheck}
+        />
       </Glass>
     </Pressable>
   );
@@ -541,8 +541,9 @@ const styles = StyleSheet.create({
   cards: { gap: 12 },
   modeRow: { flexDirection: 'row', gap: 12 },
   modeCell: { flex: 1 },
-  modeTile: { height: 264, padding: spacing.md, gap: spacing.sm },
-  modeText: { gap: 4 },
+  modeTile: { height: 284, padding: spacing.md, gap: spacing.sm },
+  modeText: { flex: 1, gap: 4 },
+  modeCheck: { alignSelf: 'flex-start' },
   modeTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   styleText: { alignItems: 'center', gap: 4, minHeight: 72 },
   styleName: { ...typography.title2, color: colors.text, textAlign: 'center' },
