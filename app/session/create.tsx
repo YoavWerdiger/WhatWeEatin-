@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   ScrollView,
   Switch,
   Pressable,
+  I18nManager,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -19,42 +22,46 @@ import Animated, {
   FadeIn,
   Keyframe,
   useAnimatedStyle,
+  useReducedMotion,
   withTiming,
 } from 'react-native-reanimated';
-import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { colors } from '../../src/theme/colors';
-import { typography } from '../../src/theme/typography';
+import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
-import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
+import { GlassButton } from '../../src/components/native/GlassButton';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import FilterPicker from '../../src/components/FilterPicker';
 import { useTranslation } from '../../src/i18n/t';
-import {
-  TIMER_OPTION_VALUES,
-  formatTimerChipLabel,
-} from '../../src/utils/constants';
+import { TIMER_OPTION_VALUES, formatTimerChipLabel } from '../../src/utils/constants';
 
-const GAME_MODES: GameMode[] = ['swipe', 'roulette'];
-const TIMER_OPTIONS = TIMER_OPTION_VALUES.filter((v) => v !== 0);
+type Step = 'name' | 'mode' | 'timer' | 'rules' | 'filters' | 'ready';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
-
-// The code card arrives from just below full size — never from nothing.
-const codeEnter = new Keyframe({
-  0: { opacity: 0, transform: [{ scale: 0.96 }, { translateY: 8 }] },
-  100: { opacity: 1, transform: [{ scale: 1 }, { translateY: 0 }], easing: EASE_OUT },
-}).duration(320);
-
-// Strip the arrow glyphs the copy uses for its text buttons.
+const AUTO_ADVANCE_MS = 220;
 const plain = (s: string) => s.replace(/[→←]/g, '').trim();
+
+// One question per screen; the next one slides in from the reading direction.
+function stepEnter(direction: 1 | -1) {
+  const from = 28 * direction * (I18nManager.isRTL ? -1 : 1);
+  return new Keyframe({
+    0: { opacity: 0, transform: [{ translateX: from }] },
+    100: { opacity: 1, transform: [{ translateX: 0 }], easing: EASE_OUT },
+  }).duration(240);
+}
+
+const MODE_OPTIONS: { mode: GameMode; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { mode: 'swipe', icon: 'albums' },
+  { mode: 'roulette', icon: 'dice' },
+];
 
 export default function CreateSessionScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const { user, setName } = useUserStore();
   const authUser = useAuthStore((s) => s.user);
   const {
@@ -73,11 +80,8 @@ export default function CreateSessionScreen() {
     void initAuth();
   }, [initAuth]);
 
-  const [displayName, setDisplayName] = useState(
-    authUser?.displayName || user.name,
-  );
+  const [displayName, setDisplayName] = useState(authUser?.displayName || user.name);
   const [sessionCode, setSessionCode] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SessionFilters>({
     cuisines: [],
     kosherOnly: false,
@@ -86,45 +90,30 @@ export default function CreateSessionScreen() {
   });
   const [gameMode, setGameMode] = useState<GameMode>('swipe');
   const [timerDuration, setTimerDuration] = useState(120);
-  const [requireUnanimousKeepBrowsing, setRequireUnanimousKeepBrowsing] =
-    useState(true);
+  const [requireUnanimousKeepBrowsing, setRequireUnanimousKeepBrowsing] = useState(true);
   const [requireLobbyReady, setRequireLobbyReady] = useState(true);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
 
-  const chevronStyle = useAnimatedStyle(() => ({
-    transform: [
-      { rotate: withTiming(showFilters ? '180deg' : '0deg', { duration: 200, easing: EASE_OUT }) },
-    ],
-  }));
+  // Roulette has no round timer, so its flow skips that question.
+  const steps = useMemo<Step[]>(
+    () =>
+      sessionCode
+        ? ['ready']
+        : ['name', 'mode', ...(gameMode === 'swipe' ? (['timer'] as const) : []), 'rules', 'filters'],
+    [gameMode, sessionCode],
+  );
+  const step = steps[Math.min(stepIndex, steps.length - 1)];
+  const isLastQuestion = !sessionCode && stepIndex === steps.length - 1;
 
-  const activeFilterCount =
-    filters.cuisines.length +
-    filters.styles.length +
-    (filters.kosherOnly ? 1 : 0) +
-    (filters.maxPriceLevel < 4 ? 1 : 0);
-
-  const modeTitle = (mode: GameMode) => {
-    if (mode === 'roulette') return t('create.modeRoulette');
-    return t('create.modeSwipe');
+  const goTo = (index: number) => {
+    setDirection(index > stepIndex ? 1 : -1);
+    setStepIndex(index);
   };
-
-  const modeHint = (mode: GameMode) => {
-    if (mode === 'roulette') return t('create.modeRouletteHint');
-    return t('create.modeSwipeHint');
+  const next = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    goTo(stepIndex + 1);
   };
-
-  const handleSelectGameMode = (mode: GameMode) => {
-    void Haptics.selectionAsync();
-    setGameMode(mode);
-    if (mode === 'roulette') {
-      setTimerDuration(0);
-    } else if (timerDuration === 0) {
-      setTimerDuration(120);
-    }
-  };
-
-  // Segment 0 is "off"; the rest map onto TIMER_OPTIONS.
-  const timerLabels = [t('create.timerOff'), ...TIMER_OPTIONS.map(formatTimerChipLabel)];
-  const timerIndex = timerDuration === 0 ? 0 : TIMER_OPTIONS.indexOf(timerDuration as never) + 1;
 
   const handleCreate = async () => {
     setName(displayName);
@@ -135,431 +124,416 @@ export default function CreateSessionScreen() {
       requireLobbyReady,
       gameMode,
     });
+    setDirection(1);
+    setStepIndex(0);
     setSessionCode(code);
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await loadRestaurants(filters);
   };
 
   const handleShare = async () => {
     if (!sessionCode) return;
     try {
-      await Share.share({
-        message: t('create.shareMessage', { code: sessionCode }),
-      });
+      await Share.share({ message: t('create.shareMessage', { code: sessionCode }) });
     } catch {}
   };
 
-  const handleStart = () => {
-    if (!sessionCode) return;
-    router.push('/session/lobby');
-  };
-
-  const restaurantCount = session?.restaurants.length || 0;
-  const isReady = !!sessionCode && !isLoadingRestaurants && restaurantCount > 0;
-
-  const sourceCounts = session?.restaurants.reduce(
-    (acc, r) => {
-      acc[r.source] = (acc[r.source] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  const handleBackFromCreate = () => {
-    if (session) {
-      leaveSession(firebaseUid || authUser?.uid || user.id);
-    }
+  const leave = () => {
+    if (session) leaveSession(firebaseUid || authUser?.uid || user.id);
     if (router.canGoBack()) router.back();
     else router.replace('/');
   };
 
-  const bottomBarHeight = 64 + Math.max(insets.bottom, spacing.md);
+  const handleBack = () => {
+    if (!sessionCode && stepIndex > 0) goTo(stepIndex - 1);
+    else leave();
+  };
+
+  // Picking a card is the answer — move on without an extra tap.
+  const choose = (apply: () => void) => {
+    void Haptics.selectionAsync();
+    apply();
+    setTimeout(() => goTo(stepIndex + 1), AUTO_ADVANCE_MS);
+  };
+
+  const restaurantCount = session?.restaurants.length || 0;
+  const isReady = !!sessionCode && !isLoadingRestaurants && restaurantCount > 0;
+  const questionCount = steps.length;
+
+  const modeTitle = (mode: GameMode) =>
+    mode === 'roulette' ? t('create.modeRoulette') : t('create.modeSwipe');
+  const modeHint = (mode: GameMode) =>
+    mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
+
+  const optional = step === 'rules' || step === 'filters';
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerTitle: () =>
+            sessionCode ? null : <Progress current={stepIndex} total={questionCount} />,
+        }}
+      />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
-          icon="chevron.backward"
+          icon={sessionCode || stepIndex === 0 ? 'xmark' : 'chevron.backward'}
           accessibilityLabel={plain(t('common.back'))}
-          onPress={handleBackFromCreate}
+          onPress={handleBack}
         />
       </Stack.Toolbar>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingBottom: bottomBarHeight + spacing.lg }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-      >
-        <View>
-          <Text style={styles.pageTitle}>{t('create.heroTitle')}</Text>
-          <Text style={styles.pageSub}>{t('create.heroSub')}</Text>
-        </View>
-
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>{t('create.yourName')}</Text>
-          <View style={styles.card}>
-            <TextInput
-              style={styles.input}
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder={t('create.namePlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              editable={!sessionCode}
-              returnKeyType="done"
-              autoCorrect={false}
-              textContentType="nickname"
-            />
-          </View>
-        </View>
-
-        {!sessionCode && (
-          <>
-            <View style={styles.group}>
-              <Text style={styles.groupLabel}>{t('create.gameMode')}</Text>
-              <View style={[styles.card, styles.cardPadded]}>
-                <SegmentedControl
-                  values={GAME_MODES.map(modeTitle)}
-                  selectedIndex={GAME_MODES.indexOf(gameMode)}
-                  onChange={(e) => handleSelectGameMode(GAME_MODES[e.nativeEvent.selectedSegmentIndex])}
-                  tintColor={colors.primary}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View key={step} entering={reduceMotion ? FadeIn.duration(150) : stepEnter(direction)}>
+            {step === 'name' && (
+              <Question title={t('create.qName')} sub={t('create.qNameSub')}>
+                <TextInput
+                  style={styles.bigInput}
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  placeholder={t('create.namePlaceholder')}
+                  placeholderTextColor={colors.textMuted}
+                  autoFocus
+                  autoCorrect={false}
+                  textContentType="nickname"
+                  returnKeyType="next"
+                  onSubmitEditing={() => displayName.trim() && next()}
                 />
-                <Text style={styles.hint}>{modeHint(gameMode)}</Text>
-
-                {gameMode !== 'roulette' && (
-                  <>
-                    <View style={styles.separator} />
-                    <Text style={styles.rowTitle}>{t('create.roundTimer')}</Text>
-                    <SegmentedControl
-                      values={timerLabels}
-                      selectedIndex={timerIndex}
-                      onChange={(e) => {
-                        void Haptics.selectionAsync();
-                        const i = e.nativeEvent.selectedSegmentIndex;
-                        setTimerDuration(i === 0 ? 0 : TIMER_OPTIONS[i - 1]);
-                      }}
-                      tintColor={colors.primary}
-                    />
-                  </>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.group}>
-              <View style={styles.card}>
-                <View style={styles.switchRow}>
-                  <View style={styles.switchLabelCol}>
-                    <Text style={styles.rowTitle}>{t('create.switchUnanimousTitle')}</Text>
-                    <Text style={styles.hint}>{t('create.switchUnanimousSub')}</Text>
-                  </View>
-                  <Switch
-                    value={requireUnanimousKeepBrowsing}
-                    onValueChange={setRequireUnanimousKeepBrowsing}
-                    trackColor={{ true: colors.primary, false: undefined }}
-                  />
-                </View>
-                <View style={[styles.separator, styles.separatorInset]} />
-                <View style={styles.switchRow}>
-                  <View style={styles.switchLabelCol}>
-                    <Text style={styles.rowTitle}>{t('create.switchLobbyTitle')}</Text>
-                    <Text style={styles.hint}>{t('create.switchLobbySub')}</Text>
-                  </View>
-                  <Switch
-                    value={requireLobbyReady}
-                    onValueChange={setRequireLobbyReady}
-                    trackColor={{ true: colors.primary, false: undefined }}
-                  />
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.group}>
-              <View style={styles.card}>
-                <Pressable
-                  style={({ pressed }) => [styles.disclosureRow, pressed && styles.rowPressed]}
-                  onPress={() => {
-                    void Haptics.selectionAsync();
-                    setShowFilters((v) => !v);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: showFilters }}
-                >
-                  <Text style={styles.rowTitle}>{t('create.filters')}</Text>
-                  <View style={styles.disclosureEnd}>
-                    {activeFilterCount > 0 && (
-                      <View style={styles.countPill}>
-                        <Text style={styles.countPillText}>{activeFilterCount}</Text>
-                      </View>
-                    )}
-                    <Animated.View style={chevronStyle}>
-                      <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
-                    </Animated.View>
-                  </View>
-                </Pressable>
-
-                {showFilters && (
-                  <Animated.View entering={FadeIn.duration(180)} style={styles.filterSection}>
-                    <FilterPicker filters={filters} onChange={setFilters} />
-                  </Animated.View>
-                )}
-              </View>
-            </View>
-          </>
-        )}
-
-        {sessionCode && (
-          <Animated.View entering={codeEnter} style={[styles.card, styles.codeCard]}>
-            <Text style={styles.codeLabel}>{t('create.sessionCode')}</Text>
-            <View style={styles.codeRow}>
-              <Text style={styles.codeValue} selectable accessibilityLabel={sessionCode.split('').join(' ')}>
-                {sessionCode}
-              </Text>
-              <GlassIconButton
-                systemImage="square.and.arrow.up"
-                accessibilityLabel={t('create.shareCode')}
-                onPress={handleShare}
-                size={40}
-              />
-            </View>
-
-            {session && (
-              <Text style={styles.modeSelectedLine}>
-                {t('create.modeSelected', { mode: modeTitle(session.gameMode) })}
-              </Text>
+              </Question>
             )}
 
-            <View style={styles.separator} />
-
-            {isLoadingRestaurants ? (
-              <View style={styles.statusRow}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.statusText}>{t('create.findingRestaurants')}</Text>
-              </View>
-            ) : (
-              <Animated.View entering={FadeIn.duration(200)} style={styles.readySection}>
-                <Text style={styles.restaurantCountText}>
-                  {t('create.restaurantsFound', { count: restaurantCount })}
-                </Text>
-                <View style={styles.sourceRow}>
-                  {userLocation?.city && (
-                    <View style={styles.sourceBadge}>
-                      <Ionicons name="location" size={12} color={colors.textSecondary} />
-                      <Text style={styles.sourceBadgeText}>{userLocation.city}</Text>
-                    </View>
-                  )}
-                  {sourceCounts?.wolt ? (
-                    <View style={styles.sourceBadge}>
-                      <Text style={styles.sourceBadgeText}>Wolt · {sourceCounts.wolt}</Text>
-                    </View>
-                  ) : null}
-                  {sourceCounts?.tenbis ? (
-                    <View style={styles.sourceBadge}>
-                      <Text style={styles.sourceBadgeText}>10bis · {sourceCounts.tenbis}</Text>
-                    </View>
-                  ) : null}
-                  {sourceCounts?.google ? (
-                    <View style={styles.sourceBadge}>
-                      <Text style={styles.sourceBadgeText}>Google · {sourceCounts.google}</Text>
-                    </View>
-                  ) : null}
-                  {sourceCounts?.mock ? (
-                    <View style={styles.sourceBadge}>
-                      <Text style={styles.sourceBadgeText}>
-                        {t('create.sourceSample')} · {sourceCounts.mock}
-                      </Text>
-                    </View>
-                  ) : null}
+            {step === 'mode' && (
+              <Question title={t('create.qMode')}>
+                <View style={styles.cards}>
+                  {MODE_OPTIONS.map(({ mode, icon }) => (
+                    <OptionCard
+                      key={mode}
+                      icon={icon}
+                      title={modeTitle(mode)}
+                      hint={modeHint(mode)}
+                      selected={gameMode === mode}
+                      onPress={() => choose(() => setGameMode(mode))}
+                    />
+                  ))}
                 </View>
-                {loadError && <Text style={styles.errorText}>{loadError}</Text>}
-              </Animated.View>
+              </Question>
+            )}
+
+            {step === 'timer' && (
+              <Question title={t('create.qTimer')} sub={t('create.qTimerSub')}>
+                <View style={styles.tiles}>
+                  {TIMER_OPTION_VALUES.map((value) => {
+                    const selected = timerDuration === value;
+                    return (
+                      <Pressable
+                        key={value}
+                        onPress={() => choose(() => setTimerDuration(value))}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected }}
+                        style={({ pressed }) => [
+                          styles.tile,
+                          selected && styles.tileSelected,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <Text style={[styles.tileValue, selected && styles.tileValueSelected]}>
+                          {value === 0 ? t('create.timerOff') : formatTimerChipLabel(value)}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </Question>
+            )}
+
+            {step === 'rules' && (
+              <Question title={t('create.qRules')} sub={t('create.qRulesSub')}>
+                <View style={styles.card}>
+                  <RuleRow
+                    title={t('create.switchUnanimousTitle')}
+                    hint={t('create.switchUnanimousSub')}
+                    value={requireUnanimousKeepBrowsing}
+                    onChange={setRequireUnanimousKeepBrowsing}
+                  />
+                  <View style={styles.separator} />
+                  <RuleRow
+                    title={t('create.switchLobbyTitle')}
+                    hint={t('create.switchLobbySub')}
+                    value={requireLobbyReady}
+                    onChange={setRequireLobbyReady}
+                  />
+                </View>
+              </Question>
+            )}
+
+            {step === 'filters' && (
+              <Question title={t('create.qFilters')} sub={t('create.qFiltersSub')}>
+                <View style={[styles.card, styles.cardPadded]}>
+                  <FilterPicker filters={filters} onChange={setFilters} />
+                </View>
+              </Question>
+            )}
+
+            {step === 'ready' && sessionCode && (
+              <Question title={t('create.readyTitle')} sub={t('create.readySub')}>
+                <View style={[styles.card, styles.ticket]}>
+                  <Text style={styles.ticketLabel}>{t('create.sessionCode')}</Text>
+                  <Text
+                    style={styles.ticketCode}
+                    selectable
+                    accessibilityLabel={sessionCode.split('').join(' ')}
+                  >
+                    {sessionCode}
+                  </Text>
+                  <Pressable
+                    onPress={handleShare}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
+                  >
+                    <Ionicons name="share-outline" size={18} color={colors.primaryDark} />
+                    <Text style={styles.shareText}>{t('create.shareCode')}</Text>
+                  </Pressable>
+                  <View style={styles.separatorFull} />
+                  {isLoadingRestaurants ? (
+                    <View style={styles.statusRow}>
+                      <ActivityIndicator size="small" color={colors.primary} />
+                      <Text style={styles.statusText}>{t('create.findingRestaurants')}</Text>
+                    </View>
+                  ) : (
+                    <Animated.View entering={FadeIn.duration(200)} style={styles.statusRow}>
+                      <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
+                      <Text style={styles.statusText}>
+                        {t('create.restaurantsFound', { count: restaurantCount })}
+                        {userLocation?.city ? ` · ${userLocation.city}` : ''}
+                      </Text>
+                    </Animated.View>
+                  )}
+                  {loadError && <Text style={styles.errorText}>{loadError}</Text>}
+                </View>
+              </Question>
             )}
           </Animated.View>
-        )}
-      </ScrollView>
+        </ScrollView>
 
-      {/* Floating action bar — content scrolls underneath the glass */}
-      <View
-        pointerEvents="box-none"
-        style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
-      >
-        {!sessionCode ? (
-          <GlassButton
-            title={t('create.createBtn')}
-            onPress={handleCreate}
-            disabled={!displayName.trim()}
-          />
-        ) : (
-          <GlassButton
-            title={isReady ? plain(t('create.letsGo')) : t('common.loading')}
-            onPress={handleStart}
-            disabled={!isReady}
-            loading={isLoadingRestaurants}
-          />
-        )}
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+          {step === 'ready' ? (
+            <GlassButton
+              title={isReady ? plain(t('create.letsGo')) : t('common.loading')}
+              onPress={() => router.push('/session/lobby')}
+              disabled={!isReady}
+              loading={isLoadingRestaurants}
+            />
+          ) : (
+            <View style={styles.actionsRow}>
+              {optional && (
+                <View style={styles.flex}>
+                  <GlassButton
+                    title={t('create.skip')}
+                    prominent={false}
+                    onPress={isLastQuestion ? handleCreate : next}
+                  />
+                </View>
+              )}
+              <View style={optional ? styles.flexWide : styles.flex}>
+                <GlassButton
+                  title={isLastQuestion ? t('create.createBtn') : t('create.continue')}
+                  onPress={isLastQuestion ? handleCreate : next}
+                  disabled={step === 'name' && !displayName.trim()}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+function Progress({ current, total }: { current: number; total: number }) {
+  return (
+    <View style={styles.progress} accessibilityRole="progressbar" accessibilityValue={{ now: current + 1, max: total }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <ProgressSegment key={i} filled={i <= current} />
+      ))}
+    </View>
+  );
+}
+
+function ProgressSegment({ filled }: { filled: boolean }) {
+  const style = useAnimatedStyle(() => ({
+    opacity: withTiming(filled ? 1 : 0.18, { duration: 200, easing: EASE_OUT }),
+  }));
+  return <Animated.View style={[styles.segment, style]} />;
+}
+
+function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.question}>
+      <View style={styles.questionHead}>
+        <Text style={styles.questionTitle} accessibilityRole="header">
+          {title}
+        </Text>
+        {sub ? <Text style={styles.questionSub}>{sub}</Text> : null}
       </View>
+      {children}
+    </View>
+  );
+}
+
+function OptionCard({
+  icon,
+  title,
+  hint,
+  selected,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  hint: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [styles.option, selected && styles.optionSelected, pressed && styles.pressed]}
+    >
+      <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
+        <Ionicons name={icon} size={24} color={selected ? '#FFFFFF' : colors.primaryDark} />
+      </View>
+      <View style={styles.optionText}>
+        <Text style={styles.optionTitle}>{title}</Text>
+        <Text style={styles.optionHint}>{hint}</Text>
+      </View>
+      <Ionicons
+        name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+        size={24}
+        color={selected ? colors.primary : colors.border}
+      />
+    </Pressable>
+  );
+}
+
+function RuleRow({
+  title,
+  hint,
+  value,
+  onChange,
+}: {
+  title: string;
+  hint: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <View style={styles.ruleRow}>
+      <View style={styles.ruleText}>
+        <Text style={styles.ruleTitle}>{title}</Text>
+        <Text style={styles.ruleHint}>{hint}</Text>
+      </View>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary, false: undefined }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  flexWide: { flex: 2 },
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-    alignItems: 'flex-start',
-  },
-  scrollView: { flex: 1 },
-  content: {
-    paddingHorizontal: spacing.md,
-    gap: spacing.lg,
-  },
-  pageTitle: {
-    ...typography.largeTitle,
-    color: colors.text,
-    paddingHorizontal: spacing.xs,
-  },
-  pageSub: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    lineHeight: 22,
-    paddingHorizontal: spacing.xs,
-  },
+  content: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
 
-  // Grouped, inset sections — the iOS Settings rhythm
-  group: { gap: spacing.sm },
-  groupLabel: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-    paddingHorizontal: spacing.md,
-  },
-  card: {
+  progress: { flexDirection: 'row', gap: 4, width: 160 },
+  segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.primary },
+
+  question: { gap: spacing.lg },
+  questionHead: { gap: spacing.sm, paddingHorizontal: spacing.xs },
+  questionTitle: { ...typography.largeTitle, color: colors.text },
+  questionSub: { ...typography.body, color: colors.textSecondary },
+
+  bigInput: {
+    ...typography.title2,
+    color: colors.text,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     ...continuous,
-    overflow: 'hidden',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
-  cardPadded: {
+
+  cards: { gap: 12 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
     padding: spacing.md,
-    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    ...continuous,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-    alignSelf: 'stretch',
-  },
-  separatorInset: {
-    marginStart: spacing.md,
-  },
-  rowTitle: {
-    ...typography.body,
-    color: colors.text,
-  },
-  hint: {
-    ...typography.caption,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-
-  input: {
-    ...typography.body,
-    color: colors.text,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    textAlign: 'auto',
-  },
-
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-  },
-  switchLabelCol: { flex: 1, gap: 2 },
-
-  disclosureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 16,
-  },
-  rowPressed: { backgroundColor: colors.borderLight },
-  disclosureEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  countPill: {
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: 8,
-    borderRadius: 11,
-    backgroundColor: colors.primary,
+  optionSelected: { borderColor: colors.primary },
+  optionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countPillText: {
-    ...typography.caption1,
-    fontWeight: '600',
+  optionIconSelected: { backgroundColor: colors.primary },
+  optionText: { flex: 1, gap: 2 },
+  optionTitle: { ...typography.headline, color: colors.text },
+  optionHint: { ...typography.subheadline, color: colors.textSecondary },
+
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tile: {
+    width: '31%',
+    flexGrow: 1,
+    aspectRatio: 1.15,
+    borderRadius: borderRadius.lg,
+    ...continuous,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileSelected: { backgroundColor: colors.primary },
+  tileValue: {
+    ...typography.title2,
+    fontFamily: fontFamilies.mono,
     fontVariant: ['tabular-nums'],
-    color: colors.onPrimary,
-  },
-  filterSection: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-  },
-
-  codeCard: {
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  codeLabel: { ...typography.captionMedium, color: colors.textSecondary },
-  codeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  codeValue: {
-    ...typography.code,
-    fontSize: 40,
-    lineHeight: 48,
     color: colors.text,
   },
-  modeSelectedLine: {
-    ...typography.captionMedium,
-    color: colors.primaryDark,
-    textAlign: 'center',
-  },
+  tileValueSelected: { color: colors.onPrimary },
 
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
-  statusText: { ...typography.captionMedium, color: colors.textSecondary },
+  card: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, ...continuous, overflow: 'hidden' },
+  cardPadded: { padding: spacing.md },
+  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md },
+  separatorFull: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, alignSelf: 'stretch' },
+  ruleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md },
+  ruleText: { flex: 1, gap: 2 },
+  ruleTitle: { ...typography.body, color: colors.text },
+  ruleHint: { ...typography.footnote, color: colors.textSecondary },
 
-  readySection: { alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
-  restaurantCountText: { ...typography.bodySemiBold, color: colors.text },
-  sourceRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'center',
-  },
-  sourceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.background,
-  },
-  sourceBadgeText: { ...typography.footnote, color: colors.textSecondary },
-  errorText: { ...typography.caption, color: colors.warning, textAlign: 'center' },
+  ticket: { alignItems: 'center', gap: spacing.md, padding: spacing.lg },
+  ticketLabel: { ...typography.footnote, color: colors.textSecondary },
+  ticketCode: { ...typography.code, fontSize: 48, lineHeight: 56, letterSpacing: 6, color: colors.text },
+  shareButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs },
+  shareText: { ...typography.headline, color: colors.primaryDark },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  statusText: { ...typography.subheadline, color: colors.textSecondary },
+  errorText: { ...typography.footnote, color: colors.warning, textAlign: 'center' },
 
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-  },
+  pressed: { opacity: 0.7 },
+
+  bottomBar: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
+  actionsRow: { flexDirection: 'row', gap: 12 },
 });
