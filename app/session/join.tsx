@@ -18,6 +18,7 @@ import Animated, {
   Easing,
   FadeIn,
   FadeOut,
+  Keyframe,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -32,6 +33,10 @@ import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
 
 const CODE_LENGTH = 6;
+const charLand = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 1.5 }, { translateY: -6 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }, { translateY: 0 }], easing: Easing.bezier(0.23, 1, 0.32, 1) },
+}).duration(200);
 const HOW_STEPS = [
   { icon: 'key-outline', key: 'join.step1' },
   { icon: 'albums-outline', key: 'join.step2' },
@@ -170,7 +175,12 @@ export default function JoinSessionScreen() {
                         !!error && styles.codeBoxError,
                       ]}
                     >
-                      <Text style={styles.codeChar}>{char ?? ''}</Text>
+                      {char ? (
+                        // Each character lands in its box
+                        <Animated.Text key={`${i}-${char}`} entering={charLand} style={styles.codeChar}>
+                          {char}
+                        </Animated.Text>
+                      ) : null}
                     </View>
                   );
                 })}

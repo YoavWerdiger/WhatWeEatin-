@@ -14,7 +14,7 @@ import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
-import { UserList } from '../../src/components/UserList';
+import { LobbyTable } from '../../src/components/LobbyTable';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { getFirebaseUid, isFirebaseConfigured } from '../../src/services/firebase';
@@ -155,16 +155,11 @@ export default function LobbyScreen() {
           </View>
         </View>
 
-        <View style={styles.group}>
-          <View style={styles.groupHeader}>
-            <Text style={styles.groupLabel}>{t('lobby.playersSection')}</Text>
-            <Text style={styles.groupCount}>{session.users.length}</Text>
-          </View>
-          <UserList
-            users={session.users}
-            readyIds={session.requireLobbyReady ? readySet : undefined}
-          />
-        </View>
+        {/* Players take their seats as they join */}
+        <LobbyTable
+          users={session.users}
+          readyIds={session.requireLobbyReady ? readySet : undefined}
+        />
       </ScrollView>
 
       <View
