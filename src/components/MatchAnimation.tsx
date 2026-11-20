@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   Easing,
+  FadeIn,
   FadeInDown,
   Keyframe,
   useAnimatedStyle,
@@ -44,11 +45,10 @@ interface MatchAnimationProps {
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 const LIGHT_RED = '#FF8A80';
 
-// The photo settles into place as the match lands — the one big moment of the game.
-const photoEnter = new Keyframe({
-  0: { transform: [{ scale: 1.08 }] },
-  100: { transform: [{ scale: 1 }], easing: EASE_OUT },
-}).duration(700);
+const heroEnter = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.9 }, { rotate: '-4deg' }] },
+  100: { opacity: 1, transform: [{ scale: 1 }, { rotate: '0deg' }], easing: EASE_OUT },
+}).duration(480);
 
 const rise = (i: number) => FadeInDown.duration(320).delay(120 + i * 70);
 
@@ -114,9 +114,7 @@ export function MatchAnimation({
   return (
     <Animated.View style={[StyleSheet.absoluteFill, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
       {/* The winner's photo is the backdrop — rich content for the glass to sit on */}
-      <Animated.View style={StyleSheet.absoluteFill} entering={reduceMotion ? undefined : photoEnter}>
-        <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
-      </Animated.View>
+      <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
       <LinearGradient
         colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
         locations={[0, 0.4, 1]}
@@ -137,21 +135,41 @@ export function MatchAnimation({
           </Animated.Text>
         </View>
 
-        <View style={styles.body}>
-          <Animated.View entering={rise(2)} style={styles.nameBlock}>
-            <Text style={styles.name} numberOfLines={2}>
-              {r.name}
-            </Text>
-            <View style={styles.pills}>
-              {meta.map((m) => (
-                <Glass key={m.icon} radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.pill}>
-                  <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.85)" />
-                  <Text style={styles.pillText}>{m.text}</Text>
-                </Glass>
-              ))}
+        {/* The winner, front and centre — it lands like a card on the table */}
+        <Animated.View entering={reduceMotion ? FadeIn.duration(200) : heroEnter} style={styles.heroWrap}>
+          <View style={styles.hero}>
+            <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.85)']}
+              locations={[0.35, 0.6, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.heroInfo}>
+              <Text style={styles.name} numberOfLines={2}>
+                {r.name}
+              </Text>
+              <View style={styles.pills}>
+                {meta.map((m) => (
+                  <Glass
+                    key={m.icon}
+                    radius={borderRadius.full}
+                    variant="clear"
+                    scheme="dark"
+                    dark
+                    tint="rgba(255, 255, 255, 0.16)"
+                    style={styles.pill}
+                  >
+                    <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
+                    <Text style={styles.pillText}>{m.text}</Text>
+                  </Glass>
+                ))}
+              </View>
             </View>
-          </Animated.View>
+          </View>
+        </Animated.View>
 
+        <View style={styles.body}>
+          {result.agreedUsers.length > 0 && (
           <Animated.View entering={rise(3)}>
             <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
               <View style={styles.avatars}>
@@ -168,6 +186,7 @@ export function MatchAnimation({
               </Text>
             </Glass>
           </Animated.View>
+          )}
 
           {showUnanimous && (
             <Animated.View entering={rise(4)}>
@@ -251,13 +270,32 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    gap: spacing.xl,
+    gap: spacing.lg,
   },
   head: { alignItems: 'center', gap: spacing.md },
   title: { ...typography.largeTitle, color: '#FFFFFF', textAlign: 'center' },
 
   body: { gap: spacing.md },
-  nameBlock: { gap: spacing.sm },
+  // Shadow lives on the wrapper: overflow:hidden on the card itself would clip it.
+  heroWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  hero: {
+    width: '100%',
+    aspectRatio: 0.95,
+    maxHeight: 420,
+    alignSelf: 'center',
+    borderRadius: borderRadius.xl,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  heroInfo: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: spacing.lg, gap: spacing.sm },
   name: { ...typography.title1, color: '#FFFFFF' },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
