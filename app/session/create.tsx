@@ -368,17 +368,15 @@ function ProgressSegment({ filled }: { filled: boolean }) {
 function NameGreeting({ name, greet }: { name: string; greet: (first: string) => string }) {
   const first = name.trim().split(/\s+/)[0] ?? '';
   const ready = first.length >= 2;
+  // Nothing to show until there is a letter — no placeholder avatar.
+  if (!first) return null;
   return (
     <View style={styles.greet}>
-      <View style={[styles.greetAvatar, ready && styles.greetAvatarReady]}>
-        {first ? (
+      <Animated.View entering={ZoomIn.duration(220)} style={[styles.greetAvatar, ready && styles.greetAvatarReady]}>
           <Animated.Text key={first.charAt(0)} entering={ZoomIn.duration(220)} style={[styles.greetInitial, ready && styles.greetInitialReady]}>
             {first.charAt(0).toUpperCase()}
           </Animated.Text>
-        ) : (
-          <Ionicons name="person" size={30} color={colors.textMuted} />
-        )}
-      </View>
+      </Animated.View>
       {ready ? (
         <Animated.Text entering={FadeInDown.duration(260)} style={styles.greetText} numberOfLines={1}>
           {greet(first)}
