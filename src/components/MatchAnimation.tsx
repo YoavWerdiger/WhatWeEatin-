@@ -139,36 +139,32 @@ export function MatchAnimation({
         <Animated.View entering={reduceMotion ? FadeIn.duration(200) : heroEnter} style={styles.heroWrap}>
           <View style={styles.hero}>
             <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.85)']}
-              locations={[0.35, 0.6, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.heroInfo}>
-              <Text style={styles.name} numberOfLines={2}>
-                {r.name}
-              </Text>
-              <View style={styles.pills}>
-                {meta.map((m) => (
-                  <Glass
-                    key={m.icon}
-                    radius={borderRadius.full}
-                    variant="clear"
-                    scheme="dark"
-                    dark
-                    tint="rgba(255, 255, 255, 0.16)"
-                    style={styles.pill}
-                  >
-                    <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
-                    <Text style={styles.pillText}>{m.text}</Text>
-                  </Glass>
-                ))}
-              </View>
-            </View>
           </View>
         </Animated.View>
 
         <View style={styles.body}>
+          <Animated.View entering={rise(2)} style={styles.nameBlock}>
+            <Text style={styles.name} numberOfLines={2}>
+              {r.name}
+            </Text>
+            <View style={styles.pills}>
+              {meta.map((m) => (
+                <Glass
+                  key={m.icon}
+                  radius={borderRadius.full}
+                  variant="clear"
+                  scheme="dark"
+                  dark
+                  tint="rgba(255, 255, 255, 0.16)"
+                  style={styles.pill}
+                >
+                  <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
+                  <Text style={styles.pillText}>{m.text}</Text>
+                </Glass>
+              ))}
+            </View>
+          </Animated.View>
+
           {result.agreedUsers.length > 0 && (
           <Animated.View entering={rise(3)}>
             <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
@@ -295,7 +291,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
-  heroInfo: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: spacing.lg, gap: spacing.sm },
+  nameBlock: { gap: spacing.sm },
   name: { ...typography.title1, color: '#FFFFFF' },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
