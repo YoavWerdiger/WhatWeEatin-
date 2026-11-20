@@ -2,12 +2,18 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet, ActivityIndicator, View } from 'react-native';
+import { Appearance, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { colors } from '../src/theme/colors';
 import { useAuthStore } from '../src/store/authStore';
 import { applyRtlForLocale, useLocaleStore } from '../src/i18n/localeStore';
 import { initializeAds } from '../src/services/ads';
+
+// The palette is light-only for now. Pin the whole app to light so every native
+// piece — Liquid Glass, nav bars, toolbars, keyboards, switches — matches it even
+// when the phone is in Dark Mode. Sets overrideUserInterfaceStyle on all windows,
+// which also covers Expo Go (where app.json's userInterfaceStyle isn't applied).
+Appearance.setColorScheme('light');
 
 const queryClient = new QueryClient();
 

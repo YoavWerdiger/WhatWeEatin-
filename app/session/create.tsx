@@ -20,23 +20,25 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   Easing,
   FadeIn,
+  FadeInDown,
   Keyframe,
   useAnimatedStyle,
   useReducedMotion,
   withTiming,
+  ZoomIn,
 } from 'react-native-reanimated';
 import { colors } from '../../src/theme/colors';
 import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
+import { TimeDial } from '../../src/components/TimeDial';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import FilterPicker from '../../src/components/FilterPicker';
 import { useTranslation } from '../../src/i18n/t';
-import { TIMER_OPTION_VALUES, formatTimerChipLabel } from '../../src/utils/constants';
 
 type Step = 'name' | 'mode' | 'timer' | 'rules' | 'filters' | 'ready';
 
@@ -196,6 +198,7 @@ export default function CreateSessionScreen() {
           <Animated.View key={step} entering={reduceMotion ? FadeIn.duration(150) : stepEnter(direction)}>
             {step === 'name' && (
               <Question title={t('create.qName')} sub={t('create.qNameSub')}>
+                <NameGreeting name={displayName} greet={(n) => t('create.greet', { name: n })} />
                 <TextInput
                   style={styles.bigInput}
                   value={displayName}
@@ -214,9 +217,10 @@ export default function CreateSessionScreen() {
             {step === 'mode' && (
               <Question title={t('create.qMode')}>
                 <View style={styles.cards}>
-                  {MODE_OPTIONS.map(({ mode, icon }) => (
+                  {MODE_OPTIONS.map(({ mode, icon }, i) => (
                     <OptionCard
                       key={mode}
+                      index={i}
                       icon={icon}
                       title={modeTitle(mode)}
                       hint={modeHint(mode)}
@@ -230,31 +234,12 @@ export default function CreateSessionScreen() {
 
             {step === 'timer' && (
               <Question title={t('create.qTimer')} sub={t('create.qTimerSub')}>
-                <View style={styles.tiles}>
-                  {TIMER_OPTION_VALUES.map((value) => {
-                    const selected = timerDuration === value;
-                    return (
-                      <Pressable
-                        key={value}
-                        onPress={() => choose(() => setTimerDuration(value))}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected }}
-                        style={styles.tileCell}
-                      >
-                        <Glass
-                          radius={borderRadius.lg}
-                          interactive
-                          tint={selected ? colors.primary : undefined}
-                          style={styles.tile}
-                        >
-                          <Text style={[styles.tileValue, selected && styles.tileValueSelected]}>
-                          {value === 0 ? t('create.timerOff') : formatTimerChipLabel(value)}
-                        </Text>
-                        </Glass>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                <TimeDial
+                  value={timerDuration}
+                  onChange={setTimerDuration}
+                  unlimitedLabel={t('create.timerUnlimited')}
+                  accessibilityLabel={t('create.qTimer')}
+                />
               </Question>
             )}
 
@@ -376,6 +361,30 @@ function ProgressSegment({ filled }: { filled: boolean }) {
   return <Animated.View style={[styles.segment, style]} />;
 }
 
+/** The name field answers back: an avatar with your initial, then a hello. */
+function NameGreeting({ name, greet }: { name: string; greet: (first: string) => string }) {
+  const first = name.trim().split(/\s+/)[0] ?? '';
+  const ready = first.length >= 2;
+  return (
+    <View style={styles.greet}>
+      <View style={[styles.greetAvatar, ready && styles.greetAvatarReady]}>
+        {first ? (
+          <Animated.Text key={first.charAt(0)} entering={ZoomIn.duration(220)} style={[styles.greetInitial, ready && styles.greetInitialReady]}>
+            {first.charAt(0).toUpperCase()}
+          </Animated.Text>
+        ) : (
+          <Ionicons name="person" size={30} color={colors.textMuted} />
+        )}
+      </View>
+      {ready ? (
+        <Animated.Text entering={FadeInDown.duration(260)} style={styles.greetText} numberOfLines={1}>
+          {greet(first)}
+        </Animated.Text>
+      ) : null}
+    </View>
+  );
+}
+
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <View style={styles.question}>
@@ -391,12 +400,14 @@ function Question({ title, sub, children }: { title: string; sub?: string; child
 }
 
 function OptionCard({
+  index = 0,
   icon,
   title,
   hint,
   selected,
   onPress,
 }: {
+  index?: number;
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   hint: string;
@@ -404,6 +415,7 @@ function OptionCard({
   onPress: () => void;
 }) {
   return (
+    <Animated.View entering={FadeInDown.duration(260).delay(index * 60)}>
     <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }}>
       <Glass
         radius={borderRadius.lg}
@@ -425,6 +437,7 @@ function OptionCard({
       />
       </Glass>
     </Pressable>
+    </Animated.View>
   );
 }
 
@@ -464,6 +477,19 @@ const styles = StyleSheet.create({
   questionTitle: { ...typography.largeTitle, color: colors.text },
   questionSub: { ...typography.body, color: colors.textSecondary },
 
+  greet: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
+  greetAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greetAvatarReady: { backgroundColor: colors.primary },
+  greetInitial: { ...typography.title1, color: colors.textMuted },
+  greetInitialReady: { color: colors.onPrimary },
+  greetText: { ...typography.title3, color: colors.text },
   bigInput: {
     ...typography.title2,
     color: colors.text,
@@ -494,16 +520,6 @@ const styles = StyleSheet.create({
   optionTitle: { ...typography.headline, color: colors.text },
   optionHint: { ...typography.subheadline, color: colors.textSecondary },
 
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tileCell: { width: '31%', flexGrow: 1, aspectRatio: 1.15 },
-  tile: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  tileValue: {
-    ...typography.title2,
-    fontFamily: fontFamilies.mono,
-    fontVariant: ['tabular-nums'],
-    color: colors.text,
-  },
-  tileValueSelected: { color: colors.onPrimary },
 
   card: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, ...continuous, overflow: 'hidden' },
   cardPadded: { padding: spacing.md },

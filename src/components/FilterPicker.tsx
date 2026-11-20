@@ -19,6 +19,7 @@ import {
 } from '../types';
 import { useTranslation } from '../i18n/t';
 import { Glass } from './ui/Glass';
+import { StopSlider } from './native/StopSlider';
 
 /** How many cuisine chips to show before "show more". */
 const CUISINE_COLLAPSED_COUNT = 6;
@@ -165,45 +166,29 @@ export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
         </View>
       </View>
 
-      {/* Price Section */}
+      {/* Price — a native slider you drag; the label follows the thumb */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('filters.maxPrice')}</Text>
-        <View style={styles.priceRow}>
+        <View style={styles.priceHeader}>
+          <Text style={styles.sectionTitle}>{t('filters.maxPrice')}</Text>
+          <Text style={styles.priceValue}>
+            {PRICE_LABELS[filters.maxPriceLevel - 1].label}
+            <Text style={styles.priceValueDesc}>{'  '}{PRICE_LABELS[filters.maxPriceLevel - 1].desc}</Text>
+          </Text>
+        </View>
+        <StopSlider
+          count={4}
+          index={filters.maxPriceLevel - 1}
+          onChange={(i) => onChange({ ...filters, maxPriceLevel: (i + 1) as 1 | 2 | 3 | 4 })}
+          accessibilityLabel={t('filters.maxPrice')}
+        />
+        <View style={styles.priceScale}>
           {PRICE_LABELS.map((p) => (
-            <Pressable
+            <Text
               key={p.level}
-              style={styles.priceCell}
-              onPress={() => {
-                Haptics.selectionAsync();
-                onChange({ ...filters, maxPriceLevel: p.level });
-              }}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: filters.maxPriceLevel === p.level }}
+              style={[styles.priceTick, p.level <= filters.maxPriceLevel && styles.priceTickActive]}
             >
-              <Glass
-                radius={borderRadius.lg}
-                interactive
-                tint={filters.maxPriceLevel >= p.level ? colors.primary : undefined}
-                style={styles.priceChip}
-              >
-              <Text
-                style={[
-                  styles.priceLabel,
-                  filters.maxPriceLevel >= p.level && styles.priceLabelActive,
-                ]}
-              >
-                {p.label}
-              </Text>
-              <Text
-                style={[
-                  styles.priceDesc,
-                  filters.maxPriceLevel >= p.level && styles.priceDescActive,
-                ]}
-              >
-                {p.desc}
-              </Text>
-              </Glass>
-            </Pressable>
+              {p.label}
+            </Text>
           ))}
         </View>
       </View>
@@ -274,31 +259,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  priceRow: {
+  priceHeader: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
   },
-  priceCell: { flex: 1 },
-  priceChip: {
-    alignItems: 'center',
-    paddingVertical: 8,
-    gap: 2,
+  priceValue: {
+    ...typography.title3,
+    color: colors.primaryDark,
   },
-  priceLabel: {
+  priceValueDesc: {
     ...typography.subheadline,
+    color: colors.textSecondary,
+  },
+  priceScale: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  priceTick: {
+    ...typography.footnote,
     fontWeight: '600',
     color: colors.textMuted,
   },
-  priceLabelActive: {
-    color: colors.onPrimary,
-  },
-  priceDesc: {
-    ...typography.caption2,
-    color: colors.textMuted,
-  },
-  priceDescActive: {
-    color: colors.onPrimary,
-  },
+  priceTickActive: { color: colors.primaryDark },
 
   kosherRow: {
     flexDirection: 'row',
