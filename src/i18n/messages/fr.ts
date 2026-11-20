@@ -118,6 +118,8 @@ export const fr: Messages = {
   'create.timerUnlimited': 'Illimité',
   'create.qRules': 'Règles du jeu',
   'create.qRulesSub': 'Vous pouvez les laisser telles quelles',
+  'create.qStart': 'Quand la partie commence-t-elle ?',
+  'create.startWaitHint': 'Commence quand tout le monde est prêt',
   'create.qStyle': 'La table est stricte comment ?',
   'create.styleChill': 'Détendu',
   'create.styleChillHint': 'L’hôte lance quand il veut. N’importe qui peut continuer après un match.',

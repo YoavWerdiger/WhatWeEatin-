@@ -210,7 +210,7 @@ export function TimeDial({
         )}
 
         <Animated.View style={[styles.knob, knobStyle]} pointerEvents="none">
-          <Glass radius={KNOB / 2} interactive style={styles.knobGlass}>
+          <Glass radius={KNOB / 2} interactive tint="rgba(255, 255, 255, 0.75)" style={styles.knobGlass}>
             <View style={styles.knobDot} />
           </Glass>
         </Animated.View>
@@ -240,7 +240,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   caption: { ...typography.subheadline, color: colors.textSecondary },
-  knob: { position: 'absolute', left: 0, top: 0, width: KNOB, height: KNOB },
+  // A physical knob: tinted glass plus a soft shadow, so it reads on the white face.
+  knob: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: KNOB,
+    height: KNOB,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
   knobGlass: { width: KNOB, height: KNOB, alignItems: 'center', justifyContent: 'center' },
   knobDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
 });

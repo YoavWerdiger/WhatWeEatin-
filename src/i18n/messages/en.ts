@@ -112,6 +112,8 @@ export const en = {
   'create.timerUnlimited': 'Unlimited',
   'create.qRules': 'House rules',
   'create.qRulesSub': 'You can leave these as they are',
+  'create.qStart': 'When does the game start?',
+  'create.startWaitHint': 'Starts once everyone taps ready',
   'create.qStyle': 'How strict is the table?',
   'create.styleChill': 'Chill',
   'create.styleChillHint': 'The host starts anytime. Anyone can keep swiping after a match.',

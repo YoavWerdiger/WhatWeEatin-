@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, {
   Easing,
   cancelAnimation,
+  SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -97,6 +99,24 @@ const styles = StyleSheet.create({
   card1: { backgroundColor: colors.primary },
   cardShade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 28, backgroundColor: 'rgba(0,0,0,0.18)' },
   wheel: { width: WHEEL, height: WHEEL },
+  miniRow: { flexDirection: 'row', alignItems: 'center', gap: 6, direction: 'ltr' },
+  mini: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+  miniLetter: { fontSize: 12, fontWeight: '700', color: '#FFFFFF' },
+  miniBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: colors.accentDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  miniBadgeStar: { backgroundColor: colors.primary },
+  miniPlay: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   pointer: {
     position: 'absolute',
     top: (110 - WHEEL) / 2 - 6,
@@ -110,3 +130,105 @@ const styles = StyleSheet.create({
     borderTopColor: colors.text,
   },
 });
+
+const MINI = [
+  { letter: 'A', color: '#FF6B35' },
+  { letter: 'B', color: '#22A35A' },
+  { letter: 'C', color: '#1D6FB8' },
+];
+
+function useLoop(length: number, duration: number) {
+  const reduceMotion = useReducedMotion();
+  const t = useSharedValue(reduceMotion ? length : 0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    t.set(withRepeat(withTiming(length, { duration, easing: Easing.linear }), -1, false));
+    return () => cancelAnimation(t);
+  }, [reduceMotion]);
+  return t;
+}
+
+/** Everyone ticks ready, one by one — only then does play light up. */
+export function ReadyPreview() {
+  const t = useLoop(5, 3600);
+  return (
+    <View style={styles.stage}>
+      <View style={styles.miniRow}>
+        {MINI.map((p, i) => (
+          <MiniPlayer key={p.letter} {...p} t={t} showAt={i + 0.6} badge="check" />
+        ))}
+        <MiniPlay t={t} showAt={3.6} />
+      </View>
+    </View>
+  );
+}
+
+/** The host hits play right away; the others drop in while it's running. */
+export function HostStartPreview() {
+  const t = useLoop(4, 3000);
+  return (
+    <View style={styles.stage}>
+      <View style={styles.miniRow}>
+        <MiniPlayer {...MINI[0]} t={t} showAt={0.3} badge="star" />
+        <MiniPlayer {...MINI[1]} t={t} showAt={1.6} fadeIn />
+        <MiniPlayer {...MINI[2]} t={t} showAt={2.2} fadeIn />
+        <MiniPlay t={t} showAt={0.7} />
+      </View>
+    </View>
+  );
+}
+
+function MiniPlayer({
+  letter,
+  color,
+  t,
+  showAt,
+  badge,
+  fadeIn,
+}: {
+  letter: string;
+  color: string;
+  t: SharedValue<number>;
+  showAt: number;
+  badge?: 'check' | 'star';
+  fadeIn?: boolean;
+}) {
+  const body = useAnimatedStyle(() => {
+    if (!fadeIn) return { opacity: 1 };
+    const p = Math.min(1, Math.max(0, (t.get() - showAt) / 0.3));
+    return { opacity: 0.25 + 0.75 * p, transform: [{ translateY: (1 - p) * -8 }] };
+  });
+  const mark = useAnimatedStyle(() => {
+    const p = Math.min(1, Math.max(0, (t.get() - showAt) / 0.25));
+    return { opacity: p, transform: [{ scale: 0.5 + 0.5 * p }] };
+  });
+  return (
+    <Animated.View style={[styles.mini, { backgroundColor: color }, body]}>
+      <Text style={styles.miniLetter}>{letter}</Text>
+      {badge && (
+        <Animated.View style={[styles.miniBadge, badge === 'star' && styles.miniBadgeStar, mark]}>
+          <Ionicons name={badge === 'star' ? 'star' : 'checkmark'} size={9} color="#FFFFFF" />
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+}
+
+function MiniPlay({ t, showAt }: { t: SharedValue<number>; showAt: number }) {
+  const lit = useAnimatedStyle(() => {
+    const p = Math.min(1, Math.max(0, (t.get() - showAt) / 0.25));
+    return {
+      backgroundColor: p > 0.5 ? colors.primary : colors.borderLight,
+      transform: [{ scale: 1 + 0.12 * Math.sin(p * Math.PI) }],
+    };
+  });
+  const icon = useAnimatedStyle(() => ({ opacity: 0.5 + 0.5 * Math.min(1, Math.max(0, (t.get() - showAt) / 0.25)) }));
+  return (
+    <Animated.View style={[styles.miniPlay, lit]}>
+      <Animated.View style={icon}>
+        <Ionicons name="play" size={14} color="#FFFFFF" />
+      </Animated.View>
+    </Animated.View>
+  );
+}
+

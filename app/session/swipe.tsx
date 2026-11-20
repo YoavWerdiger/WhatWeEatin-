@@ -376,7 +376,7 @@ export default function SwipeScreen() {
               <Pressable onPress={handleAIDecision} accessibilityRole="button" style={styles.aiWrap}>
                 <Glass radius={borderRadius.lg} interactive style={styles.aiCard}>
                   <View style={styles.aiIcon}>
-                    <Ionicons name="dice" size={24} color={colors.primaryDark} />
+                    <Ionicons name="dice" size={24} color={colors.primary} />
                   </View>
                   <View style={styles.shortlistText}>
                     <Text style={styles.aiText}>{t('swipe.aiTitle')}</Text>

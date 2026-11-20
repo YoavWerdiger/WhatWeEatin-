@@ -118,6 +118,8 @@ export const es: Messages = {
   'create.timerUnlimited': 'Ilimitado',
   'create.qRules': 'Reglas de la casa',
   'create.qRulesSub': 'Puedes dejarlas como están',
+  'create.qStart': '¿Cuándo empieza el juego?',
+  'create.startWaitHint': 'Empieza cuando todos marcan listo',
   'create.qStyle': '¿Qué tan estricta es la mesa?',
   'create.styleChill': 'Relajado',
   'create.styleChillHint': 'El anfitrión empieza cuando quiere. Cualquiera puede seguir tras un match.',

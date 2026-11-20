@@ -114,6 +114,8 @@ export const ar: Messages = {
   'create.timerUnlimited': 'بلا حدود',
   'create.qRules': 'قواعد اللعبة',
   'create.qRulesSub': 'يمكنك تركها كما هي',
+  'create.qStart': 'متى تبدأ اللعبة؟',
+  'create.startWaitHint': 'تبدأ عندما يضغط الجميع «جاهز»',
   'create.qStyle': 'ما مدى صرامة الطاولة؟',
   'create.styleChill': 'هادئ',
   'create.styleChillHint': 'يبدأ المضيف متى شاء. يمكن لأي شخص المتابعة بعد التطابق.',

@@ -148,7 +148,7 @@ function Plate({
           tint={selected ? 'rgba(255, 107, 53, 0.9)' : 'rgba(255, 255, 255, 0.6)'}
           style={styles.plate}
         >
-          <Ionicons name={icon} size={36} color={selected ? '#FFFFFF' : colors.primaryDark} />
+          <Ionicons name={icon} size={36} color={selected ? '#FFFFFF' : colors.primary} />
         </Glass>
       </Animated.View>
       <Text style={[styles.plateLabel, selected && styles.plateLabelSelected]} numberOfLines={2}>
@@ -192,12 +192,19 @@ export function KosherCard({ filters, onChange }: PartProps) {
           <Text style={[styles.vibeLabel, styles.textStart]}>{t('filters.kosher')}</Text>
           <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
         </View>
-        <Animated.View style={[styles.stamp, on ? styles.stampOn : styles.stampOff, stampStyle]}>
+        <Animated.View style={stampStyle}>
+          <Glass
+            radius={36}
+            interactive
+            tint={on ? 'rgba(255, 107, 53, 0.88)' : 'rgba(255, 255, 255, 0.6)'}
+            style={[styles.stamp, on ? styles.stampOn : styles.stampOff]}
+          >
           <View style={[styles.stampInner, on && styles.stampInnerOn]}>
             <Text style={[styles.stampText, on && styles.stampTextOn]} numberOfLines={1} adjustsFontSizeToFit>
               {t('filters.kosherStamp')}
             </Text>
           </View>
+          </Glass>
         </Animated.View>
       </Glass>
     </Pressable>
@@ -343,7 +350,7 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
   },
   stampOff: { borderColor: colors.border, borderStyle: 'dashed', opacity: 0.7 },
-  stampOn: { borderColor: colors.primaryDark, backgroundColor: colors.primary },
+  stampOn: { borderColor: 'rgba(255,255,255,0.6)' },
   stampInner: {
     width: 56,
     height: 56,

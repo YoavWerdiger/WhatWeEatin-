@@ -34,15 +34,17 @@ import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
 import { TimeDial } from '../../src/components/TimeDial';
-import { TableScene } from '../../src/components/TableScene';
-import { RoulettePreview, SwipePreview } from '../../src/components/ModePreview';
-import { StopSlider } from '../../src/components/native/StopSlider';
+import {
+  HostStartPreview,
+  ReadyPreview,
+  RoulettePreview,
+  SwipePreview,
+} from '../../src/components/ModePreview';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import {
-  CuisinePicker,
   KosherCard,
   PricePicker,
   VibePicker,
@@ -53,7 +55,7 @@ type Step =
   | 'name'
   | 'mode'
   | 'timer'
-  | 'style'
+  | 'start'
   | 'cuisine'
   | 'vibe'
   | 'price'
@@ -128,8 +130,7 @@ export default function CreateSessionScreen() {
             'name',
             'mode',
             ...(gameMode === 'swipe' ? (['timer'] as const) : []),
-            'style',
-            'cuisine',
+            'start',
             'vibe',
             'price',
           ],
@@ -197,17 +198,8 @@ export default function CreateSessionScreen() {
   const modeHint = (mode: GameMode) =>
     mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
 
-  // Table strictness folds the two house rules into one level.
-  const styleLevel: 0 | 1 | 2 = !requireLobbyReady ? 0 : requireUnanimousKeepBrowsing ? 2 : 1;
-  const setStyleLevel = (level: 0 | 1 | 2) => {
-    setRequireLobbyReady(level >= 1);
-    setRequireUnanimousKeepBrowsing(level === 2);
-  };
-  const STYLE_NAMES = [t('create.styleChill'), t('create.styleBalanced'), t('create.styleStrict')];
-  const STYLE_HINTS = [t('create.styleChillHint'), t('create.styleBalancedHint'), t('create.styleStrictHint')];
-
   // Only the food filters are optional; the rule questions have a default and advance on tap.
-  const optional = step === 'cuisine' || step === 'vibe' || step === 'price';
+  const optional = step === 'vibe' || step === 'price';
 
   return (
     <View style={styles.container}>
@@ -256,9 +248,9 @@ export default function CreateSessionScreen() {
                 {/* Each mode plays a tiny demo of itself */}
                 <View style={styles.modeRow}>
                   {MODE_OPTIONS.map(({ mode }) => (
-                    <ModeTile
+                    <DemoTile
                       key={mode}
-                      mode={mode}
+                      preview={mode === 'roulette' ? <RoulettePreview /> : <SwipePreview />}
                       title={modeTitle(mode)}
                       hint={modeHint(mode)}
                       selected={gameMode === mode}
@@ -280,33 +272,25 @@ export default function CreateSessionScreen() {
               </Question>
             )}
 
-            {step === 'style' && (
-              <Question title={t('create.qStyle')}>
-                {/* One decision you can see: the table changes as you drag */}
-                <TableScene level={styleLevel} />
-                <View style={styles.styleText}>
-                  <Text style={styles.styleName}>{STYLE_NAMES[styleLevel]}</Text>
-                  <Text style={styles.styleHint}>{STYLE_HINTS[styleLevel]}</Text>
+            {step === 'start' && (
+              <Question title={t('create.qStart')}>
+                {/* Each option plays out how the game would start */}
+                <View style={styles.modeRow}>
+                  <DemoTile
+                    preview={<ReadyPreview />}
+                    title={t('create.readyYes')}
+                    hint={t('create.startWaitHint')}
+                    selected={requireLobbyReady}
+                    onPress={() => choose(() => setRequireLobbyReady(true))}
+                  />
+                  <DemoTile
+                    preview={<HostStartPreview />}
+                    title={t('create.readyNo')}
+                    hint={t('create.readyNoHint')}
+                    selected={!requireLobbyReady}
+                    onPress={() => choose(() => setRequireLobbyReady(false))}
+                  />
                 </View>
-                <StopSlider
-                  count={3}
-                  index={styleLevel}
-                  onChange={(i) => setStyleLevel(i as 0 | 1 | 2)}
-                  accessibilityLabel={t('create.qStyle')}
-                />
-                <View style={styles.styleScale}>
-                  {STYLE_NAMES.map((n, i) => (
-                    <Text key={n} style={[styles.styleTick, i === styleLevel && styles.styleTickActive]}>
-                      {n}
-                    </Text>
-                  ))}
-                </View>
-              </Question>
-            )}
-
-            {step === 'cuisine' && (
-              <Question title={t('create.qFilters')} sub={t('create.qFiltersSub')}>
-                <CuisinePicker filters={filters} onChange={setFilters} />
               </Question>
             )}
 
@@ -339,7 +323,7 @@ export default function CreateSessionScreen() {
                     accessibilityRole="button"
                     style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
                   >
-                    <Ionicons name="share-outline" size={18} color={colors.primaryDark} />
+                    <Ionicons name="share-outline" size={18} color={colors.primary} />
                     <Text style={styles.shareText}>{t('create.shareCode')}</Text>
                   </Pressable>
                   <View style={styles.separatorFull} />
@@ -426,14 +410,14 @@ function NameGreeting({ name, greet }: { name: string; greet: (first: string) =>
   );
 }
 
-function ModeTile({
-  mode,
+function DemoTile({
+  preview,
   title,
   hint,
   selected,
   onPress,
 }: {
-  mode: GameMode;
+  preview: React.ReactNode;
   title: string;
   hint: string;
   selected: boolean;
@@ -454,7 +438,7 @@ function ModeTile({
         tint={selected ? SELECTED_TINT : RESTING_TINT}
         style={styles.modeTile}
       >
-        {mode === 'roulette' ? <RoulettePreview /> : <SwipePreview />}
+        {preview}
         <View style={styles.modeText}>
           <View style={styles.modeTitleRow}>
             <Text style={styles.optionTitle}>{title}</Text>
@@ -512,7 +496,7 @@ function OptionCard({
         style={styles.option}
       >
       <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
-        <Ionicons name={icon} size={24} color={selected ? '#FFFFFF' : colors.primaryDark} />
+        <Ionicons name={icon} size={24} color={selected ? '#FFFFFF' : colors.primary} />
       </View>
       <View style={styles.optionText}>
         <Text style={styles.optionTitle}>{title}</Text>

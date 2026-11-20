@@ -113,6 +113,8 @@ export const he: Messages = {
   'create.timerUnlimited': 'ללא הגבלה',
   'create.qRules': 'חוקי הבית',
   'create.qRulesSub': 'אפשר להשאיר כמו שזה',
+  'create.qStart': 'מתי המשחק מתחיל?',
+  'create.startWaitHint': 'מתחיל ברגע שכולם לוחצים ״מוכן״',
   'create.qStyle': 'כמה קפדני השולחן?',
   'create.styleChill': 'רגוע',
   'create.styleChillHint': 'המארח מתחיל מתי שרוצה. כל אחד יכול להמשיך אחרי מאץ׳.',

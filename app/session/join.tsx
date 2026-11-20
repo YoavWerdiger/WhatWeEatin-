@@ -153,7 +153,7 @@ export default function JoinSessionScreen() {
                 accessibilityRole="button"
                 style={({ pressed }) => [styles.pasteButton, pressed && styles.pressed]}
               >
-                <Ionicons name="clipboard-outline" size={16} color={colors.primaryDark} />
+                <Ionicons name="clipboard-outline" size={16} color={colors.primary} />
                 <Text style={styles.pasteText}>{t('join.paste')}</Text>
               </Pressable>
             </View>
@@ -236,7 +236,7 @@ export default function JoinSessionScreen() {
               {HOW_STEPS.map(({ icon, key }, i) => (
                 <View key={key} style={styles.stepRow}>
                   <View style={styles.stepIcon}>
-                    <Ionicons name={icon} size={18} color={colors.primaryDark} />
+                    <Ionicons name={icon} size={18} color={colors.primary} />
                   </View>
                   <Text style={styles.stepText}>{t(key)}</Text>
                   <Text style={styles.stepNumber}>{i + 1}</Text>

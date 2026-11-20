@@ -218,7 +218,7 @@ export default function LobbyScreen() {
 function MetaChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
   return (
     <Glass radius={borderRadius.full} interactive tint="rgba(255, 255, 255, 0.6)" style={styles.metaChip}>
-      <Ionicons name={icon} size={14} color={colors.primaryDark} />
+      <Ionicons name={icon} size={14} color={colors.primary} />
       <Text style={styles.metaChipText}>{label}</Text>
     </Glass>
   );
