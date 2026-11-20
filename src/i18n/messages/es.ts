@@ -172,6 +172,7 @@ export const es: Messages = {
   'roulette.waitingHost': 'Esperando a que el anfitrión gire…',
   'roulette.landed': '¡Cayendo en {{name}}',
 
+  'swipe.go': 'Ya',
   'swipe.finishedTitle': '¡Todo deslizado',
   'swipe.finishedSubtitle': 'Esperando a que el grupo termine...',
   'swipe.duelKicker': 'Ronda 2',

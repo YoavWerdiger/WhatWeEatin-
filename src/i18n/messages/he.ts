@@ -161,6 +161,7 @@ export const he: Messages = {
   'roulette.waitingHost': 'מחכים שהמארח יסובב…',
   'roulette.landed': 'נוחתים על {{name}}',
 
+  'swipe.go': 'יאללה',
   'swipe.finishedTitle': 'החלקתם הכול',
   'swipe.finishedSubtitle': 'מחכים ששאר הקבוצה יסיימו...',
   'swipe.duelKicker': 'סיבוב 2',

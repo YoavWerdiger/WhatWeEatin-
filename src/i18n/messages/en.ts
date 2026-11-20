@@ -166,6 +166,7 @@ export const en = {
   'roulette.waitingHost': 'Waiting for the host to spin…',
   'roulette.landed': 'Landing on {{name}}',
 
+  'swipe.go': 'Go',
   'swipe.finishedTitle': 'All swiped',
   'swipe.finishedSubtitle': 'Waiting for the group to finish...',
   'swipe.duelKicker': 'Round 2',

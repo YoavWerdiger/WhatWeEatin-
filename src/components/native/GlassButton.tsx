@@ -26,7 +26,7 @@ export function GlassButton({
       disabled={disabled}
       loading={loading}
       fullWidth={fullWidth}
-      style={StyleSheet.flatten(style)}
+      style={StyleSheet.flatten(style) ?? undefined}
     />
   );
 }

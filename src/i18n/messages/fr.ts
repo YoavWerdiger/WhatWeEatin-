@@ -174,6 +174,7 @@ export const fr: Messages = {
   'roulette.waitingHost': 'En attente que l’hôte tourne…',
   'roulette.landed': 'On tombe sur {{name}} ',
 
+  'swipe.go': 'C\'est parti',
   'swipe.finishedTitle': 'Tout est swipé ',
   'swipe.finishedSubtitle': 'En attente que le groupe termine...',
   'swipe.duelKicker': 'Manche 2',

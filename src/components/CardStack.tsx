@@ -4,14 +4,16 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedReaction,
+  useReducedMotion,
   withSpring,
   withTiming,
-  runOnJS,
   interpolate,
   Extrapolation,
   Easing,
   SharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
 import { Restaurant, VoteType } from '../types';
@@ -19,29 +21,25 @@ import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { useTranslation } from '../i18n/t';
 import { borderRadius } from '../theme/spacing';
-import { SESSION, ANIMATION } from '../utils/constants';
+import { SESSION } from '../utils/constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SWIPE_THRESHOLD = SESSION.SWIPE_THRESHOLD;
 const SWIPE_VELOCITY = SESSION.SWIPE_VELOCITY_THRESHOLD;
-const ROTATION_ANGLE = SESSION.MAX_CARD_ROTATION;
-const SNAP_SPRING = ANIMATION.CARD_SNAP_BACK;
-const EXIT_DURATION = 260;
-const PROGRAMMATIC_DURATION = 420;
+/** Tilt at one screen-width of travel. Grabbing the bottom half tilts the other way. */
+const ROTATION_PER_WIDTH = 16;
+const OFFSCREEN_X = SCREEN_WIDTH * 1.4;
 
-/** Soft drag envelope — card never leaves a controlled orbit. */
-const MAX_DRAG_X = Math.min(SCREEN_WIDTH * 0.34, 140);
-const MAX_DRAG_Y_DOWN = 48;
-const MAX_DRAG_Y_UP = 56;
-/** Rubber-band coefficient past the soft limit (0 = hard stop, 1 = free). */
-const RUBBER = 0.28;
+// Finger was on the card → springs, so release velocity carries through.
+const SNAP_BACK = { duration: 400, dampingRatio: 0.8 };
+const THROW = { duration: 350, dampingRatio: 1, overshootClamping: true };
+const BUTTON_SWIPE_DURATION = 320;
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
 const STACK_CARDS = SESSION.CARD_STACK_SIZE;
 const STACK_SCALE_STEP = 0.045;
 const STACK_OFFSET_STEP = 10;
-
-const EXIT_EASING = Easing.bezier(0.22, 1, 0.36, 1);
 
 export interface CardStackRef {
   swipeLeft: () => void;
@@ -54,109 +52,88 @@ interface CardStackProps {
   onSwipe: (restaurant: Restaurant, direction: VoteType) => void;
 }
 
-/** Progressive resistance so yanking past the soft max feels sticky, not free. */
-function resist(offset: number, limit: number): number {
+/** Apple's momentum projection — where a flick would come to rest. */
+function project(velocity: number): number {
   'worklet';
-  const sign = offset < 0 ? -1 : 1;
-  const abs = Math.abs(offset);
-  if (abs <= limit) return offset;
-  const overshoot = abs - limit;
-  return sign * (limit + (overshoot * RUBBER * limit) / (limit + overshoot));
-}
-
-function clampExitY(y: number): number {
-  'worklet';
-  const maxArc = 56;
-  return Math.max(-maxArc, Math.min(maxArc, y * 0.22));
+  const decel = 0.998;
+  return ((velocity / 1000) * decel) / (1 - decel);
 }
 
 export const CardStack = forwardRef<CardStackRef, CardStackProps>(
   ({ restaurants, currentIndex, onSwipe }, ref) => {
     const { t } = useTranslation();
+    const reduceMotion = useReducedMotion();
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
+    const tiltSign = useSharedValue(1);
     const isLocked = useSharedValue(false);
 
     useEffect(() => {
-      translateX.value = 0;
-      translateY.value = 0;
-      isLocked.value = false;
+      translateX.set(0);
+      translateY.set(0);
+      isLocked.set(false);
     }, [currentIndex]);
 
-    const triggerHaptic = useCallback(() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const tick = useCallback(() => {
+      void Haptics.selectionAsync();
+    }, []);
+
+    const commitHaptic = useCallback(() => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }, []);
 
     const emitSwipe = useCallback(
       (direction: VoteType) => {
         const restaurant = restaurants[currentIndex];
-        if (restaurant) {
-          onSwipe(restaurant, direction);
-        }
+        if (restaurant) onSwipe(restaurant, direction);
       },
       [restaurants, currentIndex, onSwipe],
     );
 
-    const animateExit = useCallback(
-      (direction: 'like' | 'dislike') => {
-        'worklet';
-        isLocked.value = true;
-
-        const dest =
-          direction === 'like'
-            ? { x: SCREEN_WIDTH * 1.25, y: clampExitY(translateY.value) }
-            : { x: -SCREEN_WIDTH * 1.25, y: clampExitY(translateY.value) };
-
-        translateX.value = withTiming(dest.x, {
-          duration: EXIT_DURATION,
-          easing: EXIT_EASING,
-        });
-        translateY.value = withTiming(
-          dest.y,
-          {
-            duration: EXIT_DURATION,
-            easing: EXIT_EASING,
-          },
-          (finished) => {
-            if (finished) {
-              runOnJS(emitSwipe)(direction);
-            }
-          },
-        );
-        runOnJS(triggerHaptic)();
+    // A tick the moment the card crosses into "like" / "pass" (and back out),
+    // so the decision is felt before the finger lifts.
+    useAnimatedReaction(
+      () => {
+        const x = translateX.get();
+        return x > SWIPE_THRESHOLD ? 1 : x < -SWIPE_THRESHOLD ? -1 : 0;
       },
-      [emitSwipe, triggerHaptic],
+      (zone, prev) => {
+        if (prev !== null && zone !== prev && !isLocked.get()) {
+          scheduleOnRN(tick);
+        }
+      },
     );
+
+    const throwCard = (direction: 'like' | 'dislike', velocityX: number, velocityY: number) => {
+      'worklet';
+      isLocked.set(true);
+      const sign = direction === 'like' ? 1 : -1;
+      // Keep the flick's speed; never let a slow release crawl off screen.
+      const vx = sign * Math.max(Math.abs(velocityX), 1400);
+      translateX.set(
+        withSpring(sign * OFFSCREEN_X, { ...THROW, velocity: vx }, (finished) => {
+          if (finished) scheduleOnRN(emitSwipe, direction);
+        }),
+      );
+      translateY.set(withSpring(translateY.get() + velocityY * 0.12, { ...THROW, velocity: velocityY }));
+      scheduleOnRN(commitHaptic);
+    };
 
     const programmaticSwipe = useCallback(
       (direction: 'like' | 'dislike') => {
-        if (isLocked.value) return;
-        isLocked.value = true;
-
-        const dest =
-          direction === 'like'
-            ? { x: SCREEN_WIDTH * 1.25, y: -36 }
-            : { x: -SCREEN_WIDTH * 1.25, y: -36 };
-
-        translateX.value = withTiming(dest.x, {
-          duration: PROGRAMMATIC_DURATION,
-          easing: EXIT_EASING,
-        });
-        translateY.value = withTiming(
-          dest.y,
-          {
-            duration: PROGRAMMATIC_DURATION,
-            easing: EXIT_EASING,
-          },
-          (finished) => {
-            if (finished) {
-              runOnJS(triggerHaptic)();
-              runOnJS(emitSwipe)(direction);
-            }
-          },
+        if (isLocked.get()) return;
+        isLocked.set(true);
+        const sign = direction === 'like' ? 1 : -1;
+        tiltSign.set(1);
+        commitHaptic();
+        translateY.set(withTiming(-24, { duration: BUTTON_SWIPE_DURATION, easing: EASE_OUT }));
+        translateX.set(
+          withTiming(sign * OFFSCREEN_X, { duration: BUTTON_SWIPE_DURATION, easing: EASE_OUT }, (finished) => {
+            if (finished) scheduleOnRN(emitSwipe, direction);
+          }),
         );
       },
-      [emitSwipe, triggerHaptic],
+      [emitSwipe, commitHaptic],
     );
 
     useImperativeHandle(ref, () => ({
@@ -165,73 +142,56 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
     }));
 
     const panGesture = Gesture.Pan()
-      .activeOffsetX([-12, 12])
-      .activeOffsetY([-18, 18])
+      .maxPointers(1)
+      .activeOffsetX([-10, 10])
+      .failOffsetY([-24, 24])
+      .onBegin((e) => {
+        // Where the card was grabbed decides which way it pivots — like a real card.
+        tiltSign.set(e.y > CARD_HEIGHT / 2 ? -1 : 1);
+      })
       .onUpdate((e) => {
-        if (isLocked.value) return;
-        translateX.value = resist(e.translationX, MAX_DRAG_X);
-        if (e.translationY >= 0) {
-          translateY.value = Math.min(e.translationY, MAX_DRAG_Y_DOWN);
-        } else {
-          translateY.value = resist(e.translationY, MAX_DRAG_Y_UP);
-        }
+        if (isLocked.get()) return;
+        // 1:1 — the card stays under the finger.
+        translateX.set(e.translationX);
+        translateY.set(e.translationY);
       })
       .onEnd((e) => {
-        if (isLocked.value) return;
-
-        const x = translateX.value;
-        const y = translateY.value;
-        const absX = Math.abs(x);
-        const absY = Math.abs(y);
-
-        const horizontalDominant = absX >= absY * 0.75;
-        const flingRight = e.velocityX > SWIPE_VELOCITY && horizontalDominant;
-        const flingLeft = e.velocityX < -SWIPE_VELOCITY && horizontalDominant;
-
-        if (horizontalDominant && (x > SWIPE_THRESHOLD || flingRight)) {
-          animateExit('like');
-        } else if (horizontalDominant && (x < -SWIPE_THRESHOLD || flingLeft)) {
-          animateExit('dislike');
+        if (isLocked.get()) return;
+        // Decide from where the flick is heading, not only where it was released.
+        const landing = translateX.get() + project(e.velocityX);
+        const fast = Math.abs(e.velocityX) > SWIPE_VELOCITY;
+        if (landing > SWIPE_THRESHOLD * 1.5 && (translateX.get() > SWIPE_THRESHOLD || fast)) {
+          throwCard('like', e.velocityX, e.velocityY);
+        } else if (landing < -SWIPE_THRESHOLD * 1.5 && (translateX.get() < -SWIPE_THRESHOLD || fast)) {
+          throwCard('dislike', e.velocityX, e.velocityY);
         } else {
-          translateX.value = withSpring(0, SNAP_SPRING);
-          translateY.value = withSpring(0, SNAP_SPRING);
+          translateX.set(withSpring(0, { ...SNAP_BACK, velocity: e.velocityX }));
+          translateY.set(withSpring(0, { ...SNAP_BACK, velocity: e.velocityY }));
         }
       });
 
     const topCardStyle = useAnimatedStyle(() => {
-      const rotation = interpolate(
-        translateX.value,
-        [-MAX_DRAG_X, 0, MAX_DRAG_X],
-        [-ROTATION_ANGLE, 0, ROTATION_ANGLE],
-        Extrapolation.CLAMP,
-      );
-
+      const rotation = reduceMotion
+        ? 0
+        : (translateX.get() / SCREEN_WIDTH) * ROTATION_PER_WIDTH * tiltSign.get();
       return {
         transform: [
-          { translateX: translateX.value },
-          { translateY: translateY.value },
+          { translateX: translateX.get() },
+          { translateY: translateY.get() },
           { rotate: `${rotation}deg` },
         ],
       };
     });
 
-    const likeOpacity = useAnimatedStyle(() => ({
-      opacity: interpolate(
-        translateX.value,
-        [0, SWIPE_THRESHOLD * 0.55],
-        [0, 1],
-        Extrapolation.CLAMP,
-      ),
-    }));
-
-    const nopeOpacity = useAnimatedStyle(() => ({
-      opacity: interpolate(
-        translateX.value,
-        [-SWIPE_THRESHOLD * 0.55, 0],
-        [1, 0],
-        Extrapolation.CLAMP,
-      ),
-    }));
+    // Stamps grow into place as the card nears the threshold.
+    const likeStyle = useAnimatedStyle(() => {
+      const p = interpolate(translateX.get(), [SWIPE_THRESHOLD * 0.25, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
+      return { opacity: p, transform: [{ rotate: '-14deg' }, { scale: 0.9 + 0.1 * p }] };
+    });
+    const nopeStyle = useAnimatedStyle(() => {
+      const p = interpolate(translateX.get(), [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD * 0.25], [1, 0], Extrapolation.CLAMP);
+      return { opacity: p, transform: [{ rotate: '14deg' }, { scale: 0.9 + 0.1 * p }] };
+    });
 
     const visibleCards = restaurants.slice(currentIndex, currentIndex + STACK_CARDS);
 
@@ -248,14 +208,14 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
                     <SwipeCard restaurant={restaurant} />
 
                     <Animated.View
-                      style={[styles.overlayStamp, styles.likeStamp, likeOpacity]}
+                      style={[styles.overlayStamp, styles.likeStamp, likeStyle]}
                       pointerEvents="none"
                     >
                       <Text style={styles.likeStampText}>{t('swipeActions.like')}</Text>
                     </Animated.View>
 
                     <Animated.View
-                      style={[styles.overlayStamp, styles.nopeStamp, nopeOpacity]}
+                      style={[styles.overlayStamp, styles.nopeStamp, nopeStyle]}
                       pointerEvents="none"
                     >
                       <Text style={styles.nopeStampText}>{t('swipeActions.pass')}</Text>
@@ -294,12 +254,12 @@ function StackCard({
   translateX,
   translateY,
 }: StackCardProps) {
+  // The card underneath rises to meet you as the top one leaves.
   const style = useAnimatedStyle(() => {
-    const dragDistance = Math.sqrt(
-      translateX.value * translateX.value + translateY.value * translateY.value,
-    );
+    const x = translateX.get();
+    const y = translateY.get();
     const progress = interpolate(
-      dragDistance,
+      Math.sqrt(x * x + y * y),
       [0, SWIPE_THRESHOLD * 1.8],
       [0, 1],
       Extrapolation.CLAMP,
@@ -314,7 +274,7 @@ function StackCard({
     const offsetY = baseY + (targetY - baseY) * progress;
 
     return {
-      transform: [{ scale }, { translateY: offsetY }],
+      transform: [{ translateY: offsetY }, { scale }],
       zIndex: -stackIndex,
     };
   });
@@ -349,23 +309,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 4,
     borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   likeStamp: {
     left: 20,
-    borderColor: colors.accent,
-    transform: [{ rotate: '-18deg' }],
+    borderColor: colors.accentLight,
   },
   nopeStamp: {
     right: 20,
-    borderColor: colors.danger,
-    transform: [{ rotate: '18deg' }],
+    borderColor: '#FF8A80',
   },
   likeStampText: {
     ...typography.largeTitle,
-    color: colors.accent,
+    color: colors.accentLight,
   },
   nopeStampText: {
     ...typography.largeTitle,
-    color: colors.danger,
+    color: '#FF8A80',
   },
 });

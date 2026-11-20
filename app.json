@@ -24,7 +24,8 @@
           "wolt",
           "tenbis",
           "tenbisapp"
-        ]
+        ],
+        "CADisableMinimumFrameDurationOnPhone": true
       }
     },
     "android": {

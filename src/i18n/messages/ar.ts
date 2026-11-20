@@ -162,6 +162,7 @@ export const ar: Messages = {
   'roulette.waitingHost': 'بانتظار أن يدير المضيف…',
   'roulette.landed': 'نهبط على {{name}}',
 
+  'swipe.go': 'انطلق',
   'swipe.finishedTitle': 'مرّرتم على الكل',
   'swipe.finishedSubtitle': 'بانتظار أن تنهي المجموعة...',
   'swipe.duelKicker': 'الجولة 2',

@@ -15,6 +15,7 @@ import { SwipeActions } from '../../src/components/SwipeActions';
 import { Timer } from '../../src/components/Timer';
 import { UserList } from '../../src/components/UserList';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
+import { RoundCountdown } from '../../src/components/RoundCountdown';
 import { Restaurant, VoteType } from '../../src/types';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -78,6 +79,11 @@ export default function SwipeScreen() {
 
   const [displayedMatch, setDisplayedMatch] = useState(matchResult);
   const [matchExiting, setMatchExiting] = useState(false);
+  // Count the round in only when arriving at its first card.
+  const [showCountdown, setShowCountdown] = useState(
+    () => useSessionStore.getState().currentCardIndex === 0 && !matchResult,
+  );
+  const endCountdown = useCallback(() => setShowCountdown(false), []);
   const chromeOpacity = useRef(new Animated.Value(matchResult ? 0 : 1)).current;
 
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -423,6 +429,10 @@ export default function SwipeScreen() {
                     </Animated.View>
         )}
       </SafeAreaView>
+
+      {showCountdown && !displayedMatch && (
+        <RoundCountdown goLabel={t('swipe.go')} onDone={endCountdown} />
+      )}
 
       {displayedMatch && (
         <MatchAnimation

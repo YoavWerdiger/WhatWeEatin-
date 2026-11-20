@@ -42,7 +42,7 @@ export default function JoinSessionScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codeFocused, setCodeFocused] = useState(false);
-  const codeInputRef = useRef<TextInput>(null);
+  const codeInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Wrong code: a short horizontal shake — the "no" head-shake.
   const shake = useSharedValue(0);
