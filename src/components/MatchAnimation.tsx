@@ -138,33 +138,33 @@ export function MatchAnimation({
         {/* The winner, front and centre — it lands like a card on the table */}
         <Animated.View entering={reduceMotion ? FadeIn.duration(200) : heroEnter} style={styles.heroWrap}>
           <View style={styles.hero}>
-            <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            {/* Photo on top, the details below it — on the card, not over the picture */}
+            <Image source={{ uri: r.image }} style={styles.heroPhoto} resizeMode="cover" />
+            <Glass radius={0} variant="regular" scheme="dark" dark style={styles.cardInfo}>
+              <Text style={styles.name} numberOfLines={2}>
+                {r.name}
+              </Text>
+              <View style={styles.pills}>
+                {meta.map((m) => (
+                  <Glass
+                    key={m.icon}
+                    radius={borderRadius.full}
+                    variant="clear"
+                    scheme="dark"
+                    dark
+                    tint="rgba(255, 255, 255, 0.16)"
+                    style={styles.pill}
+                  >
+                    <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
+                    <Text style={styles.pillText}>{m.text}</Text>
+                  </Glass>
+                ))}
+              </View>
+            </Glass>
           </View>
         </Animated.View>
 
         <View style={styles.body}>
-          <Animated.View entering={rise(2)} style={styles.nameBlock}>
-            <Text style={styles.name} numberOfLines={2}>
-              {r.name}
-            </Text>
-            <View style={styles.pills}>
-              {meta.map((m) => (
-                <Glass
-                  key={m.icon}
-                  radius={borderRadius.full}
-                  variant="clear"
-                  scheme="dark"
-                  dark
-                  tint="rgba(255, 255, 255, 0.16)"
-                  style={styles.pill}
-                >
-                  <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
-                  <Text style={styles.pillText}>{m.text}</Text>
-                </Glass>
-              ))}
-            </View>
-          </Animated.View>
-
           {result.agreedUsers.length > 0 && (
           <Animated.View entering={rise(3)}>
             <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
@@ -283,15 +283,14 @@ const styles = StyleSheet.create({
   },
   hero: {
     width: '100%',
-    aspectRatio: 0.95,
-    maxHeight: 420,
     alignSelf: 'center',
     borderRadius: borderRadius.xl,
     borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
-  nameBlock: { gap: spacing.sm },
+  heroPhoto: { width: '100%', aspectRatio: 1.45, maxHeight: 280 },
+  cardInfo: { padding: spacing.md, gap: spacing.sm },
   name: { ...typography.title1, color: '#FFFFFF' },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
