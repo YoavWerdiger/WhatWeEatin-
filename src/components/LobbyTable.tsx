@@ -4,12 +4,15 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   Easing,
+  FadeIn,
+  FadeOut,
   Keyframe,
   useAnimatedStyle,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { SessionUser } from '../types';
+import { Glass } from './ui/Glass';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
@@ -35,10 +38,12 @@ interface LobbyTableProps {
   /** Tapping an empty seat invites someone to fill it. */
   onInvite?: () => void;
   inviteLabel?: string;
+  /** Dish photos to serve on the plate in the middle. */
+  photos?: string[];
 }
 
 /** The lobby as a table: players take seats as they join, ready players get a check. */
-export function LobbyTable({ users, readyIds, onInvite, inviteLabel }: LobbyTableProps) {
+export function LobbyTable({ users, readyIds, onInvite, inviteLabel, photos = [] }: LobbyTableProps) {
   const seats = Math.min(8, Math.max(4, users.length + 1));
   return (
     <View style={styles.scene}>
@@ -47,11 +52,15 @@ export function LobbyTable({ users, readyIds, onInvite, inviteLabel }: LobbyTabl
         <Circle cx={C} cy={C} r={TABLE_R - 16} fill="none" stroke={colors.borderLight} strokeWidth={2} />
       </Svg>
 
-      <View style={styles.center} pointerEvents="none">
-        <Text style={styles.count}>
-          {users.length}
-          <Text style={styles.countOf}>/{seats}</Text>
-        </Text>
+      {/* The plate in the middle keeps serving dishes from tonight's list */}
+      <Plate photos={photos} />
+      <View style={styles.countWrap} pointerEvents="none">
+        <Glass radius={999} scheme="dark" tint="rgba(0,0,0,0.35)" style={styles.countPill}>
+          <Text style={styles.count}>
+            {users.length}
+            <Text style={styles.countOf}>/{seats}</Text>
+          </Text>
+        </Glass>
       </View>
 
       {Array.from({ length: seats }).map((_, i) => {
@@ -92,6 +101,27 @@ export function LobbyTable({ users, readyIds, onInvite, inviteLabel }: LobbyTabl
   );
 }
 
+const PLATE = (TABLE_R - 10) * 2;
+
+function Plate({ photos }: { photos: string[] }) {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => {
+    if (photos.length < 2) return;
+    const id = setInterval(() => setI((n) => (n + 1) % Math.min(photos.length, 10)), 2200);
+    return () => clearInterval(id);
+  }, [photos.length]);
+  const uri = photos[i];
+  return (
+    <View style={styles.plate} pointerEvents="none">
+      {uri ? (
+        <Animated.Image key={uri} source={{ uri }} style={styles.plateImg} entering={FadeIn.duration(500)} exiting={FadeOut.duration(500)} />
+      ) : (
+        <Ionicons name="restaurant" size={34} color={colors.textMuted} />
+      )}
+    </View>
+  );
+}
+
 function ReadyBadge({ ready }: { ready: boolean }) {
   const style = useAnimatedStyle(() => ({
     opacity: withTiming(ready ? 1 : 0, { duration: 150 }),
@@ -106,17 +136,23 @@ function ReadyBadge({ ready }: { ready: boolean }) {
 
 const styles = StyleSheet.create({
   scene: { width: SIZE, height: SIZE + 16, alignSelf: 'center' },
-  center: {
+  plate: {
     position: 'absolute',
-    left: C - 50,
-    top: C - 24,
-    width: 100,
-    height: 48,
+    left: C - PLATE / 2,
+    top: C - PLATE / 2,
+    width: PLATE,
+    height: PLATE,
+    borderRadius: PLATE / 2,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.borderLight,
   },
-  count: { ...typography.title1, color: colors.text, fontVariant: ['tabular-nums'] },
-  countOf: { ...typography.title3, color: colors.textMuted },
+  plateImg: { position: "absolute", top: 0, left: 0, width: PLATE, height: PLATE },
+  countWrap: { position: 'absolute', left: 0, right: 0, top: C + PLATE / 2 - 18, alignItems: 'center' },
+  countPill: { paddingHorizontal: 12, paddingVertical: 4 },
+  count: { ...typography.headline, color: '#FFFFFF', fontVariant: ['tabular-nums'] },
+  countOf: { ...typography.subheadline, color: 'rgba(255,255,255,0.75)' },
   seat: { position: 'absolute', width: AVATAR, height: AVATAR, alignItems: 'center' },
   seatInner: { alignItems: 'center' },
   // name above the avatar for seats on the top of the table

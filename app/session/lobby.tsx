@@ -19,6 +19,7 @@ import { typography } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { LobbyTable } from '../../src/components/LobbyTable';
+import { MenuMarquee } from '../../src/components/MenuMarquee';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { getFirebaseUid, isFirebaseConfigured } from '../../src/services/firebase';
@@ -102,6 +103,8 @@ export default function LobbyScreen() {
     setTimeout(() => setCopied(false), 1600);
   };
 
+  const dishPhotos = session.restaurants.map((r) => r.image).filter(Boolean);
+
   const isHost =
     !isFirebaseConfigured() || (myUid != null && session.hostId === myUid);
   const canStart = session.users.length >= SESSION.MIN_USERS;
@@ -175,8 +178,15 @@ export default function LobbyScreen() {
             readyIds={session.requireLobbyReady ? readySet : undefined}
             onInvite={handleShare}
             inviteLabel={t('lobby.invite')}
+            photos={dishPhotos}
           />
         </View>
+
+        {/* Tonight's menu drifts past while the table fills up */}
+        <MenuMarquee
+          images={dishPhotos}
+          label={t('create.restaurantsFound', { count: session.restaurants.length })}
+        />
       </ScrollView>
 
       <View
