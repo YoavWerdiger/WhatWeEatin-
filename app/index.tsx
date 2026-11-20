@@ -18,10 +18,9 @@ import { useAuthStore } from '../src/store/authStore';
 import { useSessionStore } from '../src/store/sessionStore';
 import { useTranslation } from '../src/i18n/t';
 import { AdBanner } from '../src/components/ads/AdBanner';
+import { HomeHero } from '../src/components/HomeHero';
 
 const { width } = Dimensions.get('window');
-
-const FOOD_EMOJIS = ['🍕', '🍔', '🌮', '🍣', '🥗', '🍜', '🥘', '🍱'];
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -36,9 +35,6 @@ export default function HomeScreen() {
   }, []);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
-  const emojiAnims = useRef(
-    FOOD_EMOJIS.map(() => new Animated.Value(0)),
-  ).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -55,54 +51,12 @@ export default function HomeScreen() {
       }),
     ]).start();
 
-    emojiAnims.forEach((anim, i) => {
-      Animated.sequence([
-        Animated.delay(300 + i * 100),
-        Animated.spring(anim, {
-          toValue: 1,
-          tension: 50,
-          friction: 5,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.emojiRing}>
-        {FOOD_EMOJIS.map((emoji, i) => {
-          const angle = (i / FOOD_EMOJIS.length) * 2 * Math.PI - Math.PI / 2;
-          const radius = 100;
-          const x = Math.cos(angle) * radius;
-          const y = Math.sin(angle) * radius;
-
-          return (
-            <Animated.Text
-              key={i}
-              style={[
-                styles.emoji,
-                {
-                  transform: [
-                    { translateX: x },
-                    { translateY: y },
-                    { scale: emojiAnims[i] },
-                  ],
-                  opacity: emojiAnims[i],
-                },
-              ]}
-            >
-              {emoji}
-            </Animated.Text>
-          );
-        })}
-        <Image
-          source={require('../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-          accessibilityLabel="What We Eatin'"
-        />
-      </View>
+      {/* The game, shown: a dealt hand of restaurants, the top one getting liked */}
+      <HomeHero />
 
       <Animated.View
         style={[
@@ -152,20 +106,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
-  },
-  emojiRing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 240,
-    marginTop: spacing.xl,
-  },
-  emoji: {
-    position: 'absolute',
-    fontSize: 36,
-  },
-  logo: {
-    width: 88,
-    height: 88,
   },
   content: {
     flex: 1,
