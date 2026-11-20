@@ -103,7 +103,7 @@ export function HomeHero() {
               {isFront && (
                 <Animated.View style={[styles.stamp, stamp]}>
                   <Glass radius={999} scheme="dark" tint="rgba(34, 163, 90, 0.8)" style={styles.stampGlass}>
-                    <Ionicons name="heart" size={16} color="#FFFFFF" />
+                    <Ionicons name="heart" size={26} color="#FFFFFF" />
                   </Glass>
                 </Animated.View>
               )}
@@ -131,5 +131,5 @@ const styles = StyleSheet.create({
   shade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 64, backgroundColor: 'rgba(0,0,0,0.35)' },
   name: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF', position: 'absolute', left: 12, right: 12, bottom: 12 },
   stamp: { position: 'absolute', top: 14, left: 14 },
-  stampGlass: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  stampGlass: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
 });

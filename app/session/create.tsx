@@ -44,10 +44,7 @@ import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
-import {
-  PricePicker,
-  VibePicker,
-} from '../../src/components/FilterPicker';
+import { MoodPad } from '../../src/components/MoodPad';
 import { useTranslation } from '../../src/i18n/t';
 
 type Step =
@@ -56,8 +53,7 @@ type Step =
   | 'timer'
   | 'start'
   | 'cuisine'
-  | 'vibe'
-  | 'price'
+  | 'mood'
   | 'ready';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
@@ -130,8 +126,7 @@ export default function CreateSessionScreen() {
             'mode',
             ...(gameMode === 'swipe' ? (['timer'] as const) : []),
             'start',
-            'vibe',
-            'price',
+            'mood',
           ],
     [gameMode, sessionCode],
   );
@@ -198,7 +193,7 @@ export default function CreateSessionScreen() {
     mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
 
   // Only the food filters are optional; the rule questions have a default and advance on tap.
-  const optional = step === 'vibe' || step === 'price';
+  const optional = step === 'mood';
 
   return (
     <View style={styles.container}>
@@ -293,15 +288,14 @@ export default function CreateSessionScreen() {
               </Question>
             )}
 
-            {step === 'vibe' && (
-              <Question title={t('create.qVibe')} sub={t('create.qVibeSub')}>
-                <VibePicker filters={filters} onChange={setFilters} />
-              </Question>
-            )}
-
-            {step === 'price' && (
-              <Question title={t('create.qPrice')} sub={t('create.qPriceSub')}>
-                <PricePicker filters={filters} onChange={setFilters} />
+            {step === 'mood' && (
+              <Question title={t('create.qMood')} sub={t('create.qMoodSub')}>
+                <MoodPad filters={filters} onChange={setFilters} />
+                <KosherPill
+                  on={filters.kosherOnly}
+                  label={t('filters.kosher')}
+                  onToggle={() => setFilters({ ...filters, kosherOnly: !filters.kosherOnly })}
+                />
               </Question>
             )}
 
@@ -455,6 +449,31 @@ function DemoTile({
   );
 }
 
+/** A small glass toggle; kosher is a yes/no on top of the mood. */
+function KosherPill({ on, label, onToggle }: { on: boolean; label: string; onToggle: () => void }) {
+  return (
+    <Pressable
+      onPress={() => {
+        void Haptics.impactAsync(on ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
+        onToggle();
+      }}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: on }}
+      style={styles.kosherWrap}
+    >
+      <Glass
+        radius={borderRadius.full}
+        interactive
+        tint={on ? 'rgba(255, 107, 53, 0.9)' : RESTING_TINT}
+        style={styles.kosherPill}
+      >
+        <Ionicons name={on ? 'shield-checkmark' : 'shield-outline'} size={18} color={on ? '#FFFFFF' : colors.primary} />
+        <Text style={[styles.kosherText, on && styles.kosherTextOn]}>{label}</Text>
+      </Glass>
+    </Pressable>
+  );
+}
+
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <View style={styles.question}>
@@ -537,6 +556,10 @@ const styles = StyleSheet.create({
   },
 
   cards: { gap: 12 },
+  kosherWrap: { alignSelf: 'center' },
+  kosherPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 10 },
+  kosherText: { ...typography.subheadline, fontWeight: '600', color: colors.text },
+  kosherTextOn: { color: '#FFFFFF' },
   modeRow: { flexDirection: 'row', gap: 12 },
   modeCell: { flex: 1 },
   modeTile: { height: 284, padding: spacing.md, gap: spacing.sm },
