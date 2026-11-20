@@ -29,6 +29,7 @@ import { colors } from '../../src/theme/colors';
 import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
+import { Glass } from '../../src/components/ui/Glass';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
@@ -41,6 +42,8 @@ type Step = 'name' | 'mode' | 'timer' | 'rules' | 'filters' | 'ready';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 const AUTO_ADVANCE_MS = 220;
+// Selected cards: a light wash of the brand orange over the glass.
+const SELECTED_TINT = 'rgba(255, 107, 53, 0.22)';
 const plain = (s: string) => s.replace(/[→←]/g, '').trim();
 
 // One question per screen; the next one slides in from the reading direction.
@@ -236,15 +239,18 @@ export default function CreateSessionScreen() {
                         onPress={() => choose(() => setTimerDuration(value))}
                         accessibilityRole="radio"
                         accessibilityState={{ selected }}
-                        style={({ pressed }) => [
-                          styles.tile,
-                          selected && styles.tileSelected,
-                          pressed && styles.pressed,
-                        ]}
+                        style={styles.tileCell}
                       >
-                        <Text style={[styles.tileValue, selected && styles.tileValueSelected]}>
+                        <Glass
+                          radius={borderRadius.lg}
+                          interactive
+                          tint={selected ? colors.primary : undefined}
+                          style={styles.tile}
+                        >
+                          <Text style={[styles.tileValue, selected && styles.tileValueSelected]}>
                           {value === 0 ? t('create.timerOff') : formatTimerChipLabel(value)}
                         </Text>
+                        </Glass>
                       </Pressable>
                     );
                   })}
@@ -274,9 +280,7 @@ export default function CreateSessionScreen() {
 
             {step === 'filters' && (
               <Question title={t('create.qFilters')} sub={t('create.qFiltersSub')}>
-                <View style={[styles.card, styles.cardPadded]}>
-                  <FilterPicker filters={filters} onChange={setFilters} />
-                </View>
+                <FilterPicker filters={filters} onChange={setFilters} />
               </Question>
             )}
 
@@ -400,12 +404,13 @@ function OptionCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      style={({ pressed }) => [styles.option, selected && styles.optionSelected, pressed && styles.pressed]}
-    >
+    <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }}>
+      <Glass
+        radius={borderRadius.lg}
+        interactive
+        tint={selected ? SELECTED_TINT : undefined}
+        style={styles.option}
+      >
       <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
         <Ionicons name={icon} size={24} color={selected ? '#FFFFFF' : colors.primaryDark} />
       </View>
@@ -418,6 +423,7 @@ function OptionCard({
         size={24}
         color={selected ? colors.primary : colors.border}
       />
+      </Glass>
     </Pressable>
   );
 }
@@ -474,13 +480,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    ...continuous,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
-  optionSelected: { borderColor: colors.primary },
   optionIcon: {
     width: 48,
     height: 48,
@@ -495,17 +495,8 @@ const styles = StyleSheet.create({
   optionHint: { ...typography.subheadline, color: colors.textSecondary },
 
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: {
-    width: '31%',
-    flexGrow: 1,
-    aspectRatio: 1.15,
-    borderRadius: borderRadius.lg,
-    ...continuous,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tileSelected: { backgroundColor: colors.primary },
+  tileCell: { width: '31%', flexGrow: 1, aspectRatio: 1.15 },
+  tile: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tileValue: {
     ...typography.title2,
     fontFamily: fontFamilies.mono,

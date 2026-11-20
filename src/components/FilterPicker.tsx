@@ -4,18 +4,21 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   Switch,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { spacing, borderRadius, shadows } from '../theme/spacing';
+import { spacing, borderRadius } from '../theme/spacing';
 import {
   SessionFilters,
   CUISINE_OPTIONS,
   STYLE_OPTIONS,
 } from '../types';
 import { useTranslation } from '../i18n/t';
+import { Glass } from './ui/Glass';
 
 /** How many cuisine chips to show before "show more". */
 const CUISINE_COLLAPSED_COUNT = 6;
@@ -35,18 +38,26 @@ function Chip({
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity
-      style={[styles.chip, selected && styles.chipSelected]}
+    <Pressable
       onPress={() => {
         Haptics.selectionAsync();
         onPress();
       }}
-      activeOpacity={0.7}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      hitSlop={4}
     >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
+      {/* Native Liquid Glass; selected chips are tinted with the brand orange */}
+      <Glass
+        radius={borderRadius.full}
+        interactive
+        tint={selected ? colors.primary : undefined}
+        style={styles.chip}
+      >
+        {selected && <Ionicons name="checkmark" size={14} color={colors.onPrimary} />}
+        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+      </Glass>
+    </Pressable>
   );
 }
 
@@ -141,7 +152,7 @@ export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
 
       {/* Style Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🎯 Vibe</Text>
+        <Text style={styles.sectionTitle}>{t('filters.vibe')}</Text>
         <View style={styles.chipWrap}>
           {STYLE_OPTIONS.map((opt) => (
             <Chip
@@ -159,18 +170,22 @@ export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
         <Text style={styles.sectionTitle}>{t('filters.maxPrice')}</Text>
         <View style={styles.priceRow}>
           {PRICE_LABELS.map((p) => (
-            <TouchableOpacity
+            <Pressable
               key={p.level}
-              style={[
-                styles.priceChip,
-                filters.maxPriceLevel >= p.level && styles.priceChipActive,
-              ]}
+              style={styles.priceCell}
               onPress={() => {
                 Haptics.selectionAsync();
                 onChange({ ...filters, maxPriceLevel: p.level });
               }}
-              activeOpacity={0.7}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: filters.maxPriceLevel === p.level }}
             >
+              <Glass
+                radius={borderRadius.lg}
+                interactive
+                tint={filters.maxPriceLevel >= p.level ? colors.primary : undefined}
+                style={styles.priceChip}
+              >
               <Text
                 style={[
                   styles.priceLabel,
@@ -187,7 +202,8 @@ export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
               >
                 {p.desc}
               </Text>
-            </TouchableOpacity>
+              </Glass>
+            </Pressable>
           ))}
         </View>
       </View>
@@ -243,24 +259,18 @@ const styles = StyleSheet.create({
     color: colors.primaryDark,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  chipSelected: {
-    backgroundColor: colors.primaryMuted,
-    borderColor: colors.primary,
   },
   chipText: {
     ...typography.subheadline,
     color: colors.textSecondary,
   },
   chipTextSelected: {
-    color: colors.primaryDark,
+    color: colors.onPrimary,
     fontWeight: '600',
   },
 
@@ -268,19 +278,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
+  priceCell: { flex: 1 },
   priceChip: {
-    flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
     gap: 2,
-  },
-  priceChipActive: {
-    backgroundColor: colors.primaryMuted,
-    borderColor: colors.primary,
   },
   priceLabel: {
     ...typography.subheadline,
@@ -288,14 +290,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   priceLabelActive: {
-    color: colors.primaryDark,
+    color: colors.onPrimary,
   },
   priceDesc: {
     ...typography.caption2,
     color: colors.textMuted,
   },
   priceDescActive: {
-    color: colors.primaryDark,
+    color: colors.onPrimary,
   },
 
   kosherRow: {
@@ -304,10 +306,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
     padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
+    borderRadius: borderRadius.lg,
+    borderCurve: 'continuous',
   },
   kosherInfo: {
     flex: 1,
