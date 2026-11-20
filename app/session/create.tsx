@@ -34,6 +34,8 @@ import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
 import { TimeDial } from '../../src/components/TimeDial';
+import { TableScene } from '../../src/components/TableScene';
+import { StopSlider } from '../../src/components/native/StopSlider';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
@@ -50,8 +52,7 @@ type Step =
   | 'name'
   | 'mode'
   | 'timer'
-  | 'unanimous'
-  | 'readyCheck'
+  | 'style'
   | 'cuisine'
   | 'vibe'
   | 'price'
@@ -126,8 +127,7 @@ export default function CreateSessionScreen() {
             'name',
             'mode',
             ...(gameMode === 'swipe' ? (['timer'] as const) : []),
-            'unanimous',
-            'readyCheck',
+            'style',
             'cuisine',
             'vibe',
             'price',
@@ -195,6 +195,15 @@ export default function CreateSessionScreen() {
     mode === 'roulette' ? t('create.modeRoulette') : t('create.modeSwipe');
   const modeHint = (mode: GameMode) =>
     mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
+
+  // Table strictness folds the two house rules into one level.
+  const styleLevel: 0 | 1 | 2 = !requireLobbyReady ? 0 : requireUnanimousKeepBrowsing ? 2 : 1;
+  const setStyleLevel = (level: 0 | 1 | 2) => {
+    setRequireLobbyReady(level >= 1);
+    setRequireUnanimousKeepBrowsing(level === 2);
+  };
+  const STYLE_NAMES = [t('create.styleChill'), t('create.styleBalanced'), t('create.styleStrict')];
+  const STYLE_HINTS = [t('create.styleChillHint'), t('create.styleBalancedHint'), t('create.styleStrictHint')];
 
   // Only the food filters are optional; the rule questions have a default and advance on tap.
   const optional = step === 'cuisine' || step === 'vibe' || step === 'price';
@@ -270,44 +279,26 @@ export default function CreateSessionScreen() {
               </Question>
             )}
 
-            {step === 'unanimous' && (
-              <Question title={t('create.qUnanimous')}>
-                <View style={styles.ruleRow}>
-                  <RuleTile
-                    kind="all"
-                    title={t('create.unanimousAll')}
-                    hint={t('create.switchUnanimousSub')}
-                    selected={requireUnanimousKeepBrowsing}
-                    onPress={() => choose(() => setRequireUnanimousKeepBrowsing(true))}
-                  />
-                  <RuleTile
-                    kind="any"
-                    title={t('create.unanimousAny')}
-                    hint={t('create.unanimousAnyHint')}
-                    selected={!requireUnanimousKeepBrowsing}
-                    onPress={() => choose(() => setRequireUnanimousKeepBrowsing(false))}
-                  />
+            {step === 'style' && (
+              <Question title={t('create.qStyle')}>
+                {/* One decision you can see: the table changes as you drag */}
+                <TableScene level={styleLevel} />
+                <View style={styles.styleText}>
+                  <Text style={styles.styleName}>{STYLE_NAMES[styleLevel]}</Text>
+                  <Text style={styles.styleHint}>{STYLE_HINTS[styleLevel]}</Text>
                 </View>
-              </Question>
-            )}
-
-            {step === 'readyCheck' && (
-              <Question title={t('create.qReady')}>
-                <View style={styles.ruleRow}>
-                  <RuleTile
-                    kind="wait"
-                    title={t('create.readyYes')}
-                    hint={t('create.switchLobbySub')}
-                    selected={requireLobbyReady}
-                    onPress={() => choose(() => setRequireLobbyReady(true))}
-                  />
-                  <RuleTile
-                    kind="host"
-                    title={t('create.readyNo')}
-                    hint={t('create.readyNoHint')}
-                    selected={!requireLobbyReady}
-                    onPress={() => choose(() => setRequireLobbyReady(false))}
-                  />
+                <StopSlider
+                  count={3}
+                  index={styleLevel}
+                  onChange={(i) => setStyleLevel(i as 0 | 1 | 2)}
+                  accessibilityLabel={t('create.qStyle')}
+                />
+                <View style={styles.styleScale}>
+                  {STYLE_NAMES.map((n, i) => (
+                    <Text key={n} style={[styles.styleTick, i === styleLevel && styles.styleTickActive]}>
+                      {n}
+                    </Text>
+                  ))}
                 </View>
               </Question>
             )}
@@ -434,99 +425,6 @@ function NameGreeting({ name, greet }: { name: string; greet: (first: string) =>
   );
 }
 
-type CrowdKind = 'all' | 'any' | 'wait' | 'host';
-const CROWD = [
-  { letter: 'A', color: '#FF6B35' },
-  { letter: 'B', color: '#22A35A' },
-  { letter: 'C', color: '#1D6FB8' },
-  { letter: 'D', color: '#9B59B6' },
-];
-
-/** A rule shown, not described: four players, and who the rule waits for. */
-function RuleTile({
-  kind,
-  title,
-  hint,
-  selected,
-  onPress,
-}: {
-  kind: CrowdKind;
-  title: string;
-  hint: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      accessibilityLabel={title}
-      accessibilityHint={hint}
-      style={styles.ruleCell}
-    >
-      <Glass
-        radius={borderRadius.lg}
-        interactive
-        tint={selected ? SELECTED_TINT : RESTING_TINT}
-        style={styles.ruleTile}
-      >
-        <Crowd kind={kind} active={selected} />
-        <View style={styles.ruleText}>
-          <Text style={styles.ruleTitle}>{title}</Text>
-          <Text style={styles.ruleHint} numberOfLines={4}>
-            {hint}
-          </Text>
-        </View>
-        <Ionicons
-          name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-          size={24}
-          color={selected ? colors.primary : colors.border}
-        />
-      </Glass>
-    </Pressable>
-  );
-}
-
-function Crowd({ kind, active }: { kind: CrowdKind; active: boolean }) {
-  // Which players get a badge, and what the badge is.
-  const badged = (i: number) => (kind === 'all' || kind === 'wait' ? true : i === 0);
-  const badge: keyof typeof Ionicons.glyphMap =
-    kind === 'all' || kind === 'any' ? 'checkmark' : kind === 'wait' ? 'hand-left' : 'star';
-  return (
-    <View style={styles.crowd} accessibilityElementsHidden>
-      <View style={styles.crowdRow}>
-        {CROWD.map((p, i) => (
-          <View key={p.letter} style={[styles.crowdAvatar, { backgroundColor: p.color }, i > 0 && styles.crowdOverlap]}>
-            <Text style={styles.crowdLetter}>{p.letter}</Text>
-            {badged(i) && <CrowdBadge icon={badge} active={active} delay={i * 90} />}
-          </View>
-        ))}
-      </View>
-      {(kind === 'any' || kind === 'host') && (
-        <View style={[styles.crowdPlay, active && styles.crowdPlayActive]}>
-          <Ionicons name="play" size={12} color={active ? '#FFFFFF' : colors.textMuted} />
-        </View>
-      )}
-    </View>
-  );
-}
-
-/** Faded until the tile is picked, then pops in — one after another. */
-function CrowdBadge({ icon, active, delay }: { icon: keyof typeof Ionicons.glyphMap; active: boolean; delay: number }) {
-  const style = useAnimatedStyle(() => ({
-    opacity: withDelay(active ? delay : 0, withTiming(active ? 1 : 0.35, { duration: 160 })),
-    transform: [
-      { scale: withDelay(active ? delay : 0, withSpring(active ? 1 : 0.8, { duration: 320, dampingRatio: 0.55 })) },
-    ],
-  }));
-  return (
-    <Animated.View style={[styles.crowdBadge, active && styles.crowdBadgeActive, style]}>
-      <Ionicons name={icon} size={10} color="#FFFFFF" />
-    </Animated.View>
-  );
-}
-
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <View style={styles.question}>
@@ -609,48 +507,12 @@ const styles = StyleSheet.create({
   },
 
   cards: { gap: 12 },
-  ruleRow: { flexDirection: 'row', gap: 12 },
-  ruleCell: { flex: 1 },
-  ruleTile: { height: 236, padding: spacing.md, gap: spacing.sm, alignItems: 'flex-start' },
-  ruleText: { flex: 1, gap: 4 },
-  ruleTitle: { ...typography.headline, color: colors.text },
-  ruleHint: { ...typography.footnote, color: colors.textSecondary },
-  crowd: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 44, direction: 'ltr' },
-  crowdRow: { flexDirection: 'row' },
-  crowdAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  crowdOverlap: { marginLeft: -8 },
-  crowdLetter: { ...typography.caption1, fontWeight: '700', color: '#FFFFFF' },
-  crowdBadge: {
-    position: 'absolute',
-    right: -4,
-    bottom: -4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.textMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-  },
-  crowdBadgeActive: { backgroundColor: colors.accentDark },
-  crowdPlay: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.borderLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  crowdPlayActive: { backgroundColor: colors.primary },
+  styleText: { alignItems: 'center', gap: 4, minHeight: 72 },
+  styleName: { ...typography.title2, color: colors.text, textAlign: 'center' },
+  styleHint: { ...typography.subheadline, color: colors.textSecondary, textAlign: 'center' },
+  styleScale: { flexDirection: 'row', justifyContent: 'space-between' },
+  styleTick: { ...typography.footnote, color: colors.textMuted },
+  styleTickActive: { color: colors.primaryDark, fontWeight: '600' },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
