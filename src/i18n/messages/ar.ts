@@ -167,6 +167,8 @@ export const ar: Messages = {
   'join.alertBody': 'تحقق من الرمز وحاول مرة أخرى.',
 
   'lobby.title': 'ردهة الجلسة',
+  'lobby.copied': 'تم النسخ',
+  'lobby.invite': 'ادعُ صديقًا',
   'lobby.codeLabel': 'الرمز',
   'lobby.players': 'اللاعبون',
   'lobby.spots': 'الأماكن',

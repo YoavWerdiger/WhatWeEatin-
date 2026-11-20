@@ -166,6 +166,8 @@ export const he: Messages = {
   'join.alertBody': 'בדקו את הקוד ונסו שוב.',
 
   'lobby.title': 'לובי הסשן',
+  'lobby.copied': 'הועתק',
+  'lobby.invite': 'הזמנת חבר',
   'lobby.codeLabel': 'קוד',
   'lobby.players': 'שחקנים',
   'lobby.spots': 'מקומות',

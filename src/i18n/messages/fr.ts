@@ -172,6 +172,8 @@ export const fr: Messages = {
   'join.alertBody': 'Vérifiez le code et réessayez.',
 
   'lobby.title': 'Lobby de session',
+  'lobby.copied': 'Copié',
+  'lobby.invite': 'Inviter un ami',
   'lobby.codeLabel': 'CODE',
   'lobby.players': 'Joueurs',
   'lobby.spots': 'Lieux',

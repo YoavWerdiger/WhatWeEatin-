@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,11 @@ import {
   Alert,
   ScrollView,
   Share,
+  Pressable,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Ionicons } from '@expo/vector-icons';
+import { Glass } from '../../src/components/ui/Glass';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -35,6 +39,7 @@ export default function LobbyScreen() {
   const toggleLobbyReady = useSessionStore((s) => s.toggleLobbyReady);
   const { session, startSwiping } = useSessionStore();
   useParticipantNoticeAlert();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     void initAuth();
@@ -90,6 +95,13 @@ export default function LobbyScreen() {
     } catch {}
   };
 
+  const copyCode = async () => {
+    await Clipboard.setStringAsync(session.code);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+
   const isHost =
     !isFirebaseConfigured() || (myUid != null && session.hostId === myUid);
   const canStart = session.users.length >= SESSION.MIN_USERS;
@@ -136,30 +148,35 @@ export default function LobbyScreen() {
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingBottom: 180 + insets.bottom }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 150 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.codeBlock}>
-          <Text style={styles.codeLabel}>{t('lobby.title')}</Text>
-          <Text
-            style={styles.codeValue}
-            selectable
-            accessibilityLabel={session.code.split('').join(' ')}
-          >
-            {session.code}
-          </Text>
+          {/* Tap the code to copy it */}
+          <Pressable onPress={copyCode} accessibilityRole="button" accessibilityHint={t('lobby.copied')} style={styles.codePress}>
+            <Text style={[styles.codeLabel, copied && styles.codeLabelCopied]}>
+              {copied ? `${t('lobby.copied')} ✓` : t('lobby.title')}
+            </Text>
+            <Text style={styles.codeValue} accessibilityLabel={session.code.split('').join(' ')}>
+              {session.code}
+            </Text>
+          </Pressable>
           <View style={styles.metaRow}>
-            <MetaChip label={modeLabel} />
-            <MetaChip label={`${session.restaurants.length} ${t('lobby.spots')}`} />
-            <MetaChip label={formatTimer(session.timerDuration)} />
+            <MetaChip icon={session.gameMode === 'roulette' ? 'dice' : 'albums'} label={modeLabel} />
+            <MetaChip icon="restaurant" label={`${session.restaurants.length} ${t('lobby.spots')}`} />
+            <MetaChip icon={session.timerDuration > 0 ? 'time' : 'infinite'} label={formatTimer(session.timerDuration)} />
           </View>
         </View>
 
-        {/* Players take their seats as they join */}
-        <LobbyTable
-          users={session.users}
-          readyIds={session.requireLobbyReady ? readySet : undefined}
-        />
+        {/* Players take their seats as they join; an empty seat invites a friend */}
+        <View style={styles.tableArea}>
+          <LobbyTable
+            users={session.users}
+            readyIds={session.requireLobbyReady ? readySet : undefined}
+            onInvite={handleShare}
+            inviteLabel={t('lobby.invite')}
+          />
+        </View>
       </ScrollView>
 
       <View
@@ -198,11 +215,12 @@ export default function LobbyScreen() {
   );
 }
 
-function MetaChip({ label }: { label: string }) {
+function MetaChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
   return (
-    <View style={styles.metaChip}>
+    <Glass radius={borderRadius.full} interactive tint="rgba(255, 255, 255, 0.6)" style={styles.metaChip}>
+      <Ionicons name={icon} size={14} color={colors.primaryDark} />
       <Text style={styles.metaChipText}>{label}</Text>
-    </View>
+    </Glass>
   );
 }
 
@@ -212,9 +230,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: spacing.md,
-    gap: spacing.xl,
+    gap: spacing.lg,
   },
+  tableArea: { flex: 1, justifyContent: 'center' },
+  codePress: { alignItems: 'center', gap: 4 },
+  codeLabelCopied: { color: colors.accentDark },
 
   codeBlock: {
     alignItems: 'center',
@@ -239,11 +261,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    ...continuous,
-    backgroundColor: colors.surface,
+    paddingVertical: 6,
   },
   metaChipText: {
     ...typography.captionMedium,

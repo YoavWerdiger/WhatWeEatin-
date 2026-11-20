@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -32,10 +32,13 @@ interface LobbyTableProps {
   users: SessionUser[];
   /** Ready-check ids, when the room uses one. */
   readyIds?: Set<string>;
+  /** Tapping an empty seat invites someone to fill it. */
+  onInvite?: () => void;
+  inviteLabel?: string;
 }
 
 /** The lobby as a table: players take seats as they join, ready players get a check. */
-export function LobbyTable({ users, readyIds }: LobbyTableProps) {
+export function LobbyTable({ users, readyIds, onInvite, inviteLabel }: LobbyTableProps) {
   const seats = Math.min(8, Math.max(4, users.length + 1));
   return (
     <View style={styles.scene}>
@@ -56,10 +59,12 @@ export function LobbyTable({ users, readyIds }: LobbyTableProps) {
         const left = C + SEAT_R * Math.cos(angle) - AVATAR / 2;
         const top = C + SEAT_R * Math.sin(angle) - AVATAR / 2;
         const user = users[i];
+        // Names sit on the far side of the seat, away from the table.
+        const nameAbove = Math.sin(angle) < -0.3;
         return (
           <View key={user ? user.id : `empty-${i}`} style={[styles.seat, { left, top }]}>
             {user ? (
-              <Animated.View entering={sitDown} style={styles.seatInner}>
+              <Animated.View entering={sitDown} style={[styles.seatInner, nameAbove && styles.seatInnerAbove]}>
                 <View style={[styles.avatar, { backgroundColor: user.avatar || AVATAR_COLORS[i % AVATAR_COLORS.length] }]}>
                   <Text style={styles.initial}>{user.name.charAt(0).toUpperCase()}</Text>
                 </View>
@@ -69,7 +74,16 @@ export function LobbyTable({ users, readyIds }: LobbyTableProps) {
                 </Text>
               </Animated.View>
             ) : (
-              <View style={styles.empty} />
+              <Pressable
+                onPress={onInvite}
+                disabled={!onInvite}
+                accessibilityRole="button"
+                accessibilityLabel={inviteLabel}
+                hitSlop={6}
+                style={({ pressed }) => [styles.empty, pressed && styles.emptyPressed]}
+              >
+                <Ionicons name="add" size={20} color={colors.textMuted} />
+              </Pressable>
             )}
           </View>
         );
@@ -105,6 +119,8 @@ const styles = StyleSheet.create({
   countOf: { ...typography.title3, color: colors.textMuted },
   seat: { position: 'absolute', width: AVATAR, height: AVATAR, alignItems: 'center' },
   seatInner: { alignItems: 'center' },
+  // name above the avatar for seats on the top of the table
+  seatInnerAbove: { flexDirection: 'column-reverse', marginTop: -18 },
   avatar: {
     width: AVATAR,
     height: AVATAR,
@@ -123,7 +139,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderStyle: 'dashed',
     borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  emptyPressed: { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
   badge: {
     position: 'absolute',
     right: -4,

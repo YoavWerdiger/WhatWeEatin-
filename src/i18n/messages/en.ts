@@ -165,6 +165,8 @@ export const en = {
   'join.alertBody': 'Check the code and try again.',
 
   'lobby.title': 'Session Lobby',
+  'lobby.copied': 'Copied',
+  'lobby.invite': 'Invite a friend',
   'lobby.codeLabel': 'CODE',
   'lobby.players': 'Players',
   'lobby.spots': 'Spots',

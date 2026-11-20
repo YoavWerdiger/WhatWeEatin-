@@ -171,6 +171,8 @@ export const es: Messages = {
   'join.alertBody': 'Revisa el código e inténtalo de nuevo.',
 
   'lobby.title': 'Lobby de sesión',
+  'lobby.copied': 'Copiado',
+  'lobby.invite': 'Invitar a un amigo',
   'lobby.codeLabel': 'CÓDIGO',
   'lobby.players': 'Jugadores',
   'lobby.spots': 'Sitios',
