@@ -177,7 +177,8 @@ export default function LobbyScreen() {
         {session.requireLobbyReady && (
           <GlassButton
             title={plain(imReady ? t('lobby.readyDone') : t('lobby.readyTap'))}
-            prominent={!imReady}
+            // HIG: one prominent button per view — for the host that is Start
+            prominent={!imReady && !isHost}
             color={colors.accentDark}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

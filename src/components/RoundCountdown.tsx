@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
   Easing,
   FadeOut,
@@ -38,7 +38,8 @@ export function RoundCountdown({ goLabel, onDone }: RoundCountdownProps) {
   useEffect(() => {
     const isGo = STEPS[step] === 'go';
     if (isGo) {
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // "Go" starts something, it isn't a success — a heavy tap, not the success pattern.
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } else {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -53,10 +54,18 @@ export function RoundCountdown({ goLabel, onDone }: RoundCountdownProps) {
 
   return (
     <Animated.View style={styles.scrim} exiting={FadeOut.duration(200)} pointerEvents="auto">
+      {/* HIG: never make people sit through a repeated animation — a tap skips it */}
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={onDone}
+        accessibilityRole="button"
+        accessibilityLabel={goLabel}
+      />
       <Animated.View
         key={value}
         entering={reduceMotion ? undefined : land}
         exiting={reduceMotion ? undefined : leave}
+        pointerEvents="none"
         style={styles.center}
       >
         <Text

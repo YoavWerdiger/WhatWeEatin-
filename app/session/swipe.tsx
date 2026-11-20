@@ -419,7 +419,6 @@ export default function SwipeScreen() {
       <Stack.Toolbar placement="bottom">
         <Stack.Toolbar.Button
           icon="xmark"
-          tintColor={colors.danger}
           accessibilityLabel={t('swipeActions.pass')}
           onPress={() => cardStackRef.current?.swipeLeft()}
           hidden={isFinished || chromeHidden}
