@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -69,12 +69,26 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
     const translateY = useSharedValue(0);
     const tiltSign = useSharedValue(1);
     const isLocked = useSharedValue(false);
+    /** Which card (absolute index) the drag offsets belong to. */
+    const owner = useSharedValue(currentIndex);
+    /** A thrown card, hidden the moment its throw lands. */
+    const gone = useSharedValue(-1);
 
+    // The next card arrives already centred: offsets only move their owner, and
+    // ownership moves on here, after the new top card has rendered.
     useEffect(() => {
       translateX.set(0);
       translateY.set(0);
+      owner.set(currentIndex);
       isLocked.set(false);
     }, [currentIndex]);
+
+    // Warm the next few photos so a promoted card never shows an empty frame.
+    useEffect(() => {
+      restaurants.slice(currentIndex + 1, currentIndex + 4).forEach((r) => {
+        if (r.image) void Image.prefetch(r.image);
+      });
+    }, [currentIndex, restaurants]);
 
     const tick = useCallback(() => {
       void Haptics.selectionAsync();
@@ -114,7 +128,9 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
       const vx = sign * Math.max(Math.abs(velocityX), 1400);
       translateX.set(
         withSpring(sign * OFFSCREEN_X, { ...THROW, velocity: vx }, (finished) => {
-          if (finished) scheduleOnRN(emitSwipe, direction);
+          if (!finished) return;
+          gone.set(owner.get());
+          scheduleOnRN(emitSwipe, direction);
         }),
       );
       translateY.set(withSpring(translateY.get() + velocityY * 0.12, { ...THROW, velocity: velocityY }));
@@ -131,7 +147,9 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
         translateY.set(withTiming(-24, { duration: BUTTON_SWIPE_DURATION, easing: EASE_OUT }));
         translateX.set(
           withTiming(sign * OFFSCREEN_X, { duration: BUTTON_SWIPE_DURATION, easing: EASE_OUT }, (finished) => {
-            if (finished) scheduleOnRN(emitSwipe, direction);
+            if (!finished) return;
+            gone.set(owner.get());
+            scheduleOnRN(emitSwipe, direction);
           }),
         );
       },
@@ -172,119 +190,127 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
         }
       });
 
-    const topCardStyle = useAnimatedStyle(() => {
-      const rotation = reduceMotion
-        ? 0
-        : (translateX.get() / SCREEN_WIDTH) * ROTATION_PER_WIDTH * tiltSign.get();
-      return {
-        transform: [
-          { translateX: translateX.get() },
-          { translateY: translateY.get() },
-          { rotate: `${rotation}deg` },
-        ],
-      };
-    });
-
-    // Stamps grow into place as the card nears the threshold.
-    const likeStyle = useAnimatedStyle(() => {
-      const p = interpolate(translateX.get(), [SWIPE_THRESHOLD * 0.25, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
-      return { opacity: p, transform: [{ rotate: '-8deg' }, { scale: 0.9 + 0.1 * p }] };
-    });
-    const nopeStyle = useAnimatedStyle(() => {
-      const p = interpolate(translateX.get(), [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD * 0.25], [1, 0], Extrapolation.CLAMP);
-      return { opacity: p, transform: [{ rotate: '8deg' }, { scale: 0.9 + 0.1 * p }] };
-    });
-
     const visibleCards = restaurants.slice(currentIndex, currentIndex + STACK_CARDS);
 
     if (visibleCards.length === 0) return null;
 
+    const shared = { translateX, translateY, tiltSign, owner, gone, reduceMotion };
     return (
       <View style={styles.container}>
         {visibleCards
-          .map((restaurant, stackIndex) => {
-            if (stackIndex === 0) {
-              return (
-                <GestureDetector key={`card-${currentIndex}`} gesture={panGesture}>
-                  <Animated.View style={[styles.topCardWrapper, topCardStyle]}>
-                    <SwipeCard restaurant={restaurant} />
-
-                    <Animated.View style={[styles.overlayStamp, styles.likeStamp, likeStyle]} pointerEvents="none">
-                      <Glass radius={999} scheme="dark" tint="rgba(34, 163, 90, 0.75)" style={styles.stampGlass}>
-                        <Ionicons name="heart" size={22} color="#FFFFFF" />
-                        <Text style={styles.stampText}>{t('swipeActions.like')}</Text>
-                      </Glass>
-                    </Animated.View>
-
-                    <Animated.View style={[styles.overlayStamp, styles.nopeStamp, nopeStyle]} pointerEvents="none">
-                      <Glass radius={999} scheme="dark" tint="rgba(217, 45, 32, 0.75)" style={styles.stampGlass}>
-                        <Ionicons name="close" size={22} color="#FFFFFF" />
-                        <Text style={styles.stampText}>{t('swipeActions.pass')}</Text>
-                      </Glass>
-                    </Animated.View>
-                  </Animated.View>
-                </GestureDetector>
-              );
-            }
-
-            return (
-              <StackCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                stackIndex={stackIndex}
-                translateX={translateX}
-                translateY={translateY}
-              />
-            );
-          })
+          .map((restaurant, stackIndex) => (
+            // Stable key: a card keeps its photo and glass views when it moves up the deck.
+            <DeckCard
+              key={restaurant.id}
+              restaurant={restaurant}
+              absIndex={currentIndex + stackIndex}
+              stackIndex={stackIndex}
+              gesture={stackIndex === 0 ? panGesture : idleGesture}
+              likeLabel={t('swipeActions.like')}
+              passLabel={t('swipeActions.pass')}
+              {...shared}
+            />
+          ))
           .reverse()}
       </View>
     );
   },
 );
 
-interface StackCardProps {
+const idleGesture = Gesture.Pan().enabled(false);
+
+interface DeckCardProps {
   restaurant: Restaurant;
+  absIndex: number;
   stackIndex: number;
+  gesture: ReturnType<typeof Gesture.Pan>;
+  likeLabel: string;
+  passLabel: string;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
+  tiltSign: SharedValue<number>;
+  owner: SharedValue<number>;
+  gone: SharedValue<number>;
+  reduceMotion: boolean;
 }
 
-function StackCard({
+function DeckCard({
   restaurant,
+  absIndex,
   stackIndex,
+  gesture,
+  likeLabel,
+  passLabel,
   translateX,
   translateY,
-}: StackCardProps) {
-  // The card underneath rises to meet you as the top one leaves.
+  tiltSign,
+  owner,
+  gone,
+  reduceMotion,
+}: DeckCardProps) {
   const style = useAnimatedStyle(() => {
-    const x = translateX.get();
-    const y = translateY.get();
-    const progress = interpolate(
-      Math.sqrt(x * x + y * y),
-      [0, SWIPE_THRESHOLD * 1.8],
-      [0, 1],
-      Extrapolation.CLAMP,
-    );
+    const topIndex = absIndex - stackIndex;
+    const ownsOffsets = owner.get() === topIndex;
+    const x = ownsOffsets ? translateX.get() : 0;
+    const y = ownsOffsets ? translateY.get() : 0;
 
+    if (stackIndex === 0) {
+      const rotation = reduceMotion ? 0 : (x / SCREEN_WIDTH) * ROTATION_PER_WIDTH * tiltSign.get();
+      return {
+        opacity: gone.get() === absIndex ? 0 : 1,
+        zIndex: 100,
+        transform: [{ translateX: x }, { translateY: y }, { rotate: `${rotation}deg` }, { scale: 1 }],
+      };
+    }
+
+    // The card underneath rises to meet you as the top one leaves.
+    const progress = interpolate(Math.sqrt(x * x + y * y), [0, SWIPE_THRESHOLD * 1.8], [0, 1], Extrapolation.CLAMP);
     const baseScale = 1 - stackIndex * STACK_SCALE_STEP;
     const targetScale = 1 - (stackIndex - 1) * STACK_SCALE_STEP;
-    const scale = baseScale + (targetScale - baseScale) * progress;
-
     const baseY = stackIndex * STACK_OFFSET_STEP;
     const targetY = (stackIndex - 1) * STACK_OFFSET_STEP;
-    const offsetY = baseY + (targetY - baseY) * progress;
-
     return {
-      transform: [{ translateY: offsetY }, { scale }],
+      opacity: 1,
       zIndex: -stackIndex,
+      transform: [
+        { translateX: 0 },
+        { translateY: baseY + (targetY - baseY) * progress },
+        { rotate: '0deg' },
+        { scale: baseScale + (targetScale - baseScale) * progress },
+      ],
     };
   });
 
+  // Stamps grow into place as the top card nears the threshold.
+  const likeStyle = useAnimatedStyle(() => {
+    const x = stackIndex === 0 && owner.get() === absIndex ? translateX.get() : 0;
+    const p = interpolate(x, [SWIPE_THRESHOLD * 0.25, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ rotate: '-8deg' }, { scale: 0.9 + 0.1 * p }] };
+  });
+  const nopeStyle = useAnimatedStyle(() => {
+    const x = stackIndex === 0 && owner.get() === absIndex ? translateX.get() : 0;
+    const p = interpolate(x, [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD * 0.25], [1, 0], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ rotate: '8deg' }, { scale: 0.9 + 0.1 * p }] };
+  });
+
   return (
-    <Animated.View style={[styles.stackCardWrapper, style]}>
-      <SwipeCard restaurant={restaurant} />
-    </Animated.View>
+    <GestureDetector gesture={gesture}>
+      <Animated.View style={[styles.cardWrapper, style]}>
+        <SwipeCard restaurant={restaurant} />
+        <Animated.View style={[styles.overlayStamp, styles.likeStamp, likeStyle]} pointerEvents="none">
+          <Glass radius={999} scheme="dark" tint="rgba(34, 163, 90, 0.75)" style={styles.stampGlass}>
+            <Ionicons name="heart" size={22} color="#FFFFFF" />
+            <Text style={styles.stampText}>{likeLabel}</Text>
+          </Glass>
+        </Animated.View>
+        <Animated.View style={[styles.overlayStamp, styles.nopeStamp, nopeStyle]} pointerEvents="none">
+          <Glass radius={999} scheme="dark" tint="rgba(217, 45, 32, 0.75)" style={styles.stampGlass}>
+            <Ionicons name="close" size={22} color="#FFFFFF" />
+            <Text style={styles.stampText}>{passLabel}</Text>
+          </Glass>
+        </Animated.View>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
@@ -295,11 +321,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topCardWrapper: {
-    position: 'absolute',
-    zIndex: 100,
-  },
-  stackCardWrapper: {
+  cardWrapper: {
     position: 'absolute',
   },
 
