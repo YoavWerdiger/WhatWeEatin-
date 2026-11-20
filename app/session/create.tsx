@@ -466,7 +466,7 @@ function OptionCard({
   onPress: () => void;
 }) {
   return (
-    <Animated.View entering={FadeInDown.duration(260).delay(index * 60)}>
+    <View>
     <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }}>
       <Glass
         radius={borderRadius.lg}
@@ -488,7 +488,7 @@ function OptionCard({
       />
       </Glass>
     </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 

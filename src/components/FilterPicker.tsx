@@ -106,7 +106,7 @@ export function VibePicker({ filters, onChange }: PartProps) {
       {VIBES.map(({ key, icon, label }, i) => {
         const selected = filters.styles.includes(key);
         return (
-          <Animated.View key={key} entering={FadeInDown.duration(260).delay(i * 60)} style={styles.vibeCell}>
+          <View key={key} style={styles.vibeCell}>
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync();
@@ -135,7 +135,7 @@ export function VibePicker({ filters, onChange }: PartProps) {
                 />
               </Glass>
             </Pressable>
-          </Animated.View>
+          </View>
         );
       })}
     </View>
@@ -155,7 +155,7 @@ export function KosherCard({ filters, onChange }: PartProps) {
     onChange({ ...filters, kosherOnly: !on });
   };
   return (
-    <Animated.View entering={FadeInDown.duration(260).delay(200)} style={popStyle}>
+    <Animated.View style={popStyle}>
       <Pressable onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: on }}>
         <Glass
           radius={borderRadius.lg}

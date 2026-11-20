@@ -166,7 +166,7 @@ export function MatchAnimation({
 
         <View style={styles.body}>
           {result.agreedUsers.length > 0 && (
-          <Animated.View entering={rise(3)}>
+          <View>
             <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
               <View style={styles.avatars}>
                 {result.agreedUsers.map((u, i) => (
@@ -181,11 +181,11 @@ export function MatchAnimation({
                   : t('match.agreedMany', { count: result.agreedUsers.length })}
               </Text>
             </Glass>
-          </Animated.View>
+          </View>
           )}
 
           {showUnanimous && (
-            <Animated.View entering={rise(4)}>
+            <View>
               <Glass radius={borderRadius.lg} variant="clear" scheme="dark" dark style={styles.vote}>
                 <View style={styles.voteHead}>
                   <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
@@ -218,7 +218,7 @@ export function MatchAnimation({
                   })}
                 </View>
               </Glass>
-            </Animated.View>
+            </View>
           )}
 
           <Animated.View entering={rise(5)} style={styles.actions}>

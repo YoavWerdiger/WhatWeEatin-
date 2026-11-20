@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, StyleSheet, View, ViewProps } from 'react-native';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { colors } from '../../theme/colors';
@@ -33,6 +33,17 @@ export function Glass({
   ...rest
 }: GlassProps) {
   const shape = { borderRadius: radius, borderCurve: 'continuous' as const };
+  // expo-glass-effect can skip the effect when the view mounts before it has been
+  // laid out (see GlassView.swift). Hold a plain view until the first layout.
+  const [laidOut, setLaidOut] = useState(false);
+
+  if (LIQUID && !laidOut) {
+    return (
+      <View style={[shape, style]} onLayout={() => setLaidOut(true)} {...rest}>
+        {children}
+      </View>
+    );
+  }
 
   if (LIQUID) {
     return (

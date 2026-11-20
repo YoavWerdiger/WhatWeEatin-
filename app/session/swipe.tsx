@@ -348,7 +348,7 @@ export default function SwipeScreen() {
 
                       <View style={styles.shortlistList}>
                         {mutualPicks.map((r, i) => (
-                          <Reanimated.View key={r.id} entering={FadeInDown.duration(260).delay(i * 60)}>
+                          <View key={r.id}>
                             <Pressable
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -365,7 +365,7 @@ export default function SwipeScreen() {
                                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                               </Glass>
                             </Pressable>
-                          </Reanimated.View>
+                          </View>
                         ))}
                       </View>
                     </>
