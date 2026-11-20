@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Pressable,
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, borderRadius } from '../theme/spacing';
@@ -20,9 +20,6 @@ import {
 import { useTranslation } from '../i18n/t';
 import { Glass } from './ui/Glass';
 import { StopSlider } from './native/StopSlider';
-
-/** How many cuisine chips to show before "show more". */
-const CUISINE_COLLAPSED_COUNT = 6;
 
 interface FilterPickerProps {
   filters: SessionFilters;
@@ -66,149 +63,133 @@ function cuisineChipLabel(opt: (typeof CUISINE_OPTIONS)[number]): string {
   return `${opt.label.split(' ')[0]} ${opt.labelEn}`;
 }
 
-function getVisibleCuisines(
-  expanded: boolean,
-  selectedKeys: string[],
-): (typeof CUISINE_OPTIONS)[number][] {
-  if (expanded || CUISINE_OPTIONS.length <= CUISINE_COLLAPSED_COUNT) {
-    return [...CUISINE_OPTIONS];
-  }
-  const primary = CUISINE_OPTIONS.slice(0, CUISINE_COLLAPSED_COUNT);
-  const primaryKeys = new Set(primary.map((o) => o.key));
-  // Keep selected chips visible even when collapsed.
-  const extras = CUISINE_OPTIONS.filter(
-    (o) => !primaryKeys.has(o.key) && selectedKeys.includes(o.key),
-  );
-  return [...primary, ...extras];
+type PartProps = { filters: SessionFilters; onChange: (filters: SessionFilters) => void };
+
+function toggle(list: string[], key: string): string[] {
+  return list.includes(key) ? list.filter((k) => k !== key) : [...list, key];
 }
 
-export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
-  const { t } = useTranslation();
-  const [cuisinesExpanded, setCuisinesExpanded] = useState(false);
-
-  const PRICE_LABELS = [
-    { level: 1 as const, label: '₪', desc: t('filters.priceBudget') },
-    { level: 2 as const, label: '₪₪', desc: t('filters.priceModerate') },
-    { level: 3 as const, label: '₪₪₪', desc: t('filters.pricePricey') },
-    { level: 4 as const, label: '₪₪₪₪', desc: t('filters.priceSplurge') },
-  ];
-
-  const hiddenCuisineCount = Math.max(
-    0,
-    CUISINE_OPTIONS.length - CUISINE_COLLAPSED_COUNT,
-  );
-  const visibleCuisines = getVisibleCuisines(
-    cuisinesExpanded,
-    filters.cuisines,
-  );
-
-  const toggleCuisine = (key: string) => {
-    const cuisines = filters.cuisines.includes(key)
-      ? filters.cuisines.filter((c) => c !== key)
-      : [...filters.cuisines, key];
-    onChange({ ...filters, cuisines });
-  };
-
-  const toggleStyle = (key: string) => {
-    const styles_ = filters.styles.includes(key)
-      ? filters.styles.filter((s) => s !== key)
-      : [...filters.styles, key];
-    onChange({ ...filters, styles: styles_ });
-  };
-
+/** Every cuisine at once — on its own page there is room, no "show more". */
+export function CuisinePicker({ filters, onChange }: PartProps) {
   return (
-    <View style={styles.container}>
-      {/* Cuisine Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('filters.cuisine')}</Text>
-        <Text style={styles.sectionHint}>{t('filters.cuisineHint')}</Text>
-        <View style={styles.chipWrap}>
-          {visibleCuisines.map((opt) => (
-            <Chip
-              key={opt.key}
-              label={cuisineChipLabel(opt)}
-              selected={filters.cuisines.includes(opt.key)}
-              onPress={() => toggleCuisine(opt.key)}
-            />
-          ))}
-        </View>
-        {hiddenCuisineCount > 0 && (
-          <TouchableOpacity
-            style={styles.expandToggle}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setCuisinesExpanded((v) => !v);
-            }}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-          >
-            <Text style={styles.expandToggleText}>
-              {cuisinesExpanded
-                ? t('filters.showLess')
-                : t('filters.showMore', { count: hiddenCuisineCount })}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Style Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('filters.vibe')}</Text>
-        <View style={styles.chipWrap}>
-          {STYLE_OPTIONS.map((opt) => (
-            <Chip
-              key={opt.key}
-              label={`${opt.label.split(' ')[0]} ${opt.labelEn}`}
-              selected={filters.styles.includes(opt.key)}
-              onPress={() => toggleStyle(opt.key)}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Price — a native slider you drag; the label follows the thumb */}
-      <View style={styles.section}>
-        <View style={styles.priceHeader}>
-          <Text style={styles.sectionTitle}>{t('filters.maxPrice')}</Text>
-          <Text style={styles.priceValue}>
-            {PRICE_LABELS[filters.maxPriceLevel - 1].label}
-            <Text style={styles.priceValueDesc}>{'  '}{PRICE_LABELS[filters.maxPriceLevel - 1].desc}</Text>
-          </Text>
-        </View>
-        <StopSlider
-          count={4}
-          index={filters.maxPriceLevel - 1}
-          onChange={(i) => onChange({ ...filters, maxPriceLevel: (i + 1) as 1 | 2 | 3 | 4 })}
-          accessibilityLabel={t('filters.maxPrice')}
+    <View style={styles.chipWrap}>
+      {CUISINE_OPTIONS.map((opt) => (
+        <Chip
+          key={opt.key}
+          label={cuisineChipLabel(opt)}
+          selected={filters.cuisines.includes(opt.key)}
+          onPress={() => onChange({ ...filters, cuisines: toggle(filters.cuisines, opt.key) })}
         />
-        <View style={styles.priceScale}>
-          {PRICE_LABELS.map((p) => (
-            <Text
-              key={p.level}
-              style={[styles.priceTick, p.level <= filters.maxPriceLevel && styles.priceTickActive]}
-            >
-              {p.label}
-            </Text>
-          ))}
-        </View>
-      </View>
+      ))}
+    </View>
+  );
+}
 
-      {/* Kosher Toggle */}
-      <View style={styles.kosherRow}>
+export function VibePicker({ filters, onChange }: PartProps) {
+  return (
+    <View style={styles.chipWrap}>
+      {STYLE_OPTIONS.map((opt) => (
+        <Chip
+          key={opt.key}
+          label={`${opt.label.split(' ')[0]} ${opt.labelEn}`}
+          selected={filters.styles.includes(opt.key)}
+          onPress={() => onChange({ ...filters, styles: toggle(filters.styles, opt.key) })}
+        />
+      ))}
+    </View>
+  );
+}
+
+/** Kosher as a glass card: tap anywhere to flip it, the switch shows the state. */
+export function KosherCard({ filters, onChange }: PartProps) {
+  const { t } = useTranslation();
+  const on = filters.kosherOnly;
+  const flip = () => {
+    Haptics.selectionAsync();
+    onChange({ ...filters, kosherOnly: !on });
+  };
+  return (
+    <Pressable onPress={flip} accessibilityRole="switch" accessibilityState={{ checked: on }}>
+      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.22)' : undefined} style={styles.kosherRow}>
         <View style={styles.kosherInfo}>
           <Text style={styles.sectionTitle}>{t('filters.kosher')}</Text>
           <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
         </View>
         <Switch
-          value={filters.kosherOnly}
-          onValueChange={(val) => {
-            Haptics.selectionAsync();
-            onChange({ ...filters, kosherOnly: val });
-          }}
-          trackColor={{ false: colors.border, true: colors.primaryLight }}
-          thumbColor={filters.kosherOnly ? colors.primary : '#f4f4f4'}
+          value={on}
+          onValueChange={flip}
+          trackColor={{ true: colors.primary, false: undefined }}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         />
+      </Glass>
+    </Pressable>
+  );
+}
+
+const PRICE_SIGNS = ['₪', '₪₪', '₪₪₪', '₪₪₪₪'];
+
+/** Price as a hero: four shekel signs light up as you drag the native slider. */
+export function PricePicker({ filters, onChange }: PartProps) {
+  const { t } = useTranslation();
+  const level = filters.maxPriceLevel;
+  const descs = [
+    t('filters.priceBudget'),
+    t('filters.priceModerate'),
+    t('filters.pricePricey'),
+    t('filters.priceSplurge'),
+  ];
+  return (
+    <View style={styles.priceHero}>
+      <View style={styles.coins} accessibilityElementsHidden>
+        {[1, 2, 3, 4].map((n) => (
+          <PriceCoin key={n} lit={n <= level} />
+        ))}
       </View>
+      <Text style={styles.priceDescBig}>{descs[level - 1]}</Text>
+      <StopSlider
+        count={4}
+        index={level - 1}
+        onChange={(i) => onChange({ ...filters, maxPriceLevel: (i + 1) as 1 | 2 | 3 | 4 })}
+        accessibilityLabel={t('filters.maxPrice')}
+      />
+      <View style={styles.priceScale}>
+        {PRICE_SIGNS.map((sign, i) => (
+          <Text key={sign} style={[styles.priceTick, i < level && styles.priceTickActive]}>
+            {sign}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function PriceCoin({ lit }: { lit: boolean }) {
+  // Coins pop a little as they light up — the money "counts up" with the drag.
+  const style = useAnimatedStyle(() => ({
+    opacity: withTiming(lit ? 1 : 0.18, { duration: 160 }),
+    transform: [{ scale: withSpring(lit ? 1 : 0.86, { duration: 280, dampingRatio: 0.6 }) }],
+  }));
+  return <Animated.Text style={[styles.coin, style]}>₪</Animated.Text>;
+}
+
+export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('filters.cuisine')}</Text>
+        <CuisinePicker filters={filters} onChange={onChange} />
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('filters.vibe')}</Text>
+        <VibePicker filters={filters} onChange={onChange} />
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('filters.maxPrice')}</Text>
+        <PricePicker filters={filters} onChange={onChange} />
+      </View>
+      <KosherCard filters={filters} onChange={onChange} />
     </View>
   );
 }
@@ -259,6 +240,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  priceHero: { gap: spacing.md, alignItems: 'stretch' },
+  coins: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, direction: 'ltr' },
+  coin: { fontSize: 56, lineHeight: 64, fontWeight: '300', color: colors.primaryDark },
+  priceDescBig: { ...typography.title3, color: colors.text, textAlign: 'center' },
   priceHeader: {
     flexDirection: 'row',
     alignItems: 'baseline',

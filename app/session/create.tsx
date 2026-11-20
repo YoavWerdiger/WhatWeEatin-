@@ -7,7 +7,6 @@ import {
   Share,
   ActivityIndicator,
   ScrollView,
-  Switch,
   Pressable,
   I18nManager,
   KeyboardAvoidingView,
@@ -37,10 +36,24 @@ import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
-import FilterPicker from '../../src/components/FilterPicker';
+import {
+  CuisinePicker,
+  KosherCard,
+  PricePicker,
+  VibePicker,
+} from '../../src/components/FilterPicker';
 import { useTranslation } from '../../src/i18n/t';
 
-type Step = 'name' | 'mode' | 'timer' | 'rules' | 'filters' | 'ready';
+type Step =
+  | 'name'
+  | 'mode'
+  | 'timer'
+  | 'unanimous'
+  | 'readyCheck'
+  | 'cuisine'
+  | 'vibe'
+  | 'price'
+  | 'ready';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 const AUTO_ADVANCE_MS = 220;
@@ -105,7 +118,16 @@ export default function CreateSessionScreen() {
     () =>
       sessionCode
         ? ['ready']
-        : ['name', 'mode', ...(gameMode === 'swipe' ? (['timer'] as const) : []), 'rules', 'filters'],
+        : [
+            'name',
+            'mode',
+            ...(gameMode === 'swipe' ? (['timer'] as const) : []),
+            'unanimous',
+            'readyCheck',
+            'cuisine',
+            'vibe',
+            'price',
+          ],
     [gameMode, sessionCode],
   );
   const step = steps[Math.min(stepIndex, steps.length - 1)];
@@ -170,7 +192,8 @@ export default function CreateSessionScreen() {
   const modeHint = (mode: GameMode) =>
     mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
 
-  const optional = step === 'rules' || step === 'filters';
+  // Only the food filters are optional; the rule questions have a default and advance on tap.
+  const optional = step === 'cuisine' || step === 'vibe' || step === 'price';
 
   return (
     <View style={styles.container}>
@@ -243,32 +266,68 @@ export default function CreateSessionScreen() {
               </Question>
             )}
 
-            {step === 'rules' && (
-              <Question title={t('create.qRules')} sub={t('create.qRulesSub')}>
+            {step === 'unanimous' && (
+              <Question title={t('create.qUnanimous')}>
                 <View style={styles.cards}>
-                  <RuleCard
+                  <OptionCard
                     index={0}
                     icon="people"
-                    title={t('create.switchUnanimousTitle')}
+                    title={t('create.unanimousAll')}
                     hint={t('create.switchUnanimousSub')}
-                    value={requireUnanimousKeepBrowsing}
-                    onChange={setRequireUnanimousKeepBrowsing}
+                    selected={requireUnanimousKeepBrowsing}
+                    onPress={() => choose(() => setRequireUnanimousKeepBrowsing(true))}
                   />
-                  <RuleCard
+                  <OptionCard
                     index={1}
-                    icon="hand-left"
-                    title={t('create.switchLobbyTitle')}
-                    hint={t('create.switchLobbySub')}
-                    value={requireLobbyReady}
-                    onChange={setRequireLobbyReady}
+                    icon="person"
+                    title={t('create.unanimousAny')}
+                    hint={t('create.unanimousAnyHint')}
+                    selected={!requireUnanimousKeepBrowsing}
+                    onPress={() => choose(() => setRequireUnanimousKeepBrowsing(false))}
                   />
                 </View>
               </Question>
             )}
 
-            {step === 'filters' && (
+            {step === 'readyCheck' && (
+              <Question title={t('create.qReady')}>
+                <View style={styles.cards}>
+                  <OptionCard
+                    index={0}
+                    icon="hand-left"
+                    title={t('create.readyYes')}
+                    hint={t('create.switchLobbySub')}
+                    selected={requireLobbyReady}
+                    onPress={() => choose(() => setRequireLobbyReady(true))}
+                  />
+                  <OptionCard
+                    index={1}
+                    icon="play"
+                    title={t('create.readyNo')}
+                    hint={t('create.readyNoHint')}
+                    selected={!requireLobbyReady}
+                    onPress={() => choose(() => setRequireLobbyReady(false))}
+                  />
+                </View>
+              </Question>
+            )}
+
+            {step === 'cuisine' && (
               <Question title={t('create.qFilters')} sub={t('create.qFiltersSub')}>
-                <FilterPicker filters={filters} onChange={setFilters} />
+                <CuisinePicker filters={filters} onChange={setFilters} />
+              </Question>
+            )}
+
+            {step === 'vibe' && (
+              <Question title={t('create.qVibe')} sub={t('create.qVibeSub')}>
+                <VibePicker filters={filters} onChange={setFilters} />
+                <KosherCard filters={filters} onChange={setFilters} />
+              </Question>
+            )}
+
+            {step === 'price' && (
+              <Question title={t('create.qPrice')} sub={t('create.qPriceSub')}>
+                <PricePicker filters={filters} onChange={setFilters} />
               </Question>
             )}
 
@@ -442,56 +501,6 @@ function OptionCard({
   );
 }
 
-/** A house rule as a card you flip: tap anywhere, the switch shows the state. */
-function RuleCard({
-  index,
-  icon,
-  title,
-  hint,
-  value,
-  onChange,
-}: {
-  index: number;
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  hint: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const toggle = () => {
-    void Haptics.selectionAsync();
-    onChange(!value);
-  };
-  return (
-    <Animated.View entering={FadeInDown.duration(260).delay(index * 60)}>
-      <Pressable
-        onPress={toggle}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value }}
-        accessibilityLabel={title}
-        accessibilityHint={hint}
-      >
-        <Glass radius={borderRadius.lg} interactive tint={value ? SELECTED_TINT : undefined} style={styles.rule}>
-          <View style={[styles.optionIcon, value && styles.optionIconSelected]}>
-            <Ionicons name={icon} size={24} color={value ? '#FFFFFF' : colors.primaryDark} />
-          </View>
-          <View style={styles.optionText}>
-            <Text style={styles.optionTitle}>{title}</Text>
-            <Text style={styles.optionHint}>{hint}</Text>
-          </View>
-          <Switch
-            value={value}
-            onValueChange={() => toggle()}
-            trackColor={{ true: colors.primary, false: undefined }}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          />
-        </Glass>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   flexWide: { flex: 2 },
@@ -536,12 +545,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
   },
-  rule: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-  },
   optionIcon: {
     width: 48,
     height: 48,
@@ -558,7 +561,6 @@ const styles = StyleSheet.create({
 
   card: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, ...continuous, overflow: 'hidden' },
   cardPadded: { padding: spacing.md },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md },
   separatorFull: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, alignSelf: 'stretch' },
 
   ticket: { alignItems: 'center', gap: spacing.md, padding: spacing.lg },
