@@ -16,6 +16,8 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
+import { Glass } from './ui/Glass';
+import { Ionicons } from '@expo/vector-icons';
 import { Restaurant, VoteType } from '../types';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -186,11 +188,11 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
     // Stamps grow into place as the card nears the threshold.
     const likeStyle = useAnimatedStyle(() => {
       const p = interpolate(translateX.get(), [SWIPE_THRESHOLD * 0.25, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
-      return { opacity: p, transform: [{ rotate: '-14deg' }, { scale: 0.9 + 0.1 * p }] };
+      return { opacity: p, transform: [{ rotate: '-8deg' }, { scale: 0.9 + 0.1 * p }] };
     });
     const nopeStyle = useAnimatedStyle(() => {
       const p = interpolate(translateX.get(), [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD * 0.25], [1, 0], Extrapolation.CLAMP);
-      return { opacity: p, transform: [{ rotate: '14deg' }, { scale: 0.9 + 0.1 * p }] };
+      return { opacity: p, transform: [{ rotate: '8deg' }, { scale: 0.9 + 0.1 * p }] };
     });
 
     const visibleCards = restaurants.slice(currentIndex, currentIndex + STACK_CARDS);
@@ -207,18 +209,18 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
                   <Animated.View style={[styles.topCardWrapper, topCardStyle]}>
                     <SwipeCard restaurant={restaurant} />
 
-                    <Animated.View
-                      style={[styles.overlayStamp, styles.likeStamp, likeStyle]}
-                      pointerEvents="none"
-                    >
-                      <Text style={styles.likeStampText}>{t('swipeActions.like')}</Text>
+                    <Animated.View style={[styles.overlayStamp, styles.likeStamp, likeStyle]} pointerEvents="none">
+                      <Glass radius={999} scheme="dark" tint="rgba(34, 163, 90, 0.75)" style={styles.stampGlass}>
+                        <Ionicons name="heart" size={22} color="#FFFFFF" />
+                        <Text style={styles.stampText}>{t('swipeActions.like')}</Text>
+                      </Glass>
                     </Animated.View>
 
-                    <Animated.View
-                      style={[styles.overlayStamp, styles.nopeStamp, nopeStyle]}
-                      pointerEvents="none"
-                    >
-                      <Text style={styles.nopeStampText}>{t('swipeActions.pass')}</Text>
+                    <Animated.View style={[styles.overlayStamp, styles.nopeStamp, nopeStyle]} pointerEvents="none">
+                      <Glass radius={999} scheme="dark" tint="rgba(217, 45, 32, 0.75)" style={styles.stampGlass}>
+                        <Ionicons name="close" size={22} color="#FFFFFF" />
+                        <Text style={styles.stampText}>{t('swipeActions.pass')}</Text>
+                      </Glass>
                     </Animated.View>
                   </Animated.View>
                 </GestureDetector>
@@ -303,28 +305,20 @@ const styles = StyleSheet.create({
 
   overlayStamp: {
     position: 'absolute',
-    top: 40,
+    top: 28,
     zIndex: 50,
+  },
+  likeStamp: { left: 20 },
+  nopeStamp: { right: 20 },
+  stampGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 4,
-    borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    paddingVertical: 10,
   },
-  likeStamp: {
-    left: 20,
-    borderColor: colors.accentLight,
-  },
-  nopeStamp: {
-    right: 20,
-    borderColor: '#FF8A80',
-  },
-  likeStampText: {
-    ...typography.largeTitle,
-    color: colors.accentLight,
-  },
-  nopeStampText: {
-    ...typography.largeTitle,
-    color: '#FF8A80',
+  stampText: {
+    ...typography.title3,
+    color: '#FFFFFF',
   },
 });

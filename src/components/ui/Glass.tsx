@@ -17,6 +17,8 @@ interface GlassProps extends ViewProps {
   tint?: string;
   /** Sits on a dark photo — the solid fallback goes dark to match. */
   dark?: boolean;
+  /** Glass appearance. Light everywhere except over photos, where dark keeps white text legible. */
+  scheme?: 'light' | 'dark';
 }
 
 export function Glass({
@@ -25,6 +27,7 @@ export function Glass({
   interactive = false,
   tint,
   dark = false,
+  scheme = 'light',
   style,
   children,
   ...rest
@@ -34,7 +37,7 @@ export function Glass({
   if (LIQUID) {
     return (
       <GlassView
-        colorScheme="light"
+        colorScheme={scheme}
         glassEffectStyle={variant}
         isInteractive={interactive}
         tintColor={tint}

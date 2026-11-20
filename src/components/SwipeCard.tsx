@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, Dimensions, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Glass } from './ui/Glass';
 import { Ionicons } from '@expo/vector-icons';
 import { Restaurant, RestaurantSource } from '../types';
 import { colors } from '../theme/colors';
@@ -20,6 +21,15 @@ const SOURCE_CONFIG: Record<RestaurantSource, { label: string; color: string; bg
   mock: { label: 'Sample', color: '#FFFFFF', bg: 'rgba(255,255,255,0.18)' },
 };
 
+/** Rounded clear glass over the photo; dark scheme keeps the white text legible. */
+function Pill({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={[styles.pill, style]}>
+      {children}
+    </Glass>
+  );
+}
+
 interface SwipeCardProps {
   restaurant: Restaurant;
 }
@@ -33,11 +43,9 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
       <Image source={{ uri: restaurant.image }} style={styles.image} />
 
       {restaurant.source !== 'mock' && (
-        <View style={[styles.sourceBadge, { backgroundColor: src.bg }]}>
-          <Text style={[styles.sourceText, { color: src.color }]}>
-            {src.label}
-          </Text>
-        </View>
+        <Pill style={styles.sourceBadge}>
+          <Text style={[styles.sourceText, { color: src.color }]}>{src.label}</Text>
+        </Pill>
       )}
 
       <LinearGradient
@@ -47,14 +55,14 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
       >
         <View style={styles.infoContainer}>
           <View style={styles.tagsRow}>
-            <View style={styles.cuisineBadge}>
+            <Pill>
               <Text style={styles.cuisineText}>{restaurant.cuisine}</Text>
-            </View>
+            </Pill>
             {restaurant.isOpen && (
-              <View style={styles.openBadge}>
+              <Pill>
                 <View style={styles.openDot} />
                 <Text style={styles.openText}>Open</Text>
-              </View>
+              </Pill>
             )}
           </View>
 
@@ -76,27 +84,27 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
           </View>
 
           <View style={styles.metaRow}>
-            <View style={styles.metaChip}>
+            <Pill>
               <Ionicons name="time-outline" size={14} color={META_ICON} />
               <Text style={styles.metaText}>{restaurant.deliveryTime}</Text>
-            </View>
-            <View style={styles.metaChip}>
+            </Pill>
+            <Pill>
               <Ionicons name="wallet-outline" size={14} color={META_ICON} />
               <Text style={styles.metaText}>
                 {PRICE_LABELS[restaurant.priceLevel]}
               </Text>
-            </View>
+            </Pill>
             {restaurant.deliveryFee && (
-              <View style={styles.metaChip}>
+              <Pill>
                 <Ionicons name="bicycle-outline" size={14} color={META_ICON} />
                 <Text style={styles.metaText}>{restaurant.deliveryFee}</Text>
-              </View>
+              </Pill>
             )}
             {!restaurant.deliveryFee && restaurant.distance && (
-              <View style={styles.metaChip}>
+              <Pill>
                 <Ionicons name="location-outline" size={14} color={META_ICON} />
                 <Text style={styles.metaText}>{restaurant.distance}</Text>
-              </View>
+              </Pill>
             )}
           </View>
         </View>
@@ -106,6 +114,13 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
 }
 
 const styles = StyleSheet.create({
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
@@ -123,9 +138,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 14,
     right: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
     zIndex: 5,
   },
   sourceText: {
@@ -146,25 +158,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: 2,
   },
-  cuisineBadge: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
   cuisineText: {
     ...typography.caption1,
     fontWeight: '500',
     color: '#FFFFFF',
-  },
-  openBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(46,204,113,0.22)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
   },
   openDot: {
     width: 6,
@@ -207,15 +204,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginTop: 4,
-  },
-  metaChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
   },
   metaText: {
     ...typography.caption1,
