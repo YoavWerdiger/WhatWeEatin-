@@ -35,6 +35,7 @@ import { GlassButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
 import { TimeDial } from '../../src/components/TimeDial';
 import { TableScene } from '../../src/components/TableScene';
+import { RoulettePreview, SwipePreview } from '../../src/components/ModePreview';
 import { StopSlider } from '../../src/components/native/StopSlider';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -252,12 +253,12 @@ export default function CreateSessionScreen() {
 
             {step === 'mode' && (
               <Question title={t('create.qMode')}>
-                <View style={styles.cards}>
-                  {MODE_OPTIONS.map(({ mode, icon }, i) => (
-                    <OptionCard
+                {/* Each mode plays a tiny demo of itself */}
+                <View style={styles.modeRow}>
+                  {MODE_OPTIONS.map(({ mode }) => (
+                    <ModeTile
                       key={mode}
-                      index={i}
-                      icon={icon}
+                      mode={mode}
                       title={modeTitle(mode)}
                       hint={modeHint(mode)}
                       selected={gameMode === mode}
@@ -425,6 +426,53 @@ function NameGreeting({ name, greet }: { name: string; greet: (first: string) =>
   );
 }
 
+function ModeTile({
+  mode,
+  title,
+  hint,
+  selected,
+  onPress,
+}: {
+  mode: GameMode;
+  title: string;
+  hint: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={title}
+      accessibilityHint={hint}
+      style={styles.modeCell}
+    >
+      <Glass
+        radius={borderRadius.lg}
+        interactive
+        tint={selected ? SELECTED_TINT : RESTING_TINT}
+        style={styles.modeTile}
+      >
+        {mode === 'roulette' ? <RoulettePreview /> : <SwipePreview />}
+        <View style={styles.modeText}>
+          <View style={styles.modeTitleRow}>
+            <Text style={styles.optionTitle}>{title}</Text>
+            <Ionicons
+              name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+              size={22}
+              color={selected ? colors.primary : colors.border}
+            />
+          </View>
+          <Text style={styles.optionHint} numberOfLines={4}>
+            {hint}
+          </Text>
+        </View>
+      </Glass>
+    </Pressable>
+  );
+}
+
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <View style={styles.question}>
@@ -507,6 +555,11 @@ const styles = StyleSheet.create({
   },
 
   cards: { gap: 12 },
+  modeRow: { flexDirection: 'row', gap: 12 },
+  modeCell: { flex: 1 },
+  modeTile: { height: 264, padding: spacing.md, gap: spacing.sm },
+  modeText: { gap: 4 },
+  modeTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   styleText: { alignItems: 'center', gap: 4, minHeight: 72 },
   styleName: { ...typography.title2, color: colors.text, textAlign: 'center' },
   styleHint: { ...typography.subheadline, color: colors.textSecondary, textAlign: 'center' },
