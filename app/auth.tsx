@@ -4,13 +4,14 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
   Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
+  Pressable,
+  Image,
 } from 'react-native';
+import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -20,7 +21,8 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../src/theme/colors';
 import { typography } from '../src/theme/typography';
-import { spacing, borderRadius, shadows } from '../src/theme/spacing';
+import { spacing, borderRadius } from '../src/theme/spacing';
+import { GlassButton } from '../src/components/native/GlassButton';
 import { useAuthStore } from '../src/store/authStore';
 import { useTranslation } from '../src/i18n/t';
 
@@ -243,49 +245,44 @@ export default function AuthScreen() {
       ? email.trim() && password.length >= 6 && name.trim()
       : email.trim() && password.length >= 1;
 
+  const MODES: Mode[] = ['login', 'register'];
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
             <View style={styles.header}>
+              <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
               <Text style={styles.title}>{t('auth.title')}</Text>
               <Text style={styles.subtitle}>
-                {mode === 'login'
-                  ? t('auth.subtitleLogin')
-                  : t('auth.subtitleRegister')}
+                {mode === 'login' ? t('auth.subtitleLogin') : t('auth.subtitleRegister')}
               </Text>
             </View>
 
-            {/* Google Sign-In */}
-            <TouchableOpacity
-              style={styles.googleButton}
+            {/* Sign in / Create account — a native segmented control, not a link at the bottom */}
+            <SegmentedControl
+              values={[t('auth.signIn'), t('auth.createAccount')]}
+              selectedIndex={MODES.indexOf(mode)}
+              onChange={(e) => {
+                if (MODES[e.nativeEvent.selectedSegmentIndex] !== mode) toggleMode();
+              }}
+            />
+
+            <GlassButton
+              title={t('auth.continueGoogle')}
+              prominent={false}
+              loading={googleBusy}
+              disabled={isLoading || !GOOGLE_WEB_CLIENT_ID || !googleRequest}
               onPress={() => {
                 void handleGooglePress();
               }}
-              disabled={isLoading || googleBusy || !GOOGLE_WEB_CLIENT_ID || !googleRequest}
-              activeOpacity={0.8}
-            >
-              {googleBusy ? (
-                <ActivityIndicator color={colors.text} />
-              ) : (
-                <>
-                  <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleText}>{t('auth.continueGoogle')}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            {!GOOGLE_WEB_CLIENT_ID ? (
-              <Text style={styles.configHint}>{t('auth.configHint')}</Text>
-            ) : null}
-
+            />
+            {!GOOGLE_WEB_CLIENT_ID ? <Text style={styles.configHint}>{t('auth.configHint')}</Text> : null}
             {googlePolicyHint ? (
               <View style={styles.policyHintBox}>
                 <Text style={styles.policyHintText}>{googlePolicyHint}</Text>
@@ -298,94 +295,67 @@ export default function AuthScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Email Form */}
-            <View style={styles.form}>
+            {/* Grouped fields, iOS Settings style */}
+            <View style={styles.fields}>
               {mode === 'register' && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>{t('auth.name')}</Text>
+                <>
                   <TextInput
-                    style={styles.input}
+                    style={styles.field}
                     value={name}
                     onChangeText={setName}
                     placeholder={t('auth.placeholderName')}
                     placeholderTextColor={colors.textMuted}
                     autoCapitalize="words"
+                    textContentType="name"
+                    autoComplete="name"
+                    accessibilityLabel={t('auth.name')}
                   />
-                </View>
+                  <View style={styles.fieldSeparator} />
+                </>
               )}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t('auth.email')}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder={t('auth.placeholderEmail')}
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t('auth.password')}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder={
-                    mode === 'register'
-                      ? t('auth.placeholderPasswordRegister')
-                      : t('auth.placeholderPasswordLogin')
-                  }
-                  placeholderTextColor={colors.textMuted}
-                  secureTextEntry
-                />
-              </View>
-
-              {error && (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={[
-                  styles.primaryButton,
-                  !isFormValid && styles.primaryButtonDisabled,
-                ]}
-                onPress={handleEmailAuth}
-                disabled={!isFormValid || isLoading}
-                activeOpacity={0.8}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>
-                    {mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
-                  </Text>
-                )}
-              </TouchableOpacity>
+              <TextInput
+                style={styles.field}
+                value={email}
+                onChangeText={setEmail}
+                placeholder={t('auth.placeholderEmail')}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+                autoComplete="email"
+                accessibilityLabel={t('auth.email')}
+              />
+              <View style={styles.fieldSeparator} />
+              <TextInput
+                style={styles.field}
+                value={password}
+                onChangeText={setPassword}
+                placeholder={
+                  mode === 'register' ? t('auth.placeholderPasswordRegister') : t('auth.placeholderPasswordLogin')
+                }
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+                textContentType={mode === 'register' ? 'newPassword' : 'password'}
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                accessibilityLabel={t('auth.password')}
+                returnKeyType="go"
+                onSubmitEditing={() => isFormValid && void handleEmailAuth()}
+              />
             </View>
 
-            <TouchableOpacity
-              style={styles.switchModeButton}
-              onPress={toggleMode}
-            >
-              <Text style={styles.switchModeText}>
-                {mode === 'login'
-                  ? t('auth.switchToRegister')
-                  : t('auth.switchToLogin')}
-              </Text>
-            </TouchableOpacity>
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={handleSkip}
-            >
+            <GlassButton
+              title={mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
+              onPress={handleEmailAuth}
+              disabled={!isFormValid}
+              loading={isLoading}
+            />
+
+            <Pressable onPress={handleSkip} hitSlop={8} style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}>
               <Text style={styles.skipText}>{t('auth.skipGuest')}</Text>
-            </TouchableOpacity>
+            </Pressable>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -396,143 +366,33 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center' },
-  content: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.largeTitle,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    paddingVertical: 12,
-    borderRadius: borderRadius.full,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  googleIcon: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#4285F4',
-  },
-  googleText: {
-    ...typography.bodySemiBold,
-    color: colors.text,
-  },
-  configHint: {
-    ...typography.caption,
-    color: colors.warning,
-    textAlign: 'center',
-  },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.lg },
+  content: { paddingHorizontal: spacing.md, gap: spacing.md },
+  header: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
+  logo: { width: 64, height: 64, marginBottom: spacing.sm },
+  title: { ...typography.largeTitle, color: colors.text, textAlign: 'center' },
+  subtitle: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
+  configHint: { ...typography.footnote, color: colors.warning, textAlign: 'center' },
   policyHintBox: {
-    backgroundColor: 'rgba(243, 156, 18, 0.12)',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(243, 156, 18, 0.35)',
-  },
-  policyHintText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-
-  form: {
-    gap: spacing.md,
-  },
-  inputGroup: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-  },
-  input: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    ...typography.body,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderCurve: 'continuous',
+    padding: spacing.md,
   },
-
-  errorBox: {
-    backgroundColor: 'rgba(255, 71, 87, 0.1)',
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
+  policyHintText: { ...typography.footnote, color: colors.textSecondary },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  dividerText: { ...typography.footnote, color: colors.textMuted },
+  fields: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
   },
-  errorText: {
-    ...typography.captionMedium,
-    color: colors.danger,
-    textAlign: 'center',
-  },
-
-  primaryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    ...shadows.md,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.5,
-  },
-  primaryButtonText: {
-    ...typography.button,
-    color: colors.onPrimary,
-  },
-
-  switchModeButton: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  switchModeText: {
-    ...typography.bodyMedium,
-    color: colors.primaryDark,
-  },
-
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  skipText: {
-    ...typography.captionMedium,
-    color: colors.textMuted,
-  },
+  field: { ...typography.body, color: colors.text, paddingHorizontal: spacing.md, paddingVertical: 14 },
+  fieldSeparator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md },
+  errorText: { ...typography.footnote, color: colors.danger, textAlign: 'center' },
+  skipButton: { alignSelf: 'center', paddingVertical: spacing.sm },
+  skipText: { ...typography.subheadline, fontWeight: '600', color: colors.textSecondary },
+  pressed: { opacity: 0.6 },
 });
