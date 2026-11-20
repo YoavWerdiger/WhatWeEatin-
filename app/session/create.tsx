@@ -245,15 +245,18 @@ export default function CreateSessionScreen() {
 
             {step === 'rules' && (
               <Question title={t('create.qRules')} sub={t('create.qRulesSub')}>
-                <View style={styles.card}>
-                  <RuleRow
+                <View style={styles.cards}>
+                  <RuleCard
+                    index={0}
+                    icon="people"
                     title={t('create.switchUnanimousTitle')}
                     hint={t('create.switchUnanimousSub')}
                     value={requireUnanimousKeepBrowsing}
                     onChange={setRequireUnanimousKeepBrowsing}
                   />
-                  <View style={styles.separator} />
-                  <RuleRow
+                  <RuleCard
+                    index={1}
+                    icon="hand-left"
                     title={t('create.switchLobbyTitle')}
                     hint={t('create.switchLobbySub')}
                     value={requireLobbyReady}
@@ -441,25 +444,53 @@ function OptionCard({
   );
 }
 
-function RuleRow({
+/** A house rule as a card you flip: tap anywhere, the switch shows the state. */
+function RuleCard({
+  index,
+  icon,
   title,
   hint,
   value,
   onChange,
 }: {
+  index: number;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   hint: string;
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const toggle = () => {
+    void Haptics.selectionAsync();
+    onChange(!value);
+  };
   return (
-    <View style={styles.ruleRow}>
-      <View style={styles.ruleText}>
-        <Text style={styles.ruleTitle}>{title}</Text>
-        <Text style={styles.ruleHint}>{hint}</Text>
-      </View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary, false: undefined }} />
-    </View>
+    <Animated.View entering={FadeInDown.duration(260).delay(index * 60)}>
+      <Pressable
+        onPress={toggle}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: value }}
+        accessibilityLabel={title}
+        accessibilityHint={hint}
+      >
+        <Glass radius={borderRadius.lg} interactive tint={value ? SELECTED_TINT : undefined} style={styles.rule}>
+          <View style={[styles.optionIcon, value && styles.optionIconSelected]}>
+            <Ionicons name={icon} size={24} color={value ? '#FFFFFF' : colors.primaryDark} />
+          </View>
+          <View style={styles.optionText}>
+            <Text style={styles.optionTitle}>{title}</Text>
+            <Text style={styles.optionHint}>{hint}</Text>
+          </View>
+          <Switch
+            value={value}
+            onValueChange={() => toggle()}
+            trackColor={{ true: colors.primary, false: undefined }}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+          />
+        </Glass>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -507,6 +538,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
   },
+  rule: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+  },
   optionIcon: {
     width: 48,
     height: 48,
@@ -525,10 +562,6 @@ const styles = StyleSheet.create({
   cardPadded: { padding: spacing.md },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md },
   separatorFull: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, alignSelf: 'stretch' },
-  ruleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md },
-  ruleText: { flex: 1, gap: 2 },
-  ruleTitle: { ...typography.body, color: colors.text },
-  ruleHint: { ...typography.footnote, color: colors.textSecondary },
 
   ticket: { alignItems: 'center', gap: spacing.md, padding: spacing.lg },
   ticketLabel: { ...typography.footnote, color: colors.textSecondary },
