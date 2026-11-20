@@ -8,7 +8,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeInDown, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, borderRadius } from '../theme/spacing';
@@ -108,7 +115,6 @@ export function VibePicker({ filters, onChange }: PartProps) {
               accessibilityRole="checkbox"
               accessibilityState={{ checked: selected }}
               accessibilityLabel={t(label)}
-              style={styles.flex}
             >
               <Glass
                 radius={borderRadius.lg}
@@ -137,29 +143,41 @@ export function VibePicker({ filters, onChange }: PartProps) {
 }
 
 /** Kosher as a glass card: tap anywhere to flip it, the switch shows the state. */
+/** Kosher as a wide glass tile in the vibe tiles' language — tap to turn on, it pops. */
 export function KosherCard({ filters, onChange }: PartProps) {
   const { t } = useTranslation();
   const on = filters.kosherOnly;
-  const flip = () => {
-    Haptics.selectionAsync();
+  const pop = useSharedValue(1);
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.get() }] }));
+  const toggle = () => {
+    Haptics.impactAsync(on ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
+    if (!on) pop.set(withSequence(withTiming(1.04, { duration: 120 }), withSpring(1, { duration: 300, dampingRatio: 0.6 })));
     onChange({ ...filters, kosherOnly: !on });
   };
   return (
-    <Pressable onPress={flip} accessibilityRole="switch" accessibilityState={{ checked: on }}>
-      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'} style={styles.kosherRow}>
-        <View style={styles.kosherInfo}>
-          <Text style={styles.sectionTitle}>{t('filters.kosher')}</Text>
-          <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
-        </View>
-        <Switch
-          value={on}
-          onValueChange={flip}
-          trackColor={{ true: colors.primary, false: undefined }}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        />
-      </Glass>
-    </Pressable>
+    <Animated.View entering={FadeInDown.duration(260).delay(200)} style={popStyle}>
+      <Pressable onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: on }}>
+        <Glass
+          radius={borderRadius.lg}
+          interactive
+          tint={on ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'}
+          style={styles.kosherRow}
+        >
+          <View style={[styles.vibeIcon, on && styles.vibeIconSelected]}>
+            <Ionicons name="shield-checkmark" size={24} color={on ? '#FFFFFF' : colors.primaryDark} />
+          </View>
+          <View style={styles.kosherInfo}>
+            <Text style={[styles.vibeLabel, styles.textStart]}>{t('filters.kosher')}</Text>
+            <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
+          </View>
+          <Ionicons
+            name={on ? 'checkmark-circle' : 'ellipse-outline'}
+            size={26}
+            color={on ? colors.primary : colors.border}
+          />
+        </Glass>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -279,9 +297,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   vibeRow: { flexDirection: 'row', gap: 12 },
   vibeCell: { flex: 1 },
+  // Fixed height: inside a flex row with no height, flex:1 collapsed the glass to nothing.
   vibeTile: {
-    flex: 1,
-    minHeight: 150,
+    height: 156,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
@@ -297,6 +315,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   vibeIconSelected: { backgroundColor: colors.primary },
+  textStart: { textAlign: 'auto' },
   vibeLabel: { ...typography.headline, color: colors.text, textAlign: 'center' },
   priceHero: { gap: spacing.md, alignItems: 'stretch' },
   coins: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, direction: 'ltr' },
@@ -330,11 +349,8 @@ const styles = StyleSheet.create({
   kosherRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
+    gap: spacing.md,
     padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderCurve: 'continuous',
   },
   kosherInfo: {
     flex: 1,
