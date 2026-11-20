@@ -9,6 +9,8 @@ export interface GlassButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  /** Glass appearance; dark over photos. */
+  scheme?: 'light' | 'dark';
   style?: StyleProp<ViewStyle>;
 }
 

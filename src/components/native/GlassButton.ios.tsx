@@ -31,13 +31,14 @@ export function GlassButton({
   disabled = false,
   loading = false,
   fullWidth = true,
+  scheme = 'light',
   style,
 }: GlassButtonProps) {
   const isDisabled = disabled || loading;
   return (
     <Host
       matchContents={{ vertical: true, horizontal: !fullWidth }}
-      colorScheme="light"
+      colorScheme={scheme}
       // glassProminent always draws a white label, so tint with the deeper orange
       // (white on it is 5.2:1; on the bright brand orange only 2.8:1).
       seedColor={

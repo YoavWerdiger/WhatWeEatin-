@@ -223,6 +223,7 @@ export const he: Messages = {
   'swipeActions.like': 'כן',
 
   'match.title': 'זה מה שאוכלים',
+  'match.kicker': 'יש מאץ׳',
   'match.agreedOne': 'אדם אחד הסכים',
   'match.agreedMany': '{{count}} אנשים הסכימו',
   'match.keepBrowsingTitle': 'להמשיך לדפדף?',

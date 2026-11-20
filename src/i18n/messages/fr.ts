@@ -236,6 +236,7 @@ export const fr: Messages = {
   'swipeActions.like': "J'aime",
 
   'match.title': 'Voilà ce qu’on mange ',
+  'match.kicker': 'C’est un match',
   'match.agreedOne': '1 personne d’accord ',
   'match.agreedMany': '{{count}} personnes d’accord ',
   'match.keepBrowsingTitle': 'Continuer à parcourir ?',

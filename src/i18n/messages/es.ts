@@ -234,6 +234,7 @@ export const es: Messages = {
   'swipeActions.like': 'Me gusta',
 
   'match.title': '¡Esto es lo que comemos',
+  'match.kicker': 'Hay match',
   'match.agreedOne': '¡1 persona de acuerdo',
   'match.agreedMany': '¡{{count}} personas de acuerdo',
   'match.keepBrowsingTitle': '¿Seguir explorando?',

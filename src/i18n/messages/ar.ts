@@ -224,6 +224,7 @@ export const ar: Messages = {
   'swipeActions.like': 'نعم',
 
   'match.title': 'هذا اللي ناكله',
+  'match.kicker': 'تطابق',
   'match.agreedOne': 'شخص واحد وافق',
   'match.agreedMany': '{{count}} أشخاص وافقوا',
   'match.keepBrowsingTitle': 'متابعة التصفح؟',

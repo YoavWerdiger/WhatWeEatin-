@@ -1,28 +1,29 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated as RNAnimated,
-  Dimensions,
-  Image,
-  ScrollView,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import Animated, {
+  Easing,
+  FadeInDown,
+  Keyframe,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { MatchResult, RestaurantSource, SessionUser } from '../types';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { borderRadius, spacing, shadows } from '../theme/spacing';
-import { Button } from './ui/Button';
+import { borderRadius, spacing } from '../theme/spacing';
 import { Avatar } from './ui/Avatar';
+import { Glass } from './ui/Glass';
 import { GlassButton } from './native/GlassButton';
 import { useTranslation } from '../i18n/t';
-import { SOURCE_LABELS, PRICE_LABELS } from '../utils/constants';
+import { PRICE_LABELS } from '../utils/constants';
 import { openRestaurantLink } from '../utils/openRestaurantLink';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CONTENT_WIDTH = SCREEN_WIDTH - spacing.xl * 2;
 
 interface MatchAnimationProps {
   result: MatchResult;
@@ -35,10 +36,21 @@ interface MatchAnimationProps {
   sessionUsers?: SessionUser[];
   keepBrowsingApprovedBy?: string[];
   currentUserId?: string;
-  /** Play fade/scale-out, then call onExitComplete. */
+  /** Play the fade-out, then call onExitComplete. */
   exiting?: boolean;
   onExitComplete?: () => void;
 }
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const LIGHT_RED = '#FF8A80';
+
+// The photo settles into place as the match lands — the one big moment of the game.
+const photoEnter = new Keyframe({
+  0: { transform: [{ scale: 1.08 }] },
+  100: { transform: [{ scale: 1 }], easing: EASE_OUT },
+}).duration(700);
+
+const rise = (i: number) => FadeInDown.duration(320).delay(120 + i * 70);
 
 export function MatchAnimation({
   result,
@@ -52,326 +64,161 @@ export function MatchAnimation({
   exiting = false,
   onExitComplete,
 }: MatchAnimationProps) {
-  const { t, isRTL } = useTranslation();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
+  const opacity = useSharedValue(0);
+  const r = result.restaurant;
+
   const sourceLabels: Record<RestaurantSource, string> = {
     wolt: t('match.sourceWolt'),
     tenbis: t('match.sourceTenbis'),
     google: t('match.sourceGoogle'),
     mock: t('match.sourceMock'),
   };
-  const overlayOpacity = useRef(new RNAnimated.Value(0)).current;
-  const scaleAnim = useRef(new RNAnimated.Value(0)).current;
-  const fadeAnim = useRef(new RNAnimated.Value(0)).current;
-  const slideAnim = useRef(new RNAnimated.Value(50)).current;
-  const confettiAnims = useRef(
-    Array.from({ length: 20 }, () => ({
-      x: new RNAnimated.Value(SCREEN_WIDTH / 2),
-      y: new RNAnimated.Value(SCREEN_HEIGHT / 2),
-      opacity: new RNAnimated.Value(1),
-      rotate: new RNAnimated.Value(0),
-      scale: new RNAnimated.Value(0),
-    })),
-  ).current;
 
   useEffect(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-    overlayOpacity.setValue(0);
-    RNAnimated.timing(overlayOpacity, {
-      toValue: 1,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-
-    RNAnimated.sequence([
-      RNAnimated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 3,
-        useNativeDriver: true,
-      }),
-      RNAnimated.parallel([
-        RNAnimated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        RNAnimated.spring(slideAnim, {
-          toValue: 0,
-          tension: 40,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
-    confettiAnims.forEach((anim, i) => {
-      const delay = i * 50;
-      const targetX = Math.random() * SCREEN_WIDTH;
-      const targetY = Math.random() * SCREEN_HEIGHT * 0.7;
-
-      RNAnimated.sequence([
-        RNAnimated.delay(delay),
-        RNAnimated.parallel([
-          RNAnimated.spring(anim.scale, {
-            toValue: 1,
-            tension: 40,
-            friction: 5,
-            useNativeDriver: true,
-          }),
-          RNAnimated.timing(anim.x, {
-            toValue: targetX,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          RNAnimated.timing(anim.y, {
-            toValue: targetY,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          RNAnimated.timing(anim.rotate, {
-            toValue: Math.random() * 720 - 360,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          RNAnimated.sequence([
-            RNAnimated.delay(800),
-            RNAnimated.timing(anim.opacity, {
-              toValue: 0,
-              duration: 500,
-              useNativeDriver: true,
-            }),
-          ]),
-        ]),
-      ]).start();
-    });
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    opacity.set(withTiming(1, { duration: 220, easing: EASE_OUT }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   useEffect(() => {
     if (!exiting) return;
-    RNAnimated.parallel([
-      RNAnimated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 280,
-        useNativeDriver: true,
+    opacity.set(
+      withTiming(0, { duration: 220, easing: EASE_OUT }, (finished) => {
+        if (finished && onExitComplete) scheduleOnRN(onExitComplete);
       }),
-      RNAnimated.timing(scaleAnim, {
-        toValue: 0.92,
-        duration: 280,
-        useNativeDriver: true,
-      }),
-      RNAnimated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 240,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) onExitComplete?.();
-    });
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exiting]);
 
-  const emojis = ['🎉', '🍕', '🔥', '🎊', '✨', '🍔', '🌮', '🍣', '💫', '⭐'];
-  const textDir = isRTL ? 'rtl' : 'ltr';
-  const showUnanimous =
-    requireUnanimousKeepBrowsing && sessionUsers.length > 1;
-  const alreadyApproved =
-    !!(
-      showUnanimous &&
-      currentUserId &&
-      keepBrowsingApprovedBy.includes(currentUserId)
-    );
+  const fade = useAnimatedStyle(() => ({ opacity: opacity.get() }));
+
+  const showUnanimous = requireUnanimousKeepBrowsing && sessionUsers.length > 1;
+  const alreadyApproved = !!(
+    showUnanimous &&
+    currentUserId &&
+    keepBrowsingApprovedBy.includes(currentUserId)
+  );
+
+  const meta = [
+    { icon: 'star' as const, text: String(r.rating) },
+    { icon: 'restaurant-outline' as const, text: r.cuisine },
+    { icon: 'time-outline' as const, text: r.deliveryTime },
+    { icon: 'wallet-outline' as const, text: PRICE_LABELS[r.priceLevel] ?? '$$' },
+    ...(r.deliveryFee ? [{ icon: 'bicycle-outline' as const, text: r.deliveryFee }] : []),
+    ...(r.distance ? [{ icon: 'location-outline' as const, text: r.distance }] : []),
+  ].filter((m) => !!m.text);
 
   return (
-    <RNAnimated.View
-      style={[styles.container, { opacity: overlayOpacity }]}
-      pointerEvents={exiting ? 'none' : 'auto'}
-    >
-      {confettiAnims.map((anim, i) => (
-        <RNAnimated.Text
-          key={i}
-          pointerEvents="none"
-          style={[
-            styles.confetti,
-            {
-              opacity: anim.opacity,
-              transform: [
-                { translateX: anim.x },
-                { translateY: anim.y },
-                { scale: anim.scale },
-                {
-                  rotate: anim.rotate.interpolate({
-                    inputRange: [-360, 360],
-                    outputRange: ['-360deg', '360deg'],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {emojis[i % emojis.length]}
-        </RNAnimated.Text>
-      ))}
+    <Animated.View style={[StyleSheet.absoluteFill, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
+      {/* The winner's photo is the backdrop — rich content for the glass to sit on */}
+      <Animated.View style={StyleSheet.absoluteFill} entering={reduceMotion ? undefined : photoEnter}>
+        <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      </Animated.View>
+      <LinearGradient
+        colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
+        locations={[0, 0.4, 1]}
+        style={StyleSheet.absoluteFill}
+      />
 
       <ScrollView
-        style={styles.scroll}
         contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: Math.max(insets.top, spacing.sm) + spacing.sm,
-            paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.md,
-          },
+          styles.content,
+          { paddingTop: insets.top + spacing.xl, paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.sm },
         ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
       >
-        <RNAnimated.View
-          style={[
-            styles.hero,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
-        >
-          <Text style={[styles.matchTitle, { writingDirection: textDir }]}>
+        <View style={styles.head}>
+          <Animated.View entering={rise(0)}>
+            <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.kicker}>
+              <Ionicons name="heart" size={14} color={colors.accentLight} />
+              <Text style={styles.kickerText}>{t('match.kicker')}</Text>
+            </Glass>
+          </Animated.View>
+          <Animated.Text entering={rise(1)} style={styles.title}>
             {t('match.title')}
-          </Text>
+          </Animated.Text>
+        </View>
 
-          <View style={styles.restaurantCard}>
-            <Image
-              source={{ uri: result.restaurant.image }}
-              style={styles.restaurantImage}
-            />
-            <View style={styles.restaurantInfo}>
-              <View style={styles.nameRow}>
-                <Text
-                  style={[styles.restaurantName, { writingDirection: textDir }]}
-                  numberOfLines={2}
-                >
-                  {result.restaurant.name}
-                </Text>
-                {result.restaurant.source !== 'mock' && (
-                  <View style={styles.sourceBadge}>
-                    <Text style={styles.sourceBadgeText}>
-                      {SOURCE_LABELS[result.restaurant.source]}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                style={[styles.restaurantMeta, { writingDirection: textDir }]}
-                numberOfLines={3}
-              >
-                ★ {result.restaurant.rating} · {result.restaurant.cuisine} ·{' '}
-                {result.restaurant.deliveryTime}
-                {` · ${PRICE_LABELS[result.restaurant.priceLevel] ?? '$$'}`}
-                {result.restaurant.deliveryFee
-                  ? ` · ${result.restaurant.deliveryFee}`
-                  : ''}
-                {result.restaurant.distance
-                  ? ` · ${result.restaurant.distance}`
-                  : ''}
-                {result.restaurant.minimumOrder
-                  ? ` · min ${result.restaurant.minimumOrder}`
-                  : ''}
-              </Text>
-            </View>
-          </View>
-        </RNAnimated.View>
-
-        <RNAnimated.View
-          style={[
-            styles.bottomSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.agreedUsers}>
-            <Text style={[styles.agreedTitle, { writingDirection: textDir }]}>
-              {result.agreedUsers.length === 1
-                ? t('match.agreedOne')
-                : t('match.agreedMany', { count: result.agreedUsers.length })}
+        <View style={styles.body}>
+          <Animated.View entering={rise(2)} style={styles.nameBlock}>
+            <Text style={styles.name} numberOfLines={2}>
+              {r.name}
             </Text>
-            <View style={styles.avatarRow}>
-              {result.agreedUsers.map((user, i) => (
-                <View
-                  key={user.id}
-                  style={[styles.avatarWrapper, { marginLeft: i > 0 ? -8 : 0 }]}
-                >
-                  <Avatar name={user.name} color={user.avatar} size={36} />
-                </View>
+            <View style={styles.pills}>
+              {meta.map((m) => (
+                <Glass key={m.icon} radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.pill}>
+                  <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.pillText}>{m.text}</Text>
+                </Glass>
               ))}
             </View>
-          </View>
+          </Animated.View>
+
+          <Animated.View entering={rise(3)}>
+            <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
+              <View style={styles.avatars}>
+                {result.agreedUsers.map((u, i) => (
+                  <View key={u.id} style={[styles.avatarRing, i > 0 && styles.avatarOverlap]}>
+                    <Avatar name={u.name} color={u.avatar} size={28} />
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.agreedText}>
+                {result.agreedUsers.length === 1
+                  ? t('match.agreedOne')
+                  : t('match.agreedMany', { count: result.agreedUsers.length })}
+              </Text>
+            </Glass>
+          </Animated.View>
 
           {showUnanimous && (
-            <View style={styles.unanimousBox}>
-              <Text
-                style={[styles.unanimousTitle, { writingDirection: textDir }]}
-              >
-                {t('match.keepBrowsingTitle')}
-              </Text>
-              <Text
-                style={[styles.unanimousHint, { writingDirection: textDir }]}
-              >
-                {t('match.keepBrowsingHint')}
-              </Text>
-              <Text
-                style={[styles.unanimousCount, { writingDirection: textDir }]}
-              >
-                {t('match.playersIn', {
-                  done: keepBrowsingApprovedBy.length,
-                  total: sessionUsers.length,
-                })}
-              </Text>
-              <View style={styles.unanimousRow}>
-                {sessionUsers.map((u) => {
-                  const done = keepBrowsingApprovedBy.includes(u.id);
-                  const isMe = currentUserId && u.id === currentUserId;
-                  return (
-                    <View
-                      key={u.id}
-                      style={[
-                        styles.unanimousChip,
-                        done && styles.unanimousChipDone,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.unanimousChipText,
-                          done && styles.unanimousChipTextDone,
-                          { writingDirection: textDir },
-                        ]}
-                        numberOfLines={1}
+            <Animated.View entering={rise(4)}>
+              <Glass radius={borderRadius.lg} variant="clear" scheme="dark" dark style={styles.vote}>
+                <View style={styles.voteHead}>
+                  <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
+                  <Text style={styles.voteCount}>
+                    {keepBrowsingApprovedBy.length}/{sessionUsers.length}
+                  </Text>
+                </View>
+                <Text style={styles.voteHint}>{t('match.keepBrowsingHint')}</Text>
+                <View style={styles.voteChips}>
+                  {sessionUsers.map((u) => {
+                    const done = keepBrowsingApprovedBy.includes(u.id);
+                    const isMe = currentUserId && u.id === currentUserId;
+                    return (
+                      <Glass
+                        key={u.id}
+                        radius={borderRadius.full}
+                        variant="clear"
+                        scheme="dark"
+                        dark
+                        tint={done ? 'rgba(34, 163, 90, 0.6)' : undefined}
+                        style={styles.voteChip}
                       >
-                        {u.name}
-                        {isMe ? t('match.youSuffix') : ''}
-                        {done ? ' ✓' : ''}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
+                        {done && <Ionicons name="checkmark" size={13} color="#FFFFFF" />}
+                        <Text style={styles.voteChipText} numberOfLines={1}>
+                          {u.name}
+                          {isMe ? t('match.youSuffix') : ''}
+                        </Text>
+                      </Glass>
+                    );
+                  })}
+                </View>
+              </Glass>
+            </Animated.View>
           )}
 
-          <View style={styles.actions}>
-            {result.restaurant.externalUrl ? (
-              <GlassButton
-                title={sourceLabels[result.restaurant.source]}
-                onPress={() =>
-                  openRestaurantLink(
-                    result.restaurant.externalUrl,
-                    result.restaurant.source,
-                  )
-                }
-              />
-            ) : (
-              <GlassButton title={t('match.orderNow')} onPress={onOrderNow} />
-            )}
+          <Animated.View entering={rise(5)} style={styles.actions}>
+            <GlassButton
+              title={r.externalUrl ? sourceLabels[r.source] : t('match.orderNow')}
+              onPress={
+                r.externalUrl ? () => openRestaurantLink(r.externalUrl, r.source) : onOrderNow
+              }
+            />
             <GlassButton
               title={
                 alreadyApproved
@@ -382,184 +229,73 @@ export function MatchAnimation({
               }
               onPress={onContinue}
               prominent={false}
+              scheme="dark"
+              color="#FFFFFF"
               disabled={alreadyApproved}
             />
             {onLeave && (
-              // Leaving is destructive (HIG: system red), so it gets a real button, not a link
               <GlassButton
                 title={t('common.leave')}
                 onPress={onLeave}
                 prominent={false}
-                color={colors.danger}
+                scheme="dark"
+                color={LIGHT_RED}
               />
             )}
-          </View>
-        </RNAnimated.View>
+          </Animated.View>
+        </View>
       </ScrollView>
-    </RNAnimated.View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    zIndex: 1000,
-    elevation: 1000,
-  },
-  scroll: {
-    flex: 1,
-    zIndex: 2,
-  },
-  scrollContent: {
+  content: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    gap: spacing.md,
-  },
-  confetti: {
-    position: 'absolute',
-    fontSize: 24,
-    zIndex: 1,
-  },
-  continueBtn: {
-    minHeight: 48,
-    paddingHorizontal: spacing.xl,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    width: CONTENT_WIDTH,
-  },
-  matchTitle: {
-    ...typography.largeTitle,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  restaurantCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    width: '100%',
-    ...shadows.lg,
-  },
-  restaurantImage: {
-    width: '100%',
-    height: 140,
-    resizeMode: 'cover',
-  },
-  restaurantInfo: {
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    gap: 2,
+    gap: spacing.xl,
   },
-  nameRow: {
+  head: { alignItems: 'center', gap: spacing.md },
+  kicker: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sourceBadge: {
-    backgroundColor: colors.primaryMuted,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  sourceBadgeText: {
-    ...typography.caption2,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  restaurantName: {
-    ...typography.subtitle,
-    color: colors.text,
-    flexShrink: 1,
-  },
-  restaurantMeta: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
-  bottomSection: {
-    alignItems: 'center',
-    width: CONTENT_WIDTH,
-    gap: spacing.md,
-  },
-  agreedUsers: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  agreedTitle: {
-    ...typography.bodyMedium,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
-  },
-  avatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarWrapper: {
-    borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.85)',
-    borderRadius: 20,
-  },
-  actions: {
-    width: '100%',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  unanimousBox: {
-    width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    gap: spacing.sm,
-  },
-  unanimousTitle: {
-    ...typography.subheadline,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  unanimousHint: {
-    ...typography.caption,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 16,
-    textAlign: 'center',
-  },
-  unanimousCount: {
-    ...typography.captionMedium,
-    color: colors.primaryLight,
-    textAlign: 'center',
-  },
-  unanimousRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    justifyContent: 'center',
-  },
-  unanimousChip: {
+    gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    maxWidth: '100%',
+    paddingVertical: 6,
   },
-  unanimousChipDone: {
-    backgroundColor: 'rgba(46, 204, 113, 0.25)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 204, 113, 0.5)',
+  kickerText: { ...typography.footnote, fontWeight: '600', color: '#FFFFFF' },
+  title: { ...typography.largeTitle, color: '#FFFFFF', textAlign: 'center' },
+
+  body: { gap: spacing.md },
+  nameBlock: { gap: spacing.sm },
+  name: { ...typography.title1, color: '#FFFFFF' },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
+  pillText: { ...typography.footnote, fontWeight: '500', color: '#FFFFFF' },
+
+  agreed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingStart: 6,
+    paddingEnd: 14,
+    paddingVertical: 6,
   },
-  unanimousChipText: {
-    ...typography.caption1,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.85)',
-  },
-  unanimousChipTextDone: {
-    color: '#B8F5D0',
-  },
+  avatars: { flexDirection: 'row' },
+  avatarRing: { borderRadius: 16, borderWidth: 2, borderColor: 'rgba(0,0,0,0.35)' },
+  avatarOverlap: { marginStart: -8 },
+  agreedText: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF' },
+
+  vote: { padding: spacing.md, gap: spacing.sm },
+  voteHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  voteTitle: { ...typography.headline, color: '#FFFFFF' },
+  voteCount: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF', fontVariant: ['tabular-nums'] },
+  voteHint: { ...typography.footnote, color: 'rgba(255,255,255,0.75)' },
+  voteChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  voteChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
+  voteChipText: { ...typography.footnote, color: '#FFFFFF', maxWidth: 160 },
+
+  actions: { gap: spacing.sm },
 });

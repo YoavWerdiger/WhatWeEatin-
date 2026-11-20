@@ -228,6 +228,7 @@ export const en = {
   'swipeActions.like': 'Like',
 
   'match.title': "This is what we eatin'",
+  'match.kicker': 'It’s a match',
   'match.agreedOne': '1 person agreed',
   'match.agreedMany': '{{count}} people agreed',
   'match.keepBrowsingTitle': 'Keep browsing?',
