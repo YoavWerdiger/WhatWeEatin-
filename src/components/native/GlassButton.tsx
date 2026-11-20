@@ -4,7 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../ui/Button';
 import { PressableScale } from '../ui/PressableScale';
 import { colors } from '../../theme/colors';
-import type { GlassButtonProps, GlassIconButtonProps } from './GlassButton.types';
+import type {
+  GlassButtonProps,
+  GlassCircleButtonProps,
+  GlassIconButtonProps,
+} from './GlassButton.types';
 
 // Android / web: SwiftUI glass isn't available, so use the app's own button.
 
@@ -36,6 +40,8 @@ const SF_TO_IONICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   xmark: 'close',
   'square.and.arrow.up': 'share-outline',
   'doc.on.doc': 'copy-outline',
+  'heart.fill': 'heart',
+  dice: 'dice-outline',
 };
 
 export function GlassIconButton({
@@ -78,3 +84,31 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
 });
+
+export function GlassCircleButton({
+  systemImage,
+  onPress,
+  accessibilityLabel,
+  size = 72,
+  prominent = false,
+  color = colors.primary,
+  iconColor = colors.text,
+  style,
+}: GlassCircleButtonProps) {
+  return (
+    <PressableScale
+      onPress={onPress}
+      pressedScale={0.94}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[
+        styles.icon,
+        { width: size, height: size, borderRadius: size / 2 },
+        prominent && { backgroundColor: color, borderColor: 'transparent' },
+        style,
+      ]}
+    >
+      <Ionicons name={SF_TO_IONICONS[systemImage] ?? 'ellipse'} size={size * 0.4} color={iconColor} />
+    </PressableScale>
+  );
+}

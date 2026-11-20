@@ -12,6 +12,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   Easing,
   FadeIn,
@@ -30,6 +32,11 @@ import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
 
 const CODE_LENGTH = 6;
+const HOW_STEPS = [
+  { icon: 'key-outline', key: 'join.step1' },
+  { icon: 'albums-outline', key: 'join.step2' },
+  { icon: 'restaurant-outline', key: 'join.step3' },
+] as const;
 const plain = (s: string) => s.replace(/[→←]/g, '').trim();
 
 export default function JoinSessionScreen() {
@@ -94,6 +101,11 @@ export default function JoinSessionScreen() {
     }
   };
 
+  const handlePaste = async () => {
+    const text = await Clipboard.getStringAsync();
+    if (text) handleCodeChange(text);
+  };
+
   const handleCodeChange = (text: string) => {
     const next = text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH);
     setCode(next);
@@ -128,7 +140,18 @@ export default function JoinSessionScreen() {
           <Text style={styles.subtitle}>{t('join.subtitle')}</Text>
 
           <View style={styles.group}>
-            <Text style={styles.groupLabel}>{t('join.sessionCode')}</Text>
+            <View style={styles.groupHeader}>
+              <Text style={styles.groupLabel}>{t('join.sessionCode')}</Text>
+              <Pressable
+                onPress={handlePaste}
+                hitSlop={12}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.pasteButton, pressed && styles.pressed]}
+              >
+                <Ionicons name="clipboard-outline" size={16} color={colors.primaryDark} />
+                <Text style={styles.pasteText}>{t('join.paste')}</Text>
+              </Pressable>
+            </View>
             <Animated.View style={shakeStyle}>
               <Pressable
                 style={styles.codeRow}
@@ -196,6 +219,21 @@ export default function JoinSessionScreen() {
               />
             </View>
           </View>
+
+          <View style={styles.group}>
+            <Text style={styles.groupLabel}>{t('join.howTitle')}</Text>
+            <View style={[styles.card, styles.steps]}>
+              {HOW_STEPS.map(({ icon, key }, i) => (
+                <View key={key} style={styles.stepRow}>
+                  <View style={styles.stepIcon}>
+                    <Ionicons name={icon} size={18} color={colors.primaryDark} />
+                  </View>
+                  <Text style={styles.stepText}>{t(key)}</Text>
+                  <Text style={styles.stepNumber}>{i + 1}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         </ScrollView>
 
         <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
@@ -241,6 +279,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   group: { gap: spacing.sm },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingEnd: spacing.xs,
+  },
+  pasteButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  pasteText: { ...typography.subheadline, fontWeight: '600', color: colors.primaryDark },
+  pressed: { opacity: 0.6 },
+  steps: { paddingVertical: spacing.xs },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+  },
+  stepIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepText: { ...typography.subheadline, color: colors.text, flex: 1 },
+  stepNumber: { ...typography.footnote, color: colors.textMuted, fontVariant: ['tabular-nums'] },
   groupLabel: {
     ...typography.captionMedium,
     color: colors.textSecondary,

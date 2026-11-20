@@ -15,6 +15,7 @@ import { Timer } from '../../src/components/Timer';
 import { UserList } from '../../src/components/UserList';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { RoundCountdown } from '../../src/components/RoundCountdown';
+import { GlassCircleButton } from '../../src/components/native/GlassButton';
 import { Restaurant, VoteType } from '../../src/types';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -280,7 +281,7 @@ export default function SwipeScreen() {
         </Stack.Toolbar.View>
       </Stack.Toolbar>
 
-      <View style={[styles.container, { paddingTop: insets.top + 44, paddingBottom: insets.bottom + 64 }]}>
+      <View style={[styles.container, { paddingTop: insets.top + 44, paddingBottom: insets.bottom + 100 }]}>
         <View style={styles.cardArea}>
           {isFinished ? (
             <View style={styles.finishedContainer}>
@@ -415,33 +416,39 @@ export default function SwipeScreen() {
 
       </View>
 
-      {/* Floating Liquid Glass toolbar: pass · let fate decide · like */}
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button
-          icon="xmark"
-          accessibilityLabel={t('swipeActions.pass')}
-          onPress={() => cardStackRef.current?.swipeLeft()}
-          hidden={isFinished || chromeHidden}
-        />
-        <Stack.Toolbar.Spacer hidden={isFinished || chromeHidden} />
-        <Stack.Toolbar.Button
-          icon="dice"
-          accessibilityLabel={t('swipe.aiSmall')}
-          onPress={handleAIDecision}
-          hidden={isFinished || chromeHidden}
+      {/* Game controls float above the deck: big pass / like, small "decide for us" */}
+      {!isFinished && !chromeHidden && (
+        <View
+          pointerEvents="box-none"
+          style={[styles.gameControls, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
         >
-          <Stack.Toolbar.Label>{t('swipe.aiSmall')}</Stack.Toolbar.Label>
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Spacer hidden={isFinished || chromeHidden} />
-        <Stack.Toolbar.Button
-          icon="heart.fill"
-          variant="prominent"
-          tintColor={colors.accentDark}
-          accessibilityLabel={t('swipeActions.like')}
-          onPress={() => cardStackRef.current?.swipeRight()}
-          hidden={isFinished || chromeHidden}
-        />
-      </Stack.Toolbar>
+          <GlassCircleButton
+            systemImage="xmark"
+            size={76}
+            prominent
+            color={colors.danger}
+            iconColor="#FFFFFF"
+            accessibilityLabel={t('swipeActions.pass')}
+            onPress={() => cardStackRef.current?.swipeLeft()}
+          />
+          <GlassCircleButton
+            systemImage="dice"
+            size={56}
+            iconColor={colors.textSecondary}
+            accessibilityLabel={t('swipe.aiSmall')}
+            onPress={handleAIDecision}
+          />
+          <GlassCircleButton
+            systemImage="heart.fill"
+            size={76}
+            prominent
+            color={colors.accentDark}
+            iconColor="#FFFFFF"
+            accessibilityLabel={t('swipeActions.like')}
+            onPress={() => cardStackRef.current?.swipeRight()}
+          />
+        </View>
+      )}
 
       {showCountdown && !displayedMatch && (
         <RoundCountdown goLabel={t('swipe.go')} onDone={endCountdown} />
@@ -469,6 +476,17 @@ export default function SwipeScreen() {
 }
 
 const styles = StyleSheet.create({
+  gameControls: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xl,
+    paddingTop: spacing.sm,
+  },
   root: {
     flex: 1,
     backgroundColor: colors.background,

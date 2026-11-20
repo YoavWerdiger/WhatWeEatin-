@@ -34,6 +34,7 @@ export function Glass({
   if (LIQUID) {
     return (
       <GlassView
+        colorScheme="light"
         glassEffectStyle={variant}
         isInteractive={interactive}
         tintColor={tint}
