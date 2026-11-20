@@ -6,7 +6,11 @@ import { Animated,
   TouchableOpacity,
   Alert,
   ScrollView,
+  Pressable,
+  Image,
 } from 'react-native';
+import Reanimated, { FadeInDown } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -15,7 +19,8 @@ import { Timer } from '../../src/components/Timer';
 import { UserList } from '../../src/components/UserList';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { RoundCountdown } from '../../src/components/RoundCountdown';
-import { GlassCircleButton } from '../../src/components/native/GlassButton';
+import { GlassButton, GlassCircleButton } from '../../src/components/native/GlassButton';
+import { Glass } from '../../src/components/ui/Glass';
 import { Restaurant, VoteType } from '../../src/types';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -284,12 +289,16 @@ export default function SwipeScreen() {
       <View style={[styles.container, { paddingTop: insets.top + 44, paddingBottom: insets.bottom + 100 }]}>
         <View style={styles.cardArea}>
           {isFinished ? (
-            <View style={styles.finishedContainer}>
-              <Text style={styles.finishedEmoji}>🤔</Text>
+            <ScrollView
+              style={styles.finishedScroll}
+              contentContainerStyle={styles.finishedContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.finishedBadge}>
+                <Ionicons name="flag" size={30} color="#FFFFFF" />
+              </View>
               <Text style={styles.finishedTitle}>{t('swipe.finishedTitle')}</Text>
-              <Text style={styles.finishedSubtitle}>
-                {t('swipe.finishedSubtitle')}
-              </Text>
+              <Text style={styles.finishedSubtitle}>{t('swipe.finishedSubtitle')}</Text>
 
               {mutualPicks.length > 0 && (
                 <View style={styles.shortlistSection}>
@@ -298,112 +307,84 @@ export default function SwipeScreen() {
                       <Text style={styles.duelKicker}>Round 2</Text>
                       <Text style={styles.duelTitle}>Who stays?</Text>
                       <Text style={styles.duelRound}>
-                        Match {duelTotalBattles - duelState.queue.length + 1} of{' '}
-                        {duelTotalBattles}
+                        Match {duelTotalBattles - duelState.queue.length + 1} of {duelTotalBattles}
                       </Text>
 
                       <View style={styles.duelRow}>
-                        <TouchableOpacity
-                          style={[styles.duelCard, styles.duelCardLeft]}
-                          activeOpacity={0.88}
+                        <DuelCard
+                          restaurant={duelState.champion}
+                          label={t('swipe.champion')}
                           onPress={() => pickDuelWinner('champion')}
-                        >
-                          <Text style={styles.duelVs}>{t('swipe.champion')}</Text>
-                          <Text style={styles.duelName} numberOfLines={3}>
-                            {duelState.champion.name}
-                          </Text>
-                          <Text style={styles.duelCuisine} numberOfLines={1}>
-                            {duelState.champion.cuisine}
-                          </Text>
-                        </TouchableOpacity>
-
-                        <Text style={styles.vsGlyph}>VS</Text>
-
-                        <TouchableOpacity
-                          style={[styles.duelCard, styles.duelCardRight]}
-                          activeOpacity={0.88}
+                        />
+                        <Glass radius={22} style={styles.vsBubble}>
+                          <Text style={styles.vsGlyph}>VS</Text>
+                        </Glass>
+                        <DuelCard
+                          restaurant={duelState.queue[0]}
+                          label={t('swipe.challenger')}
                           onPress={() => pickDuelWinner('challenger')}
-                          disabled={!duelState.queue[0]}
-                        >
-                          <Text style={styles.duelVs}>{t('swipe.challenger')}</Text>
-                          <Text style={styles.duelName} numberOfLines={3}>
-                            {duelState.queue[0]?.name ?? '—'}
-                          </Text>
-                          <Text style={styles.duelCuisine} numberOfLines={1}>
-                            {duelState.queue[0]?.cuisine ?? ''}
-                          </Text>
-                        </TouchableOpacity>
+                        />
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.duelCancel}
-                        onPress={cancelDuel}
-                        hitSlop={{ top: 8, bottom: 8 }}
-                      >
+                      <Pressable onPress={cancelDuel} hitSlop={8} style={styles.duelCancel}>
                         <Text style={styles.duelCancelText}>{t('swipe.duelCancel')}</Text>
-                      </TouchableOpacity>
+                      </Pressable>
                     </>
                   ) : (
                     <>
                       {mutualPicks.length > 1 ? (
                         <>
-                          <Text style={styles.shortlistTitleBold}>
-                            {t('swipe.pickyTitle')}
-                          </Text>
+                          <Text style={styles.shortlistTitleBold}>{t('swipe.pickyTitle')}</Text>
                           <Text style={styles.shortlistSubtitle}>
                             {t('swipe.pickySub', { count: mutualPicks.length })}
                           </Text>
-                          <TouchableOpacity
-                            style={styles.duelCta}
-                            activeOpacity={0.9}
-                            onPress={startDuel}
-                          >
-                            <Text style={styles.duelCtaTitle}>{t('swipe.duelCtaTitle')}</Text>
-                            <Text style={styles.duelCtaHint}>{t('swipe.duelCtaHint')}</Text>
-                          </TouchableOpacity>
+                          <GlassButton title={t('swipe.duelCtaTitle')} onPress={startDuel} />
+                          <Text style={styles.duelCtaHint}>{t('swipe.duelCtaHint')}</Text>
                           <Text style={styles.orDivider}>{t('swipe.orList')}</Text>
                         </>
                       ) : (
-                        <Text style={styles.shortlistTitle}>
-                          {t('swipe.oneOverlap')}
-                        </Text>
+                        <Text style={styles.shortlistTitle}>{t('swipe.oneOverlap')}</Text>
                       )}
 
-                      <ScrollView
-                        style={styles.shortlistScroll}
-                        nestedScrollEnabled
-                        showsVerticalScrollIndicator={false}
-                      >
-                        {mutualPicks.map((r) => (
-                          <TouchableOpacity
-                            key={r.id}
-                            style={styles.shortlistRow}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                              confirmMutualMatch(r);
-                            }}
-                          >
-                            <Text style={styles.shortlistName} numberOfLines={1}>
-                              {r.name}
-                            </Text>
-                            <Text style={styles.shortlistMeta} numberOfLines={1}>
-                              {r.cuisine}
-                            </Text>
-                          </TouchableOpacity>
+                      <View style={styles.shortlistList}>
+                        {mutualPicks.map((r, i) => (
+                          <Reanimated.View key={r.id} entering={FadeInDown.duration(260).delay(i * 60)}>
+                            <Pressable
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                confirmMutualMatch(r);
+                              }}
+                              accessibilityRole="button"
+                            >
+                              <Glass radius={borderRadius.lg} interactive style={styles.shortlistRow}>
+                                <Image source={{ uri: r.image }} style={styles.shortlistThumb} />
+                                <View style={styles.shortlistText}>
+                                  <Text style={styles.shortlistName} numberOfLines={1}>{r.name}</Text>
+                                  <Text style={styles.shortlistMeta} numberOfLines={1}>{r.cuisine}</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                              </Glass>
+                            </Pressable>
+                          </Reanimated.View>
                         ))}
-                      </ScrollView>
+                      </View>
                     </>
                   )}
                 </View>
               )}
 
-              <TouchableOpacity style={styles.aiButton} onPress={handleAIDecision}>
-                <Text style={styles.aiEmoji}>🤷</Text>
-                <Text style={styles.aiText}>{t('swipe.aiTitle')}</Text>
-                <Text style={styles.aiHint}>{t('swipe.aiHint')}</Text>
-              </TouchableOpacity>
-            </View>
+              <Pressable onPress={handleAIDecision} accessibilityRole="button" style={styles.aiWrap}>
+                <Glass radius={borderRadius.lg} interactive style={styles.aiCard}>
+                  <View style={styles.aiIcon}>
+                    <Ionicons name="dice" size={24} color={colors.primaryDark} />
+                  </View>
+                  <View style={styles.shortlistText}>
+                    <Text style={styles.aiText}>{t('swipe.aiTitle')}</Text>
+                    <Text style={styles.aiHint}>{t('swipe.aiHint')}</Text>
+                  </View>
+                </Glass>
+              </Pressable>
+            </ScrollView>
           ) : (
             <CardStack
               ref={cardStackRef}
@@ -472,6 +453,30 @@ export default function SwipeScreen() {
         />
       )}
     </View>
+  );
+}
+
+/** One side of the duel: the photo up top, glass below. */
+function DuelCard({
+  restaurant,
+  label,
+  onPress,
+}: {
+  restaurant: Restaurant | undefined;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} disabled={!restaurant} style={styles.duelCell} accessibilityRole="button">
+      <Glass radius={borderRadius.lg} interactive style={styles.duelCard}>
+        {restaurant?.image ? <Image source={{ uri: restaurant.image }} style={styles.duelPhoto} /> : null}
+        <View style={styles.duelBody}>
+          <Text style={styles.duelVs}>{label}</Text>
+          <Text style={styles.duelName} numberOfLines={2}>{restaurant?.name ?? '—'}</Text>
+          <Text style={styles.duelCuisine} numberOfLines={1}>{restaurant?.cuisine ?? ''}</Text>
+        </View>
+      </Glass>
+    </Pressable>
   );
 }
 
@@ -551,176 +556,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  finishedScroll: { flex: 1, alignSelf: 'stretch' },
   finishedContainer: {
     alignItems: 'center',
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
   },
-  finishedEmoji: { fontSize: 64 },
-  finishedTitle: { ...typography.title, color: colors.text },
-  finishedSubtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-
-  shortlistSection: {
-    width: '100%',
-    marginTop: spacing.sm,
-    gap: spacing.sm,
-  },
-  shortlistTitleBold: {
-    ...typography.title2,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  shortlistSubtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: spacing.xs,
-  },
-  duelCta: {
+  finishedBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.full,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.sm,
-    ...shadows.md,
-  },
-  duelCtaTitle: {
-    ...typography.headline,
-    color: colors.onPrimary,
-  },
-  duelCtaHint: {
-    ...typography.caption,
-    color: 'rgba(28,28,30,0.8)',
-    textAlign: 'center',
-  },
-  orDivider: {
-    ...typography.captionMedium,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  duelKicker: {
-    ...typography.captionMedium,
-    color: colors.superlike,
-    textAlign: 'center',
-  },
-  duelTitle: {
-    ...typography.title2,
-    textAlign: 'center',
-    color: colors.text,
-  },
-  duelRound: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  duelRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    width: '100%',
   },
-  duelCard: {
-    flex: 1,
-    minHeight: 140,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    justifyContent: 'center',
-    borderWidth: 2,
-    ...shadows.sm,
-  },
-  duelCardLeft: {
-    backgroundColor: colors.surface,
-    borderColor: colors.accent + '99',
-  },
-  duelCardRight: {
-    backgroundColor: colors.surface,
-    borderColor: colors.superlike + '99',
-  },
-  duelVs: {
-    ...typography.caption1,
-    fontWeight: '500',
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  duelName: {
-    ...typography.headline,
-    color: colors.text,
-  },
-  duelCuisine: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  vsGlyph: {
-    ...typography.headline,
-    alignSelf: 'center',
-    color: colors.textMuted,
-  },
-  duelCancel: {
-    alignSelf: 'center',
-    paddingVertical: spacing.sm,
-  },
-  duelCancelText: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
-  },
-  shortlistTitle: {
-    ...typography.subheadline,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  shortlistScroll: {
-    maxHeight: 220,
-    width: '100%',
-  },
-  shortlistRow: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  shortlistName: {
-    ...typography.headline,
-    color: colors.text,
-  },
-  shortlistMeta: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
+  finishedTitle: { ...typography.largeTitle, color: colors.text, textAlign: 'center' },
+  finishedSubtitle: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
 
-  aiButton: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.full,
-    padding: spacing.lg,
+  shortlistSection: { alignSelf: 'stretch', gap: 12, marginTop: spacing.sm },
+  shortlistTitleBold: { ...typography.title2, color: colors.text, textAlign: 'center' },
+  shortlistSubtitle: { ...typography.subheadline, color: colors.textSecondary, textAlign: 'center' },
+  shortlistTitle: { ...typography.headline, color: colors.text, textAlign: 'center' },
+  duelCtaHint: { ...typography.footnote, color: colors.textSecondary, textAlign: 'center' },
+  orDivider: { ...typography.footnote, color: colors.textMuted, textAlign: 'center' },
+  shortlistList: { gap: spacing.sm },
+  shortlistRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  shortlistThumb: { width: 52, height: 52, borderRadius: 12, backgroundColor: colors.borderLight },
+  shortlistText: { flex: 1, gap: 2 },
+  shortlistName: { ...typography.headline, color: colors.text },
+  shortlistMeta: { ...typography.subheadline, color: colors.textSecondary },
+
+  duelKicker: { ...typography.footnote, fontWeight: '600', color: colors.primaryDark, textAlign: 'center' },
+  duelTitle: { ...typography.title1, color: colors.text, textAlign: 'center' },
+  duelRound: { ...typography.footnote, color: colors.textMuted, textAlign: 'center' },
+  duelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
+  duelCell: { flex: 1 },
+  duelCard: { overflow: 'hidden' },
+  duelPhoto: { width: '100%', aspectRatio: 1.2, backgroundColor: colors.borderLight },
+  duelBody: { padding: 12, gap: 2 },
+  duelVs: { ...typography.caption1, fontWeight: '600', color: colors.textSecondary },
+  duelName: { ...typography.headline, color: colors.text },
+  duelCuisine: { ...typography.footnote, color: colors.textSecondary },
+  vsBubble: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  vsGlyph: { ...typography.footnote, fontWeight: '700', color: colors.text },
+  duelCancel: { alignSelf: 'center', paddingVertical: spacing.sm },
+  duelCancelText: { ...typography.subheadline, color: colors.textSecondary },
+
+  aiWrap: { alignSelf: 'stretch', marginTop: spacing.sm },
+  aiCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: spacing.md },
+  aiIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primaryMuted,
     alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.md,
-    width: '100%',
-    ...shadows.md,
-    borderWidth: 2,
-    borderColor: colors.primaryMuted,
+    justifyContent: 'center',
   },
-  aiEmoji: { fontSize: 40 },
-  aiText: { ...typography.subtitle, color: colors.text },
-  aiHint: { ...typography.caption, color: colors.textMuted },
+  aiText: { ...typography.headline, color: colors.text },
+  aiHint: { ...typography.footnote, color: colors.textSecondary },
 
   aiSmall: {
     paddingVertical: spacing.sm,

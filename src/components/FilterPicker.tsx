@@ -113,7 +113,7 @@ export function VibePicker({ filters, onChange }: PartProps) {
               <Glass
                 radius={borderRadius.lg}
                 interactive
-                tint={selected ? 'rgba(255, 107, 53, 0.22)' : undefined}
+                tint={selected ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'}
                 style={styles.vibeTile}
               >
                 <View style={[styles.vibeIcon, selected && styles.vibeIconSelected]}>
@@ -146,7 +146,7 @@ export function KosherCard({ filters, onChange }: PartProps) {
   };
   return (
     <Pressable onPress={flip} accessibilityRole="switch" accessibilityState={{ checked: on }}>
-      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.22)' : undefined} style={styles.kosherRow}>
+      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'} style={styles.kosherRow}>
         <View style={styles.kosherInfo}>
           <Text style={styles.sectionTitle}>{t('filters.kosher')}</Text>
           <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>

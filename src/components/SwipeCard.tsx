@@ -14,17 +14,26 @@ export const CARD_WIDTH = SCREEN_WIDTH - spacing.lg * 2;
 export const CARD_HEIGHT = CARD_WIDTH * 1.35;
 const META_ICON = 'rgba(255,255,255,0.85)';
 
-const SOURCE_CONFIG: Record<RestaurantSource, { label: string; color: string; bg: string }> = {
-  wolt: { label: 'Wolt', color: '#00A8D0', bg: 'rgba(0,200,232,0.25)' },
-  tenbis: { label: '10bis', color: '#FF6900', bg: 'rgba(255,105,0,0.25)' },
-  google: { label: 'Google', color: '#4285F4', bg: 'rgba(66,133,244,0.25)' },
-  mock: { label: 'Sample', color: '#FFFFFF', bg: 'rgba(255,255,255,0.18)' },
+// Brand colours — the source pill is stained with the delivery app's colour.
+const SOURCE_CONFIG: Record<RestaurantSource, { label: string; brand: string }> = {
+  wolt: { label: 'Wolt', brand: 'rgba(0, 157, 224, 0.85)' },
+  tenbis: { label: '10bis', brand: 'rgba(255, 102, 0, 0.85)' },
+  google: { label: 'Google', brand: 'rgba(66, 133, 244, 0.85)' },
+  mock: { label: 'Sample', brand: 'rgba(255, 255, 255, 0.2)' },
 };
 
 /** Rounded clear glass over the photo; dark scheme keeps the white text legible. */
-function Pill({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+function Pill({
+  children,
+  style,
+  tint,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  tint?: string;
+}) {
   return (
-    <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={[styles.pill, style]}>
+    <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark tint={tint} style={[styles.pill, style]}>
       {children}
     </Glass>
   );
@@ -43,9 +52,11 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
       <Image source={{ uri: restaurant.image }} style={styles.image} />
 
       {restaurant.source !== 'mock' && (
-        <Pill style={styles.sourceBadge}>
-          <Text style={[styles.sourceText, { color: src.color }]}>{src.label}</Text>
-        </Pill>
+        <View style={styles.sourceBadge} pointerEvents="none">
+          <Pill tint={src.brand}>
+            <Text style={styles.sourceText}>{src.label}</Text>
+          </Pill>
+        </View>
       )}
 
       <LinearGradient
@@ -134,15 +145,19 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
+  // Centred across the top of the card
   sourceBadge: {
     position: 'absolute',
     top: 14,
-    right: 14,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
     zIndex: 5,
   },
   sourceText: {
     ...typography.caption1,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
   gradient: {
     ...StyleSheet.absoluteFill,

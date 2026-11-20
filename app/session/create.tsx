@@ -59,6 +59,8 @@ const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 const AUTO_ADVANCE_MS = 220;
 // Selected cards: a light wash of the brand orange over the glass.
 const SELECTED_TINT = 'rgba(255, 107, 53, 0.22)';
+// Unselected cards still need something for the glass to catch on a flat background.
+const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
 const plain = (s: string) => s.replace(/[→←]/g, '').trim();
 
 // One question per screen; the next one slides in from the reading direction.
@@ -469,7 +471,7 @@ function OptionCard({
       <Glass
         radius={borderRadius.lg}
         interactive
-        tint={selected ? SELECTED_TINT : undefined}
+        tint={selected ? SELECTED_TINT : RESTING_TINT}
         style={styles.option}
       >
       <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
