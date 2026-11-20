@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Glass } from '../../src/components/ui/Glass';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,6 +58,13 @@ export default function LobbyScreen() {
       router.replace('/');
     }
   }, [session, router]);
+
+  // Everyone waits here anyway — use it to put the first cards' photos in memory.
+  const firstPhotos = session?.restaurants.slice(0, 8).map((r) => r.image).filter(Boolean) ?? [];
+  useEffect(() => {
+    if (firstPhotos.length) void ExpoImage.prefetch(firstPhotos, 'memory-disk');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstPhotos.join('|')]);
 
   if (!session) {
     return null;

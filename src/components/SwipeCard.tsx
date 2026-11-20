@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Glass } from './ui/Glass';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,7 +50,16 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
 
   return (
     <View style={styles.card}>
-      <Image source={{ uri: restaurant.image }} style={styles.image} />
+      {/* expo-image: memory+disk cache, so a prefetched photo shows instantly */}
+      <Image
+        source={{ uri: restaurant.image }}
+        style={styles.image}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        priority="high"
+        transition={0}
+        recyclingKey={restaurant.id}
+      />
 
       {restaurant.source !== 'mock' && (
         <View style={styles.sourceBadge} pointerEvents="none">
@@ -143,7 +153,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   // Centred across the top of the card
   sourceBadge: {

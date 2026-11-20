@@ -185,7 +185,8 @@ async function fetchFromWolt(lat: number, lon: number): Promise<Restaurant[]> {
     restaurants.push({
       id: `wolt-${v.slug}`,
       name: v.name,
-      image: img.url,
+      // Card-sized from Wolt's image proxy instead of the full original
+      image: img.url.includes('?') ? img.url : `${img.url}?w=900`,
       rating: woltScoreTo5(v.rating?.score),
       reviewCount: v.rating?.volume || 0,
       deliveryTime: v.estimate_range

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -83,11 +84,13 @@ export const CardStack = forwardRef<CardStackRef, CardStackProps>(
       isLocked.set(false);
     }, [currentIndex]);
 
-    // Warm the next few photos so a promoted card never shows an empty frame.
+    // Decode the next few photos into memory so a promoted card never waits.
     useEffect(() => {
-      restaurants.slice(currentIndex + 1, currentIndex + 4).forEach((r) => {
-        if (r.image) void Image.prefetch(r.image);
-      });
+      const next = restaurants
+        .slice(currentIndex + 1, currentIndex + 6)
+        .map((r) => r.image)
+        .filter(Boolean);
+      if (next.length) void ExpoImage.prefetch(next, 'memory-disk');
     }, [currentIndex, restaurants]);
 
     const tick = useCallback(() => {

@@ -67,7 +67,8 @@
           "backgroundColor": "#FFFFFF",
           "imageWidth": 200
         }
-      ]
+      ],
+      "expo-image"
     ],
     "extra": {
       "eas": {
