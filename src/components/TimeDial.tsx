@@ -163,10 +163,6 @@ export function TimeDial({
     };
   });
 
-  // Fine minute marks around the face, plus the unlimited segment.
-  const minuteMarks = [];
-  for (let s = 60; s <= max; s += 60) minuteMarks.push(toFraction(s));
-
   const isUnlimited = shown === 0;
 
   return (
@@ -191,20 +187,6 @@ export function TimeDial({
           <Circle cx={C} cy={C} r={C - 2} fill={colors.surface} />
           {/* track */}
           <Circle cx={C} cy={C} r={R} stroke={colors.borderLight} strokeWidth={STROKE} fill="none" />
-          {minuteMarks.map((f) => {
-            const a = f * 2 * Math.PI;
-            const r1 = R - STROKE - 6;
-            const r2 = R - STROKE - 1;
-            return (
-              <Path
-                key={f}
-                d={`M ${C + r1 * Math.sin(a)} ${C - r1 * Math.cos(a)} L ${C + r2 * Math.sin(a)} ${C - r2 * Math.cos(a)}`}
-                stroke={colors.border}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-            );
-          })}
           {/* the time you've wound in */}
           <AnimatedPath
             animatedProps={arcProps}
@@ -240,13 +222,13 @@ export function TimeDial({
 const styles = StyleSheet.create({
   dial: { width: SIZE, height: SIZE, alignSelf: 'center' },
   center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
-  // Thin, wide numerals like the iOS Clock timer
+  // Bold, tabular numerals — width doesn't jump while dragging
   value: {
     fontSize: 68,
     lineHeight: 76,
     textAlign: 'center',
     includeFontPadding: false,
-    fontWeight: '200',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
     color: colors.text,
   },
