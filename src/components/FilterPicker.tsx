@@ -98,51 +98,68 @@ const VIBES = [
   { key: 'premium', icon: 'diamond', label: 'filters.vibePremium' },
 ] as const;
 
-/** Three tall glass tiles — pick any. Same language as the mode cards. */
+/** Three plates on the table — tap one and it fills, like a dish arriving. Pick any. */
 export function VibePicker({ filters, onChange }: PartProps) {
   const { t } = useTranslation();
   return (
-    <View style={styles.vibeRow}>
-      {VIBES.map(({ key, icon, label }, i) => {
-        const selected = filters.styles.includes(key);
-        return (
-          <View key={key} style={styles.vibeCell}>
-            <Pressable
-              onPress={() => {
-                Haptics.selectionAsync();
-                onChange({ ...filters, styles: toggle(filters.styles, key) });
-              }}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: selected }}
-              accessibilityLabel={t(label)}
-            >
-              <Glass
-                radius={borderRadius.lg}
-                interactive
-                tint={selected ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'}
-                style={styles.vibeTile}
-              >
-                <View style={[styles.vibeIcon, selected && styles.vibeIconSelected]}>
-                  <Ionicons name={icon} size={26} color={selected ? '#FFFFFF' : colors.primaryDark} />
-                </View>
-                <Text style={styles.vibeLabel} numberOfLines={2}>
-                  {t(label)}
-                </Text>
-                <Ionicons
-                  name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={20}
-                  color={selected ? colors.primary : colors.border}
-                />
-              </Glass>
-            </Pressable>
-          </View>
-        );
-      })}
+    <View style={styles.plates}>
+      {VIBES.map(({ key, icon, label }) => (
+        <Plate
+          key={key}
+          icon={icon}
+          label={t(label)}
+          selected={filters.styles.includes(key)}
+          onPress={() => onChange({ ...filters, styles: toggle(filters.styles, key) })}
+        />
+      ))}
     </View>
   );
 }
 
-/** Kosher as a glass card: tap anywhere to flip it, the switch shows the state. */
+function Plate({
+  icon,
+  label,
+  selected,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pop = useSharedValue(1);
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.get() }] }));
+  return (
+    <Pressable
+      onPress={() => {
+        Haptics.impactAsync(selected ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
+        if (!selected) pop.set(withSequence(withTiming(1.08, { duration: 110 }), withSpring(1, { duration: 320, dampingRatio: 0.55 })));
+        onPress();
+      }}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={label}
+      style={styles.plateCell}
+    >
+      <Animated.View style={popStyle}>
+        <Glass
+          radius={PLATE / 2}
+          interactive
+          tint={selected ? 'rgba(255, 107, 53, 0.9)' : 'rgba(255, 255, 255, 0.6)'}
+          style={styles.plate}
+        >
+          <Ionicons name={icon} size={36} color={selected ? '#FFFFFF' : colors.primaryDark} />
+        </Glass>
+      </Animated.View>
+      <Text style={[styles.plateLabel, selected && styles.plateLabelSelected]} numberOfLines={2}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+const PLATE = 96;
+
 /** Kosher as a wide glass tile in the vibe tiles' language — tap to turn on, it pops. */
 export function KosherCard({ filters, onChange }: PartProps) {
   const { t } = useTranslation();
@@ -295,17 +312,11 @@ const styles = StyleSheet.create({
   },
 
   flex: { flex: 1 },
-  vibeRow: { flexDirection: 'row', gap: 12 },
-  vibeCell: { flex: 1 },
-  // Fixed height: inside a flex row with no height, flex:1 collapsed the glass to nothing.
-  vibeTile: {
-    height: 156,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    gap: spacing.sm,
-  },
+  plates: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.sm },
+  plateCell: { alignItems: 'center', gap: spacing.sm, width: 104 },
+  plate: { width: PLATE, height: PLATE, alignItems: 'center', justifyContent: 'center' },
+  plateLabel: { ...typography.subheadline, color: colors.textSecondary, textAlign: 'center' },
+  plateLabelSelected: { color: colors.text, fontWeight: '600' },
   vibeIcon: {
     width: 52,
     height: 52,
