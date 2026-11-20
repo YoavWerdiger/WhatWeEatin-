@@ -115,7 +115,7 @@ export function MatchAnimation({
     <Animated.View style={[StyleSheet.absoluteFill, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
       {/* The winner's photo is the backdrop — rich content for the glass to sit on */}
       <Animated.View style={StyleSheet.absoluteFill} entering={reduceMotion ? undefined : photoEnter}>
-        <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
       </Animated.View>
       <LinearGradient
         colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
@@ -132,12 +132,6 @@ export function MatchAnimation({
         bounces={false}
       >
         <View style={styles.head}>
-          <Animated.View entering={rise(0)}>
-            <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.kicker}>
-              <Ionicons name="heart" size={14} color={colors.accentLight} />
-              <Text style={styles.kickerText}>{t('match.kicker')}</Text>
-            </Glass>
-          </Animated.View>
           <Animated.Text entering={rise(1)} style={styles.title}>
             {t('match.title')}
           </Animated.Text>
@@ -257,14 +251,6 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   head: { alignItems: 'center', gap: spacing.md },
-  kicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  kickerText: { ...typography.footnote, fontWeight: '600', color: '#FFFFFF' },
   title: { ...typography.largeTitle, color: '#FFFFFF', textAlign: 'center' },
 
   body: { gap: spacing.md },
