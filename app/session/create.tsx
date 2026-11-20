@@ -45,7 +45,6 @@ import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import {
-  KosherCard,
   PricePicker,
   VibePicker,
 } from '../../src/components/FilterPicker';
@@ -297,7 +296,6 @@ export default function CreateSessionScreen() {
             {step === 'vibe' && (
               <Question title={t('create.qVibe')} sub={t('create.qVibeSub')}>
                 <VibePicker filters={filters} onChange={setFilters} />
-                <KosherCard filters={filters} onChange={setFilters} />
               </Question>
             )}
 

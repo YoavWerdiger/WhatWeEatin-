@@ -112,6 +112,13 @@ export function VibePicker({ filters, onChange }: PartProps) {
           onPress={() => onChange({ ...filters, styles: toggle(filters.styles, key) })}
         />
       ))}
+      {/* Kosher speaks the same language: a fourth plate */}
+      <Plate
+        icon="shield-checkmark"
+        label={t('filters.kosher')}
+        selected={filters.kosherOnly}
+        onPress={() => onChange({ ...filters, kosherOnly: !filters.kosherOnly })}
+      />
     </View>
   );
 }
@@ -148,7 +155,7 @@ function Plate({
           tint={selected ? 'rgba(255, 107, 53, 0.9)' : 'rgba(255, 255, 255, 0.6)'}
           style={styles.plate}
         >
-          <Ionicons name={icon} size={36} color={selected ? '#FFFFFF' : colors.primary} />
+          <Ionicons name={icon} size={30} color={selected ? '#FFFFFF' : colors.primary} />
         </Glass>
       </Animated.View>
       <Text style={[styles.plateLabel, selected && styles.plateLabelSelected]} numberOfLines={2}>
@@ -158,7 +165,7 @@ function Plate({
   );
 }
 
-const PLATE = 96;
+const PLATE = 76;
 
 /** Kosher as a certificate: turning it on stamps it onto the card. */
 export function KosherCard({ filters, onChange }: PartProps) {
@@ -325,8 +332,8 @@ const styles = StyleSheet.create({
   },
 
   flex: { flex: 1 },
-  plates: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.sm },
-  plateCell: { alignItems: 'center', gap: spacing.sm, width: 104 },
+  plates: { flexDirection: 'row', justifyContent: 'space-between' },
+  plateCell: { alignItems: 'center', gap: spacing.sm, width: 84 },
   plate: { width: PLATE, height: PLATE, alignItems: 'center', justifyContent: 'center' },
   plateLabel: { ...typography.subheadline, color: colors.textSecondary, textAlign: 'center' },
   plateLabelSelected: { color: colors.text, fontWeight: '600' },
