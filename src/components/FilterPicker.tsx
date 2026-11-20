@@ -8,8 +8,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { scheduleOnRN } from 'react-native-worklets';
 import Animated, {
   FadeInDown,
+  withDelay,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -26,7 +29,6 @@ import {
 } from '../types';
 import { useTranslation } from '../i18n/t';
 import { Glass } from './ui/Glass';
-import { StopSlider } from './native/StopSlider';
 
 interface FilterPickerProps {
   filters: SessionFilters;
@@ -218,9 +220,14 @@ export function KosherCard({ filters, onChange }: PartProps) {
   );
 }
 
-const PRICE_SIGNS = ['₪', '₪₪', '₪₪₪', '₪₪₪₪'];
+const COIN = 68;
+const COIN_GAP = 12;
+const COIN_ROW = COIN * 4 + COIN_GAP * 3;
 
-/** Price as a hero: four shekel signs light up as you drag the native slider. */
+/**
+ * Price as coins you fill, like a star rating: tap a coin or drag along the row.
+ * The coins up to your pick light up one after another, a tap per coin.
+ */
 export function PricePicker({ filters, onChange }: PartProps) {
   const { t } = useTranslation();
   const level = filters.maxPriceLevel;
@@ -230,38 +237,73 @@ export function PricePicker({ filters, onChange }: PartProps) {
     t('filters.pricePricey'),
     t('filters.priceSplurge'),
   ];
+
+  const pick = (lv: number) => {
+    if (lv === filters.maxPriceLevel) return;
+    Haptics.selectionAsync();
+    onChange({ ...filters, maxPriceLevel: lv as 1 | 2 | 3 | 4 });
+  };
+
+  const levelAt = (x: number) => {
+    'worklet';
+    return Math.min(4, Math.max(1, Math.floor(x / (COIN + COIN_GAP)) + 1));
+  };
+  const drag = Gesture.Pan()
+    .minDistance(0)
+    .onBegin((e) => scheduleOnRN(pick, levelAt(e.x)))
+    .onUpdate((e) => scheduleOnRN(pick, levelAt(e.x)));
+
   return (
     <View style={styles.priceHero}>
-      <View style={styles.coins} accessibilityElementsHidden>
-        {[1, 2, 3, 4].map((n) => (
-          <PriceCoin key={n} lit={n <= level} />
-        ))}
-      </View>
-      <Text style={styles.priceDescBig}>{descs[level - 1]}</Text>
-      <StopSlider
-        count={4}
-        index={level - 1}
-        onChange={(i) => onChange({ ...filters, maxPriceLevel: (i + 1) as 1 | 2 | 3 | 4 })}
-        accessibilityLabel={t('filters.maxPrice')}
-      />
-      <View style={styles.priceScale}>
-        {PRICE_SIGNS.map((sign, i) => (
-          <Text key={sign} style={[styles.priceTick, i < level && styles.priceTickActive]}>
-            {sign}
-          </Text>
-        ))}
-      </View>
+      <GestureDetector gesture={drag}>
+        <View
+          style={styles.coins}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel={t('filters.maxPrice')}
+          accessibilityValue={{ text: `${'₪'.repeat(level)} ${descs[level - 1]}` }}
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={(e) => {
+            if (e.nativeEvent.actionName === 'increment') pick(Math.min(4, level + 1));
+            if (e.nativeEvent.actionName === 'decrement') pick(Math.max(1, level - 1));
+          }}
+        >
+          {[1, 2, 3, 4].map((n) => (
+            <Coin key={n} lit={n <= level} delay={(n - 1) * 60} />
+          ))}
+        </View>
+      </GestureDetector>
+      <Text style={styles.priceDescBig}>
+        <Text style={styles.priceSigns}>{'₪'.repeat(level)}</Text>
+        {'  '}
+        {descs[level - 1]}
+      </Text>
     </View>
   );
 }
 
-function PriceCoin({ lit }: { lit: boolean }) {
-  // Coins pop a little as they light up — the money "counts up" with the drag.
+function Coin({ lit, delay }: { lit: boolean; delay: number }) {
   const style = useAnimatedStyle(() => ({
-    opacity: withTiming(lit ? 1 : 0.18, { duration: 160 }),
-    transform: [{ scale: withSpring(lit ? 1 : 0.86, { duration: 280, dampingRatio: 0.6 }) }],
+    transform: [
+      {
+        scale: withDelay(
+          lit ? delay : 0,
+          withSequence(withTiming(lit ? 1.12 : 0.94, { duration: 110 }), withSpring(1, { duration: 300, dampingRatio: 0.55 })),
+        ),
+      },
+    ],
   }));
-  return <Animated.Text style={[styles.coin, style]}>₪</Animated.Text>;
+  return (
+    <Animated.View style={style} pointerEvents="none">
+      <Glass
+        radius={COIN / 2}
+        tint={lit ? 'rgba(255, 107, 53, 0.9)' : 'rgba(255, 255, 255, 0.6)'}
+        style={styles.coin}
+      >
+        <Text style={[styles.coinSign, lit && styles.coinSignLit]}>₪</Text>
+      </Glass>
+    </Animated.View>
+  );
 }
 
 export default function FilterPicker({ filters, onChange }: FilterPickerProps) {
@@ -370,9 +412,12 @@ const styles = StyleSheet.create({
   stampInnerOn: { borderColor: 'rgba(255,255,255,0.7)' },
   stampText: { ...typography.caption1, fontWeight: '800', color: colors.textMuted, paddingHorizontal: 4 },
   stampTextOn: { color: '#FFFFFF' },
-  priceHero: { gap: spacing.md, alignItems: 'stretch' },
-  coins: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, direction: 'ltr' },
-  coin: { fontSize: 56, lineHeight: 64, fontWeight: '300', color: colors.primaryDark },
+  priceHero: { gap: spacing.lg, alignItems: 'center' },
+  coins: { flexDirection: 'row', gap: COIN_GAP, width: COIN_ROW, direction: 'ltr' },
+  coin: { width: COIN, height: COIN, alignItems: 'center', justifyContent: 'center' },
+  coinSign: { fontSize: 30, lineHeight: 36, fontWeight: '600', color: colors.primary },
+  coinSignLit: { color: '#FFFFFF' },
+  priceSigns: { color: colors.primaryDark, fontWeight: '600' },
   priceDescBig: { ...typography.title3, color: colors.text, textAlign: 'center' },
   priceHeader: {
     flexDirection: 'row',
