@@ -15,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import { AccessTokenRequest } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Haptics from 'expo-haptics';
@@ -89,8 +88,15 @@ export default function AuthScreen() {
     [expoProxyRedirectUri],
   );
 
-  const [googleRequest, googleResponse, promptGoogle] =
-    Google.useIdTokenAuthRequest(googleAuthConfig);
+  // Not useIdTokenAuthRequest: off web it forces response_type=code, and in Expo Go only
+  // the Web client exists — Google refuses to exchange a Web-client code without a
+  // client_secret ("client_secret is missing"). Ask for the id_token directly there
+  // (implicit flow; the provider adds the nonce). Native builds keep code + PKCE with the
+  // iOS/Android client, which Google exchanges without a secret.
+  const [googleRequest, googleResponse, promptGoogle] = Google.useAuthRequest({
+    ...googleAuthConfig,
+    ...(isExpoGo ? { responseType: AuthSession.ResponseType.IdToken } : {}),
+  });
 
   const finishGoogleSignIn = useCallback(
     async (idToken: string | undefined) => {
@@ -195,20 +201,9 @@ export default function AuthScreen() {
           return;
         }
 
-        let idToken: string | undefined = parsed.params.id_token;
-        if (!idToken && parsed.params.code && expoProxyRedirectUri) {
-          const exchangeRequest = new AccessTokenRequest({
-            clientId: GOOGLE_WEB_CLIENT_ID,
-            redirectUri: expoProxyRedirectUri,
-            code: parsed.params.code,
-            extraParams: {
-              code_verifier: googleRequest.codeVerifier || '',
-            },
-          });
-          const authentication = await exchangeRequest.performAsync(Google.discovery);
-          idToken = authentication?.idToken ?? undefined;
-        }
-        await finishGoogleSignIn(idToken);
+        // Implicit flow: the id_token comes back directly — no code exchange (which would
+        // need the Web client's secret).
+        await finishGoogleSignIn(parsed.params.id_token);
       } finally {
         setGoogleBusy(false);
       }
