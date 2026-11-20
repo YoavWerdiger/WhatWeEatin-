@@ -260,6 +260,7 @@ export const he: Messages = {
   'filters.pricePricey': 'יקר',
   'filters.priceSplurge': 'פרימיום',
   'filters.kosher': 'כשר בלבד',
+  'filters.kosherStamp': 'כשר',
   'filters.kosherHint': 'הצגת מסעדות מתויגות ככשרות',
 
   'alerts.sessionUpdate': 'עדכון סשן',

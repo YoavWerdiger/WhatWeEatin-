@@ -272,6 +272,7 @@ export const es: Messages = {
   'filters.pricePricey': 'Caro',
   'filters.priceSplurge': 'Lujo',
   'filters.kosher': 'Solo kosher',
+  'filters.kosherStamp': 'KOSHER',
   'filters.kosherHint': 'Mostrar restaurantes etiquetados como kosher',
 
   'alerts.sessionUpdate': 'Actualización de sesión',

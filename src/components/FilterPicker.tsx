@@ -160,41 +160,47 @@ function Plate({
 
 const PLATE = 96;
 
-/** Kosher as a wide glass tile in the vibe tiles' language — tap to turn on, it pops. */
+/** Kosher as a certificate: turning it on stamps it onto the card. */
 export function KosherCard({ filters, onChange }: PartProps) {
   const { t } = useTranslation();
   const on = filters.kosherOnly;
-  const pop = useSharedValue(1);
-  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.get() }] }));
+  const scale = useSharedValue(on ? 1 : 0.9);
+  const tilt = useSharedValue(on ? -12 : 0);
+
   const toggle = () => {
-    Haptics.impactAsync(on ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
-    if (!on) pop.set(withSequence(withTiming(1.04, { duration: 120 }), withSpring(1, { duration: 300, dampingRatio: 0.6 })));
+    if (!on) {
+      // The stamp comes down big and lands with a thud.
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      scale.set(withSequence(withTiming(1.8, { duration: 0 }), withSpring(1, { duration: 360, dampingRatio: 0.5 })));
+      tilt.set(withSequence(withTiming(4, { duration: 0 }), withSpring(-12, { duration: 360, dampingRatio: 0.6 })));
+    } else {
+      Haptics.selectionAsync();
+      scale.set(withTiming(0.9, { duration: 180 }));
+      tilt.set(withTiming(0, { duration: 180 }));
+    }
     onChange({ ...filters, kosherOnly: !on });
   };
+
+  const stampStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.get() }, { rotate: `${tilt.get()}deg` }],
+  }));
+
   return (
-    <Animated.View style={popStyle}>
-      <Pressable onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: on }}>
-        <Glass
-          radius={borderRadius.lg}
-          interactive
-          tint={on ? 'rgba(255, 107, 53, 0.22)' : 'rgba(255, 255, 255, 0.6)'}
-          style={styles.kosherRow}
-        >
-          <View style={[styles.vibeIcon, on && styles.vibeIconSelected]}>
-            <Ionicons name="shield-checkmark" size={24} color={on ? '#FFFFFF' : colors.primaryDark} />
+    <Pressable onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel={t('filters.kosher')}>
+      <Glass radius={borderRadius.lg} interactive tint="rgba(255, 255, 255, 0.6)" style={styles.kosherRow}>
+        <View style={styles.kosherInfo}>
+          <Text style={[styles.vibeLabel, styles.textStart]}>{t('filters.kosher')}</Text>
+          <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
+        </View>
+        <Animated.View style={[styles.stamp, on ? styles.stampOn : styles.stampOff, stampStyle]}>
+          <View style={[styles.stampInner, on && styles.stampInnerOn]}>
+            <Text style={[styles.stampText, on && styles.stampTextOn]} numberOfLines={1} adjustsFontSizeToFit>
+              {t('filters.kosherStamp')}
+            </Text>
           </View>
-          <View style={styles.kosherInfo}>
-            <Text style={[styles.vibeLabel, styles.textStart]}>{t('filters.kosher')}</Text>
-            <Text style={styles.sectionHint}>{t('filters.kosherHint')}</Text>
-          </View>
-          <Ionicons
-            name={on ? 'checkmark-circle' : 'ellipse-outline'}
-            size={26}
-            color={on ? colors.primary : colors.border}
-          />
-        </Glass>
-      </Pressable>
-    </Animated.View>
+        </Animated.View>
+      </Glass>
+    </Pressable>
   );
 }
 
@@ -328,6 +334,28 @@ const styles = StyleSheet.create({
   vibeIconSelected: { backgroundColor: colors.primary },
   textStart: { textAlign: 'auto' },
   vibeLabel: { ...typography.headline, color: colors.text, textAlign: 'center' },
+  stamp: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2.5,
+  },
+  stampOff: { borderColor: colors.border, borderStyle: 'dashed', opacity: 0.7 },
+  stampOn: { borderColor: colors.primaryDark, backgroundColor: colors.primary },
+  stampInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  stampInnerOn: { borderColor: 'rgba(255,255,255,0.7)' },
+  stampText: { ...typography.caption1, fontWeight: '800', color: colors.textMuted, paddingHorizontal: 4 },
+  stampTextOn: { color: '#FFFFFF' },
   priceHero: { gap: spacing.md, alignItems: 'stretch' },
   coins: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, direction: 'ltr' },
   coin: { fontSize: 56, lineHeight: 64, fontWeight: '300', color: colors.primaryDark },

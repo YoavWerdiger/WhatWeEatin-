@@ -274,6 +274,7 @@ export const fr: Messages = {
   'filters.pricePricey': 'Cher',
   'filters.priceSplurge': 'Luxe',
   'filters.kosher': 'Casher uniquement',
+  'filters.kosherStamp': 'CASHER',
   'filters.kosherHint': 'Afficher les restaurants étiquetés casher',
 
   'alerts.sessionUpdate': 'Mise à jour de session',

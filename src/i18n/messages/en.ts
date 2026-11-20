@@ -266,6 +266,7 @@ export const en = {
   'filters.pricePricey': 'Pricey',
   'filters.priceSplurge': 'Splurge',
   'filters.kosher': 'Kosher only',
+  'filters.kosherStamp': 'KOSHER',
   'filters.kosherHint': 'Show restaurants tagged as kosher',
 
   'alerts.sessionUpdate': 'Session update',

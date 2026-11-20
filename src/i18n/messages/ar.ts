@@ -261,6 +261,7 @@ export const ar: Messages = {
   'filters.pricePricey': 'مرتفع',
   'filters.priceSplurge': 'فاخر',
   'filters.kosher': 'كوشير فقط',
+  'filters.kosherStamp': 'كوشير',
   'filters.kosherHint': 'عرض المطاعم الموسومة كوشير',
 
   'alerts.sessionUpdate': 'تحديث الجلسة',
