@@ -423,25 +423,14 @@ function ProgressSegment({ filled }: { filled: boolean }) {
   return <Animated.View style={[styles.segment, style]} />;
 }
 
-/** The name field answers back: an avatar with your initial, then a hello. */
+/** The name field answers back with a hello once there is a name. */
 function NameGreeting({ name, greet }: { name: string; greet: (first: string) => string }) {
   const first = name.trim().split(/\s+/)[0] ?? '';
-  const ready = first.length >= 2;
-  // Nothing to show until there is a letter — no placeholder avatar.
-  if (!first) return null;
+  if (first.length < 2) return null;
   return (
-    <View style={styles.greet}>
-      <Animated.View entering={ZoomIn.duration(220)} style={[styles.greetAvatar, ready && styles.greetAvatarReady]}>
-          <Animated.Text key={first.charAt(0)} entering={ZoomIn.duration(220)} style={[styles.greetInitial, ready && styles.greetInitialReady]}>
-            {first.charAt(0).toUpperCase()}
-          </Animated.Text>
-      </Animated.View>
-      {ready ? (
-        <Animated.Text entering={FadeInDown.duration(260)} style={styles.greetText} numberOfLines={1}>
-          {greet(first)}
-        </Animated.Text>
-      ) : null}
-    </View>
+    <Animated.Text entering={FadeInDown.duration(260)} style={styles.greetText} numberOfLines={1}>
+      {greet(first)}
+    </Animated.Text>
   );
 }
 
@@ -515,18 +504,6 @@ const styles = StyleSheet.create({
   questionTitle: { ...typography.largeTitle, color: colors.text },
   questionSub: { ...typography.body, color: colors.textSecondary },
 
-  greet: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
-  greetAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  greetAvatarReady: { backgroundColor: colors.primary },
-  greetInitial: { ...typography.title3, color: colors.textMuted },
-  greetInitialReady: { color: colors.onPrimary },
   greetText: { ...typography.headline, color: colors.text },
   bigInput: {
     ...typography.body,
