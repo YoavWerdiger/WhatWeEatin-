@@ -159,7 +159,8 @@ export default function LobbyScreen() {
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingBottom: 150 + insets.bottom }]}
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: spacing.lg }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.codeBlock}>
@@ -197,10 +198,8 @@ export default function LobbyScreen() {
         />
       </ScrollView>
 
-      <View
-        pointerEvents="box-none"
-        style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
-      >
+      {/* In the layout, not floating — content can never slide under the buttons */}
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         <Text style={styles.status} accessibilityLiveRegion="polite">
           {status}
         </Text>
@@ -306,11 +305,8 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
 
+  scroll: { flex: 1 },
   bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     gap: spacing.sm,
