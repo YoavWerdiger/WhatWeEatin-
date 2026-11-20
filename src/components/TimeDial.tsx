@@ -62,14 +62,14 @@ export interface TimeDialProps {
 
 /**
  * A kitchen-timer dial: drag freely around it and the time winds up, with a
- * ratchet tick every step. Past the last timed value it becomes "unlimited".
+ * fine ratchet tick every 5 seconds. Past the last timed value it becomes "unlimited".
  */
 export function TimeDial({
   value,
   onChange,
   min = 30,
   max = 300,
-  step = 15,
+  step = 5,
   unlimitedLabel,
   accessibilityLabel,
 }: TimeDialProps) {
@@ -199,12 +199,17 @@ export function TimeDial({
           />
         </Svg>
 
+        {/* The number owns the exact centre; the caption hangs below it without pushing it up */}
         <View style={styles.center} pointerEvents="none">
           <Text style={styles.value} allowFontScaling={false}>
             {isUnlimited ? '∞' : formatClock(value)}
           </Text>
-          <Text style={styles.caption}>{isUnlimited ? unlimitedLabel : ' '}</Text>
         </View>
+        {isUnlimited && (
+          <View style={styles.captionWrap} pointerEvents="none">
+            <Text style={styles.caption}>{unlimitedLabel}</Text>
+          </View>
+        )}
 
         <Animated.View style={[styles.knob, knobStyle]} pointerEvents="none">
           <Glass radius={KNOB / 2} interactive style={styles.knobGlass}>
@@ -223,9 +228,18 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 68,
     lineHeight: 76,
+    textAlign: 'center',
+    includeFontPadding: false,
     fontWeight: '200',
     fontVariant: ['tabular-nums'],
     color: colors.text,
+  },
+  captionWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: C + 34,
+    alignItems: 'center',
   },
   caption: { ...typography.subheadline, color: colors.textSecondary },
   knob: { position: 'absolute', left: 0, top: 0, width: KNOB, height: KNOB },
