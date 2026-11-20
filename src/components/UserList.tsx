@@ -18,9 +18,11 @@ interface UserListProps {
   compact?: boolean;
   /** Lobby ready-check: shows a check per player when provided. */
   readyIds?: Set<string>;
+  /** Light text — over a dark/photo backdrop (swipe screen). */
+  light?: boolean;
 }
 
-export function UserList({ users, compact = false, readyIds }: UserListProps) {
+export function UserList({ users, compact = false, readyIds, light = false }: UserListProps) {
   if (compact) {
     return (
       <View style={styles.compactContainer}>
@@ -34,7 +36,7 @@ export function UserList({ users, compact = false, readyIds }: UserListProps) {
             />
           </View>
         ))}
-        <Text style={styles.compactCount}>{users.length} joined</Text>
+        <Text style={[styles.compactCount, light && styles.compactCountLight]}>{users.length} joined</Text>
       </View>
     );
   }
@@ -143,5 +145,8 @@ const styles = StyleSheet.create({
     ...typography.captionMedium,
     color: colors.textSecondary,
     marginLeft: spacing.xs,
+  },
+  compactCountLight: {
+    color: 'rgba(255,255,255,0.85)',
   },
 });

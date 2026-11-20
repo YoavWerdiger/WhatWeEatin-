@@ -12,6 +12,7 @@ import { Animated,
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -256,27 +257,32 @@ export default function SwipeScreen() {
 
   const isFinished = currentCardIndex >= session.restaurants.length;
   const chromeHidden = !!displayedMatch && !matchExiting;
+  const hasBackdrop = !isFinished && !!session.restaurants[currentCardIndex]?.image;
 
   return (
     <View style={styles.root}>
-      {/* Backdrop: the current restaurant's photo, blurred (like the match screen), crossfading per card */}
-      {!isFinished && session.restaurants[currentCardIndex]?.image ? (
+      {/* Backdrop — same recipe as the match screen: the current photo, lightly blurred, under a dark gradient */}
+      {hasBackdrop ? (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <ExpoImage
             source={{ uri: session.restaurants[currentCardIndex].image }}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
-            blurRadius={40}
+            blurRadius={14}
             cachePolicy="memory-disk"
             transition={300}
           />
-          <View style={[StyleSheet.absoluteFill, styles.backdropVeil]} />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
+            locations={[0, 0.4, 1]}
+            style={StyleSheet.absoluteFill}
+          />
         </View>
       ) : null}
       {/* Native nav bar — system Liquid Glass on iOS 26; hidden under the match overlay */}
       <Stack.Screen
         options={{
-          headerTitle: () => (chromeHidden ? null : <UserList users={session.users} compact />),
+          headerTitle: () => (chromeHidden ? null : <UserList users={session.users} compact light={hasBackdrop} />),
         }}
       />
       <Stack.Toolbar placement="left">
@@ -293,9 +299,9 @@ export default function SwipeScreen() {
             {session.timerDuration > 0 && (
               <Timer timeRemaining={timeRemaining} totalTime={session.timerDuration} compact />
             )}
-            <Text style={styles.counterText}>
+            <Text style={[styles.counterText, hasBackdrop && styles.textOnPhoto]}>
               {Math.min(currentCardIndex + 1, session.restaurants.length)}
-              <Text style={styles.counterTotal}>/{session.restaurants.length}</Text>
+              <Text style={[styles.counterTotal, hasBackdrop && styles.textOnPhotoMuted]}>/{session.restaurants.length}</Text>
             </Text>
           </View>
         </Stack.Toolbar.View>
@@ -520,11 +526,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Light veil keeps the dark header text and the glass controls legible over any photo
-  backdropVeil: {
-    backgroundColor: colors.background,
-    opacity: 0.55,
-  },
+  textOnPhoto: { color: '#FFFFFF' },
+  textOnPhotoMuted: { color: 'rgba(255,255,255,0.6)' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
