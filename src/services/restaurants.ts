@@ -1,4 +1,4 @@
-import { Restaurant, RestaurantSource } from '../types';
+import { Dish, Restaurant, RestaurantSource } from '../types';
 import { MOCK_RESTAURANTS } from '../utils/mockData';
 
 const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
@@ -45,6 +45,43 @@ function safeJsonParse(text: string, label: string): unknown {
   }
 }
 
+/** Wolt prices are in agorot. */
+function formatShekels(agorot: number): string {
+  const v = agorot / 100;
+  return `₪${Number.isInteger(v) ? v : v.toFixed(2)}`;
+}
+
+const dishCache = new Map<string, Promise<Dish[]>>();
+
+/**
+ * A few dishes with photos from the venue's Wolt menu — fetched only when a card is
+ * flipped, and cached per venue for the session.
+ */
+export function fetchWoltDishes(slug: string, limit = 4): Promise<Dish[]> {
+  const cached = dishCache.get(slug);
+  if (cached) return cached;
+  const url = `https://consumer-api.wolt.com/consumer-api/consumer-assortment/v1/venues/slug/${slug}/assortment`;
+  const p = fetchWithTimeout(url, {}, 10_000)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((json: { items?: { name?: string; price?: number; images?: { url?: string }[] }[] } | null) => {
+      const items = json?.items ?? [];
+      return items
+        .filter((it) => it.name && it.images?.[0]?.url)
+        .slice(0, limit)
+        .map((it) => ({
+          name: it.name as string,
+          price: it.price != null ? formatShekels(it.price) : undefined,
+          image: it.images?.[0]?.url,
+        }));
+    })
+    .catch(() => {
+      dishCache.delete(slug);
+      return [];
+    });
+  dishCache.set(slug, p);
+  return p;
+}
+
 // ---------------------------------------------------------------------------
 // Wolt Provider
 // ---------------------------------------------------------------------------
@@ -69,6 +106,7 @@ interface WoltVenue {
   rating?: WoltRating;
   price_range?: number;
   tags?: string[];
+  venue_preview_items?: { name: string; price?: number; image?: { url?: string } }[];
 }
 
 function woltScoreTo5(score: number | undefined): number {
@@ -163,6 +201,15 @@ async function fetchFromWolt(lat: number, lon: number): Promise<Restaurant[]> {
       slug: v.slug,
       externalUrl: `https://wolt.com/en/isr/${citySlug}/restaurant/${v.slug}`,
       blurhash: img.blurhash || undefined,
+      description: v.short_description || undefined,
+      tags: v.tags?.length ? v.tags : undefined,
+      dishes: v.venue_preview_items?.length
+        ? v.venue_preview_items.slice(0, 4).map((d) => ({
+            name: d.name,
+            price: d.price != null ? formatShekels(d.price) : undefined,
+            image: d.image?.url,
+          }))
+        : undefined,
     });
   }
 
@@ -339,6 +386,8 @@ async function fetchFromTenBis(
             ? `₪${r.minimumPriceForOrder}`
             : undefined,
         externalUrl: `https://www.10bis.co.il/next/restaurants/menu/delivery/${r.restaurantId}`,
+        tags: r.restaurantCuisineTypes ? Object.values(r.restaurantCuisineTypes).filter(Boolean) : undefined,
+        description: r.isKosher && r.kosherString ? r.kosherString : undefined,
       }),
     );
 }

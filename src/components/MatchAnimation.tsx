@@ -213,13 +213,12 @@ export function MatchAnimation({
                 r.externalUrl ? () => openRestaurantLink(r.externalUrl, r.source) : onOrderNow
               }
             />
-            <GlassButton
-              title={
-                alreadyApproved
-                  ? t('match.waitingOthers')
-                  : showUnanimous
-                    ? t('match.iWantKeepBrowsing')
-                    : t('match.keepBrowsing')
+            {/* Secondary choices share one row, split evenly */}
+            <View style={styles.actionRow}>
+              <View style={styles.actionCell}>
+                <GlassButton
+                  title={
+                    alreadyApproved ? t('match.waitingOthers') : t('match.keepBrowsing')
               }
               onPress={onContinue}
               prominent={false}
@@ -227,15 +226,19 @@ export function MatchAnimation({
               color="#FFFFFF"
               disabled={alreadyApproved}
             />
-            {onLeave && (
-              <GlassButton
-                title={t('common.leave')}
-                onPress={onLeave}
-                prominent={false}
-                scheme="dark"
-                color={LIGHT_RED}
-              />
-            )}
+              </View>
+              {onLeave && (
+                <View style={styles.actionCell}>
+                  <GlassButton
+                    title={t('common.leave')}
+                    onPress={onLeave}
+                    prominent={false}
+                    scheme="dark"
+                    color={LIGHT_RED}
+                  />
+                </View>
+              )}
+            </View>
           </Animated.View>
         </View>
       </ScrollView>
@@ -284,4 +287,6 @@ const styles = StyleSheet.create({
   voteChipText: { ...typography.footnote, color: '#FFFFFF', maxWidth: 160 },
 
   actions: { gap: spacing.sm },
+  actionRow: { flexDirection: 'row', gap: spacing.sm },
+  actionCell: { flex: 1 },
 });

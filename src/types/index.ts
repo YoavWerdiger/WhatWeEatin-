@@ -18,6 +18,18 @@ export interface Restaurant {
   slug?: string;
   externalUrl?: string;
   blurhash?: string;
+  /** One-line pitch from the delivery app (Wolt short_description). */
+  description?: string;
+  /** Delivery-app tags / cuisine types. */
+  tags?: string[];
+  /** A few dishes, when the list already includes them. */
+  dishes?: Dish[];
+}
+
+export interface Dish {
+  name: string;
+  price?: string;
+  image?: string;
 }
 
 export type VoteType = 'like' | 'dislike' | 'superlike';
