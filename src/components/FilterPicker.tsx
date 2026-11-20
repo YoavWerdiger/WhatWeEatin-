@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, borderRadius } from '../theme/spacing';
@@ -85,17 +85,53 @@ export function CuisinePicker({ filters, onChange }: PartProps) {
   );
 }
 
+const VIBES = [
+  { key: 'fast', icon: 'flash', label: 'filters.vibeFast' },
+  { key: 'casual', icon: 'restaurant', label: 'filters.vibeCasual' },
+  { key: 'premium', icon: 'diamond', label: 'filters.vibePremium' },
+] as const;
+
+/** Three tall glass tiles — pick any. Same language as the mode cards. */
 export function VibePicker({ filters, onChange }: PartProps) {
+  const { t } = useTranslation();
   return (
-    <View style={styles.chipWrap}>
-      {STYLE_OPTIONS.map((opt) => (
-        <Chip
-          key={opt.key}
-          label={`${opt.label.split(' ')[0]} ${opt.labelEn}`}
-          selected={filters.styles.includes(opt.key)}
-          onPress={() => onChange({ ...filters, styles: toggle(filters.styles, opt.key) })}
-        />
-      ))}
+    <View style={styles.vibeRow}>
+      {VIBES.map(({ key, icon, label }, i) => {
+        const selected = filters.styles.includes(key);
+        return (
+          <Animated.View key={key} entering={FadeInDown.duration(260).delay(i * 60)} style={styles.vibeCell}>
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                onChange({ ...filters, styles: toggle(filters.styles, key) });
+              }}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: selected }}
+              accessibilityLabel={t(label)}
+              style={styles.flex}
+            >
+              <Glass
+                radius={borderRadius.lg}
+                interactive
+                tint={selected ? 'rgba(255, 107, 53, 0.22)' : undefined}
+                style={styles.vibeTile}
+              >
+                <View style={[styles.vibeIcon, selected && styles.vibeIconSelected]}>
+                  <Ionicons name={icon} size={26} color={selected ? '#FFFFFF' : colors.primaryDark} />
+                </View>
+                <Text style={styles.vibeLabel} numberOfLines={2}>
+                  {t(label)}
+                </Text>
+                <Ionicons
+                  name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={20}
+                  color={selected ? colors.primary : colors.border}
+                />
+              </Glass>
+            </Pressable>
+          </Animated.View>
+        );
+      })}
     </View>
   );
 }
@@ -240,6 +276,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  flex: { flex: 1 },
+  vibeRow: { flexDirection: 'row', gap: 12 },
+  vibeCell: { flex: 1 },
+  vibeTile: {
+    flex: 1,
+    minHeight: 150,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    gap: spacing.sm,
+  },
+  vibeIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vibeIconSelected: { backgroundColor: colors.primary },
+  vibeLabel: { ...typography.headline, color: colors.text, textAlign: 'center' },
   priceHero: { gap: spacing.md, alignItems: 'stretch' },
   coins: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, direction: 'ltr' },
   coin: { fontSize: 56, lineHeight: 64, fontWeight: '300', color: colors.primaryDark },

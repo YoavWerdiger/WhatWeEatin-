@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import * as Haptics from 'expo-haptics';
 import { Host, Slider } from '@expo/ui/swift-ui';
 import { accessibilityLabel as accessibilityLabelModifier } from '@expo/ui/swift-ui/modifiers';
 import { colors } from '../../theme/colors';
@@ -7,7 +6,7 @@ import type { StopSliderProps } from './StopSlider.types';
 
 /**
  * Native SwiftUI slider snapped to stops — the thumb turns to Liquid Glass while
- * dragged on iOS 26. One selection tick per stop crossed, as it's crossed.
+ * dragged on iOS 26, with the system's own tick at each stop.
  * Tinted through the Host's seedColor (a ShapeStyle tint is ignored here).
  */
 export function StopSlider({ count, index, onChange, accessibilityLabel }: StopSliderProps) {
@@ -23,7 +22,8 @@ export function StopSlider({ count, index, onChange, accessibilityLabel }: StopS
           const i = Math.round(v);
           if (i === last.current) return;
           last.current = i;
-          void Haptics.selectionAsync();
+          // No extra haptic: the native slider already ticks at each step on iOS 26,
+          // and a second one on top felt excessive.
           onChange(i);
         }}
         modifiers={accessibilityLabel ? [accessibilityLabelModifier(accessibilityLabel)] : []}
