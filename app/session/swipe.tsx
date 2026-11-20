@@ -386,12 +386,15 @@ export default function SwipeScreen() {
               </Pressable>
             </ScrollView>
           ) : (
-            <CardStack
-              ref={cardStackRef}
-              restaurants={session.restaurants}
-              currentIndex={currentCardIndex}
-              onSwipe={handleSwipe}
-            />
+            // Hidden (not unmounted) under a match, so keep browsing resumes in place.
+            <View style={[styles.deck, displayedMatch && styles.deckHidden]} pointerEvents={displayedMatch ? 'none' : 'auto'}>
+              <CardStack
+                ref={cardStackRef}
+                restaurants={session.restaurants}
+                currentIndex={currentCardIndex}
+                onSwipe={handleSwipe}
+              />
+            </View>
           )}
         </View>
 
@@ -481,6 +484,8 @@ function DuelCard({
 }
 
 const styles = StyleSheet.create({
+  deck: { flex: 1 },
+  deckHidden: { opacity: 0 },
   gameControls: {
     position: 'absolute',
     left: 0,

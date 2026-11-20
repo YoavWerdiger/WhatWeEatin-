@@ -112,7 +112,7 @@ export function MatchAnimation({
   ].filter((m) => !!m.text);
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
+    <Animated.View style={[StyleSheet.absoluteFill, styles.root, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
       {/* The winner's photo is the backdrop — rich content for the glass to sit on */}
       <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
       <LinearGradient
@@ -262,6 +262,8 @@ export function MatchAnimation({
 }
 
 const styles = StyleSheet.create({
+  // Above everything on the swipe screen, including the deck's raised top card.
+  root: { zIndex: 1000, elevation: 1000 },
   content: {
     flexGrow: 1,
     justifyContent: 'space-between',
