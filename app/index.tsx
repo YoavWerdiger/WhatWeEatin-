@@ -6,14 +6,13 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '../src/theme/colors';
 import { typography } from '../src/theme/typography';
 import { spacing, borderRadius, shadows } from '../src/theme/spacing';
-import { Button } from '../src/components/ui/Button';
+import { GlassButton } from '../src/components/native/GlassButton';
 import { useUserStore } from '../src/store/userStore';
 import { useAuthStore } from '../src/store/authStore';
 import { useSessionStore } from '../src/store/sessionStore';
@@ -29,7 +28,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useUserStore();
   const authUser = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const initSessionAuth = useSessionStore((s) => s.initAuth);
   const displayName = authUser?.displayName || user.name;
 
@@ -119,20 +117,14 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
 
         <View style={styles.actions}>
-          <Button
+          <GlassButton
             title={t('home.createSession')}
             onPress={() => router.push('/session/create')}
-            variant="primary"
-            size="lg"
-            fullWidth
           />
-
-          <Button
+          <GlassButton
             title={t('home.joinSession')}
+            prominent={false}
             onPress={() => router.push('/session/join')}
-            variant="secondary"
-            size="lg"
-            fullWidth
           />
         </View>
       </Animated.View>
@@ -140,34 +132,16 @@ export default function HomeScreen() {
       <View style={styles.footer}>
         {/* Low-risk placement: between sessions on home — never on swipe stack */}
         <AdBanner placement="home_footer" />
-        <TouchableOpacity
-          style={styles.profilePill}
-          onPress={() => {
-            if (authUser?.provider === 'anonymous') {
-              router.push('/auth');
-            } else {
-              router.push('/account');
-            }
-          }}
-          onLongPress={() => logout()}
-        >
-          <View
-            style={[
-              styles.profileDot,
-              {
-                backgroundColor:
-                  authUser?.provider === 'anonymous'
-                    ? colors.textMuted
-                    : colors.accent,
-              },
-            ]}
-          />
-          <Text style={styles.profileName} numberOfLines={1}>
-            {authUser?.provider === 'anonymous'
+        <GlassButton
+          title={
+            authUser?.provider === 'anonymous'
               ? t('home.guestHint')
-              : displayName || authUser?.email || t('home.signedIn')}
-          </Text>
-        </TouchableOpacity>
+              : displayName || authUser?.email || t('home.signedIn')
+          }
+          prominent={false}
+          fullWidth={false}
+          onPress={() => router.push(authUser?.provider === 'anonymous' ? '/auth' : '/account')}
+        />
       </View>
     </SafeAreaView>
   );
@@ -217,26 +191,5 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     gap: spacing.sm,
     width: '100%',
-  },
-  profilePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    borderRadius: borderRadius.full,
-    gap: spacing.sm,
-    ...shadows.sm,
-    maxWidth: '100%',
-  },
-  profileDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  profileName: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-    maxWidth: 220,
   },
 });

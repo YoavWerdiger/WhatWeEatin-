@@ -10,8 +10,8 @@ import {
   Switch,
   Pressable,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -178,17 +178,18 @@ export default function CreateSessionScreen() {
   const bottomBarHeight = 64 + Math.max(insets.bottom, spacing.md);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <GlassIconButton
-          systemImage="chevron.backward"
+    <View style={styles.container}>
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          icon="chevron.backward"
           accessibilityLabel={plain(t('common.back'))}
           onPress={handleBackFromCreate}
         />
-      </View>
+      </Stack.Toolbar>
 
       <ScrollView
         style={styles.scrollView}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[styles.content, { paddingBottom: bottomBarHeight + spacing.lg }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -400,7 +401,7 @@ export default function CreateSessionScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

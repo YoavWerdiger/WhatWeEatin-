@@ -34,7 +34,11 @@ export function GlassButton({
       matchContents={{ vertical: true, horizontal: !fullWidth }}
       // glassProminent always draws a white label, so tint with the deeper orange
       // (white on it is 5.2:1; on the bright brand orange only 2.8:1).
-      seedColor={prominent ? (color === colors.primary ? colors.primaryDark : color) : colors.text}
+      seedColor={
+        prominent
+          ? color === colors.primary ? colors.primaryDark : color
+          : color === colors.primary ? colors.text : color
+      }
       layoutDirection={I18nManager.isRTL ? 'rightToLeft' : 'leftToRight'}
       style={[fullWidth && { width: '100%' }, disabled && !loading && { opacity: 0.45 }, style] as StyleProp<ViewStyle>}
     >

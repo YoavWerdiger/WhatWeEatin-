@@ -16,7 +16,7 @@ import { typography } from '../theme/typography';
 import { borderRadius, spacing, shadows } from '../theme/spacing';
 import { Button } from './ui/Button';
 import { Avatar } from './ui/Avatar';
-import { GlassIconButton } from './native/GlassButton';
+import { GlassButton, GlassIconButton } from './native/GlassButton';
 import { useTranslation } from '../i18n/t';
 import { SOURCE_LABELS, PRICE_LABELS } from '../utils/constants';
 import { openRestaurantLink } from '../utils/openRestaurantLink';
@@ -360,28 +360,19 @@ export function MatchAnimation({
 
           <View style={styles.actions}>
             {result.restaurant.externalUrl ? (
-              <Button
-                title={`${sourceLabels[result.restaurant.source]} →`}
+              <GlassButton
+                title={sourceLabels[result.restaurant.source]}
                 onPress={() =>
                   openRestaurantLink(
                     result.restaurant.externalUrl,
                     result.restaurant.source,
                   )
                 }
-                variant="primary"
-                size="lg"
-                fullWidth
               />
             ) : (
-              <Button
-                title={t('match.orderNow')}
-                onPress={onOrderNow}
-                variant="primary"
-                size="lg"
-                fullWidth
-              />
+              <GlassButton title={t('match.orderNow')} onPress={onOrderNow} />
             )}
-            <Button
+            <GlassButton
               title={
                 alreadyApproved
                   ? t('match.waitingOthers')
@@ -390,10 +381,9 @@ export function MatchAnimation({
                     : t('match.keepBrowsing')
               }
               onPress={onContinue}
-              variant="ghost"
-              size="md"
+              prominent={false}
+              color="#FFFFFF"
               disabled={alreadyApproved}
-              style={styles.continueBtn}
             />
             {onLeave && (
               <Button

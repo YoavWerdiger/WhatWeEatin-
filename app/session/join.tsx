@@ -7,9 +7,10 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   Easing,
@@ -23,7 +24,7 @@ import Animated, {
 import { colors } from '../../src/theme/colors';
 import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
-import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
+import { GlassButton } from '../../src/components/native/GlassButton';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
@@ -105,20 +106,24 @@ export default function JoinSessionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          icon="chevron.backward"
+          accessibilityLabel={plain(t('common.back'))}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        />
+      </Stack.Toolbar>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.header}>
-          <GlassIconButton
-            systemImage="chevron.backward"
-            accessibilityLabel={plain(t('common.back'))}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          />
-        </View>
-
-        <View style={styles.content}>
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
           <Text style={styles.title}>{t('join.title')}</Text>
           <Text style={styles.subtitle}>{t('join.subtitle')}</Text>
 
@@ -191,7 +196,7 @@ export default function JoinSessionScreen() {
               />
             </View>
           </View>
-        </View>
+        </ScrollView>
 
         <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <GlassButton
@@ -202,7 +207,7 @@ export default function JoinSessionScreen() {
           />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -219,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: spacing.md,
     gap: spacing.lg,
   },

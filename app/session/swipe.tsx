@@ -7,11 +7,10 @@ import { Animated,
   Alert,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { CardStack, CardStackRef } from '../../src/components/CardStack';
-import { SwipeActions } from '../../src/components/SwipeActions';
 import { Timer } from '../../src/components/Timer';
 import { UserList } from '../../src/components/UserList';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
@@ -42,6 +41,7 @@ function shuffleRestaurants(items: Restaurant[]): Restaurant[] {
 export default function SwipeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useUserStore();
   const cardStackRef = useRef<CardStackRef>(null);
   const firebaseUid = useSessionStore((s) => s.firebaseUid);
@@ -248,38 +248,39 @@ export default function SwipeScreen() {
   }
 
   const isFinished = currentCardIndex >= session.restaurants.length;
+  const chromeHidden = !!displayedMatch && !matchExiting;
 
   return (
     <View style={styles.root}>
-      <SafeAreaView style={styles.container}>
-        <Animated.View
-          style={[styles.header, { opacity: chromeOpacity }]}
-          pointerEvents={displayedMatch && !matchExiting ? 'none' : 'auto'}
-        >
+      {/* Native nav bar — system Liquid Glass on iOS 26; hidden under the match overlay */}
+      <Stack.Screen
+        options={{
+          headerTitle: () => (chromeHidden ? null : <UserList users={session.users} compact />),
+        }}
+      />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          icon="xmark"
+          accessibilityLabel={t('common.leave')}
+          onPress={handleLeave}
+          hidden={chromeHidden}
+        />
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.View hidden={chromeHidden}>
+          <View style={styles.headerEnd}>
+            {session.timerDuration > 0 && (
+              <Timer timeRemaining={timeRemaining} totalTime={session.timerDuration} compact />
+            )}
+            <Text style={styles.counterText}>
+              {Math.min(currentCardIndex + 1, session.restaurants.length)}
+              <Text style={styles.counterTotal}>/{session.restaurants.length}</Text>
+            </Text>
+          </View>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
 
-            <TouchableOpacity onPress={handleLeave} style={styles.closeBtn}>
-              <Text style={styles.closeIcon}>✕</Text>
-            </TouchableOpacity>
-
-            <UserList users={session.users} compact />
-
-            <View style={styles.headerEnd}>
-              {session.timerDuration > 0 && (
-                <Timer
-                  timeRemaining={timeRemaining}
-                  totalTime={session.timerDuration}
-                  compact
-                />
-              )}
-              <View style={styles.cardCounter}>
-                <Text style={styles.counterText}>
-                  {Math.min(currentCardIndex + 1, session.restaurants.length)}
-                  <Text style={styles.counterTotal}>/{session.restaurants.length}</Text>
-                </Text>
-              </View>
-            </View>
-                  </Animated.View>
-
+      <View style={[styles.container, { paddingTop: insets.top + 44, paddingBottom: insets.bottom + 64 }]}>
         <View style={styles.cardArea}>
           {isFinished ? (
             <View style={styles.finishedContainer}>
@@ -412,23 +413,36 @@ export default function SwipeScreen() {
           )}
         </View>
 
-        {!isFinished && (
-          <Animated.View
-            style={[styles.bottomSection, { opacity: chromeOpacity }]}
-            pointerEvents={displayedMatch && !matchExiting ? 'none' : 'auto'}
-          >
+      </View>
 
-            <SwipeActions
-              onDislike={() => cardStackRef.current?.swipeLeft()}
-              onLike={() => cardStackRef.current?.swipeRight()}
-            />
-
-            <TouchableOpacity style={styles.aiSmall} onPress={handleAIDecision}>
-              <Text style={styles.aiSmallText}>{t('swipe.aiSmall')}</Text>
-            </TouchableOpacity>
-                    </Animated.View>
-        )}
-      </SafeAreaView>
+      {/* Floating Liquid Glass toolbar: pass · let fate decide · like */}
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.Button
+          icon="xmark"
+          tintColor={colors.danger}
+          accessibilityLabel={t('swipeActions.pass')}
+          onPress={() => cardStackRef.current?.swipeLeft()}
+          hidden={isFinished || chromeHidden}
+        />
+        <Stack.Toolbar.Spacer hidden={isFinished || chromeHidden} />
+        <Stack.Toolbar.Button
+          icon="dice"
+          accessibilityLabel={t('swipe.aiSmall')}
+          onPress={handleAIDecision}
+          hidden={isFinished || chromeHidden}
+        >
+          <Stack.Toolbar.Label>{t('swipe.aiSmall')}</Stack.Toolbar.Label>
+        </Stack.Toolbar.Button>
+        <Stack.Toolbar.Spacer hidden={isFinished || chromeHidden} />
+        <Stack.Toolbar.Button
+          icon="heart.fill"
+          variant="prominent"
+          tintColor={colors.accentDark}
+          accessibilityLabel={t('swipeActions.like')}
+          onPress={() => cardStackRef.current?.swipeRight()}
+          hidden={isFinished || chromeHidden}
+        />
+      </Stack.Toolbar>
 
       {showCountdown && !displayedMatch && (
         <RoundCountdown goLabel={t('swipe.go')} onDone={endCountdown} />

@@ -7,13 +7,13 @@ import {
   ScrollView,
   Share,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
-import { GlassButton, GlassIconButton } from '../../src/components/native/GlassButton';
+import { GlassButton } from '../../src/components/native/GlassButton';
 import { UserList } from '../../src/components/UserList';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -118,21 +118,24 @@ export default function LobbyScreen() {
         : t('lobby.waitGuest');
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.topBar}>
-        <GlassIconButton
-          systemImage="xmark"
+    <View style={styles.container}>
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          icon="xmark"
           accessibilityLabel={plain(t('common.leave'))}
           onPress={handleLeaveLobby}
         />
-        <GlassIconButton
-          systemImage="square.and.arrow.up"
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          icon="square.and.arrow.up"
           accessibilityLabel={t('create.shareCode')}
           onPress={handleShare}
         />
-      </View>
+      </Stack.Toolbar>
 
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[styles.content, { paddingBottom: 180 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
@@ -196,7 +199,7 @@ export default function LobbyScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -212,13 +215,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
   },
   content: {
     paddingHorizontal: spacing.md,
