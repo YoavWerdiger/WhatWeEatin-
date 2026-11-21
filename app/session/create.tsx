@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
-  Dimensions,
   Text,
   TextInput,
   StyleSheet,
@@ -46,9 +45,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
 import { TableReady } from '../../src/components/TableReady';
-import { HomeMosaic } from '../../src/components/HomeMosaic';
 
-const HERO_GAP = Dimensions.get('window').height * 0.12;
 import { useTranslation } from '../../src/i18n/t';
 
 type Step =
@@ -210,8 +207,6 @@ export default function CreateSessionScreen() {
 
   return (
     <View style={styles.container}>
-      {/* A short strip of the lobby's grid behind the header, fading out before the question */}
-      <HomeMosaic heightRatio={0.3} />
       <Stack.Screen
         options={{
           headerTitle: () =>
@@ -299,7 +294,7 @@ export default function CreateSessionScreen() {
               <Question title={t('create.readyTitle')} sub={t('create.readySub')}>
                 <TableReady
                   code={sessionCode}
-                  restaurants={session?.restaurants ?? []}
+                  count={restaurantCount}
                   loading={isLoadingRestaurants}
                   city={userLocation?.city}
                   error={loadError}
@@ -509,8 +504,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   flexWide: { flex: 2 },
   container: { flex: 1, backgroundColor: colors.background },
-  // Questions start where the grid strip has faded
-  content: { paddingHorizontal: spacing.md, paddingTop: HERO_GAP },
+  content: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
 
   progress: { flexDirection: 'row', gap: 4, width: 160 },
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.primary },
