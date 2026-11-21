@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -60,6 +61,15 @@ export default function JoinSessionScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codeFocused, setCodeFocused] = useState(false);
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const codeInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Wrong code: a short horizontal shake — the "no" head-shake.
@@ -147,7 +157,10 @@ export default function JoinSessionScreen() {
           keyboardShouldPersistTaps="handled"
           bounces={false}
         >
-          <Text style={styles.kicker}>{t('join.kicker')}</Text>
+          {/* A glass pill so the small label stays readable over the grid */}
+          <Glass radius={borderRadius.full} tint="rgba(255, 255, 255, 0.75)" style={styles.kickerPill}>
+            <Text style={styles.kicker}>{t('join.kicker')}</Text>
+          </Glass>
           <Text style={styles.title}>{t('join.heroTitle')}</Text>
 
           <Animated.View style={[styles.codeWrap, shakeStyle]}>
@@ -229,7 +242,8 @@ export default function JoinSessionScreen() {
           ) : null}
         </ScrollView>
 
-        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        {/* Sits right on the keyboard when it's up; above the home indicator otherwise */}
+        <View style={[styles.bottomBar, { paddingBottom: keyboardUp ? spacing.sm : Math.max(insets.bottom, spacing.md) }]}>
           <GlassButton
             title={t('join.button')}
             onPress={() => void handleJoin()}
@@ -258,7 +272,8 @@ const styles = StyleSheet.create({
     // The title sits where the grid has faded, like the code on the lobby
     paddingTop: SCREEN_H * 0.27,
   },
-  kicker: { ...typography.captionMedium, color: colors.textSecondary },
+  kickerPill: { paddingHorizontal: 12, paddingVertical: 5 },
+  kicker: { ...typography.footnote, fontWeight: '700', color: colors.primaryDark },
   title: {
     fontFamily: fontFamilies.rounded,
     fontSize: 40,
