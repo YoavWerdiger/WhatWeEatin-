@@ -118,6 +118,9 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
     const order = [...live].sort((a, b) => a.x - b.x || a.y - b.y);
     const winnerIdx = Math.floor(Math.random() * order.length);
     const winner = order[winnerIdx];
+    if (__DEV__) {
+      console.log('[finger] draw', { fingers: order.map((o) => ({ id: o.id, pick: o.pick })), winnerIdx, winnerPick: winner.pick });
+    }
     const total = (order.length > 1 ? HOP_LOOPS * order.length : 1) + winnerIdx + 1;
     let at = 0;
     for (let i = 0; i < total; i++) {
