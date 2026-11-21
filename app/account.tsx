@@ -171,12 +171,6 @@ export default function AccountScreen() {
                 >
                   <View>
                     <Image source={{ uri: m.restaurant.image }} style={styles.matchPhoto} contentFit="cover" cachePolicy="memory-disk" />
-                    {m.restaurant.externalUrl ? (
-                      <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark tint="rgba(255,255,255,0.22)" style={styles.orderPill}>
-                        <Ionicons name="bag-handle-outline" size={13} color="#FFFFFF" />
-                        <Text style={styles.orderPillText}>{t('profile.orderAgain')}</Text>
-                      </Glass>
-                    ) : null}
                     {m.rating != null ? (
                       <View style={styles.matchRating}>
                         <Text style={styles.matchRatingText}>{m.rating === 1 ? '😍' : m.rating === 0 ? '🙂' : '😕'}</Text>
@@ -189,6 +183,13 @@ export default function AccountScreen() {
                   <Text style={styles.matchMeta} numberOfLines={1}>
                     {formatDate(m.at)} · {m.restaurant.cuisine}
                   </Text>
+                  {/* Under the photo, a glass pill to reorder */}
+                  {m.restaurant.externalUrl ? (
+                    <Glass radius={borderRadius.full} interactive tint="rgba(255, 107, 53, 0.16)" style={styles.orderPill}>
+                      <Ionicons name="bag-handle-outline" size={14} color={colors.primaryDark} />
+                      <Text style={styles.orderPillText}>{t('profile.orderAgain')}</Text>
+                    </Glass>
+                  ) : null}
                 </Pressable>
               ))}
             </ScrollView>
@@ -271,16 +272,15 @@ const styles = StyleSheet.create({
   matchName: { ...typography.headline, color: colors.text, marginTop: 8 },
   matchMeta: { ...typography.footnote, color: colors.textSecondary },
   orderPill: {
-    position: 'absolute',
-    left: 8,
-    bottom: 8,
+    alignSelf: 'flex-start',
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  orderPillText: { ...typography.caption, fontWeight: '700', color: '#FFFFFF' },
+  orderPillText: { ...typography.caption, fontWeight: '700', color: colors.primaryDark },
 
   empty: { alignItems: 'center', gap: 6, padding: spacing.lg },
   emptyTitle: { ...typography.headline, color: colors.text, textAlign: 'center' },
