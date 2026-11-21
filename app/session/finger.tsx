@@ -9,6 +9,7 @@ import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { FingerChooser } from '../../src/components/FingerChooser';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Glass } from '../../src/components/ui/Glass';
+import { LeaveButton } from '../../src/components/LeaveButton';
 import { HomeMosaic } from '../../src/components/HomeMosaic';
 
 // Glass tints, as on the create flow: resting white, chosen orange
@@ -169,9 +170,7 @@ export default function FingerScreen() {
           {/* Tonight's places drifting under a pale veil — something for the glass to refract */}
           <HomeMosaic photos={restaurants.map((r) => r.image)} heightRatio={1} tone="light" />
           <View style={styles.topBar}>
-            <Pressable onPress={handleLeave} hitSlop={12}>
-              <Text style={styles.leaveText}>{t('common.leave')}</Text>
-            </Pressable>
+            <LeaveButton label={t('common.leave')} onPress={handleLeave} />
             <Glass radius={borderRadius.full} tint={ORANGE_SOFT} style={styles.codePill}>
               <Text style={styles.codeValue}>{session.code}</Text>
             </Glass>
@@ -330,7 +329,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   safe: { flex: 1, paddingHorizontal: spacing.lg },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
-  leaveText: { ...typography.body, color: colors.primaryDark, fontWeight: '600' },
   codePill: { paddingHorizontal: 12, paddingVertical: 6 },
   codeValue: { ...typography.subheadline, fontWeight: '700', color: colors.primaryDark, letterSpacing: 2 },
   title: { ...typography.largeTitle, color: colors.text, marginTop: spacing.md },

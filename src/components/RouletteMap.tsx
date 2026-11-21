@@ -140,6 +140,7 @@ export function RouletteMap({ restaurants, spin, onLanded, mapPadding }: Props) 
         style={StyleSheet.absoluteFill}
         initialRegion={region}
         mapType="mutedStandard"
+        userInterfaceStyle="dark"
         showsPointsOfInterests={false}
         showsBuildings={false}
         pitchEnabled={false}

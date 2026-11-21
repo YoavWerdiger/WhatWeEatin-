@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Animated,
   Easing,
   Image,
@@ -17,6 +16,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { RouletteMap, hasCoords, MIN_MAP_PINS } from '../../src/components/RouletteMap';
 import { Button } from '../../src/components/ui/Button';
+import { Glass } from '../../src/components/ui/Glass';
+import { LeaveButton } from '../../src/components/LeaveButton';
+
+// The map runs dark; fades and page take its night colour
+const NIGHT = '#15161A';
+const NIGHT_CLEAR = 'rgba(21,22,26,0)';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { getFirebaseUid, isFirebaseConfigured } from '../../src/services/firebase';
@@ -235,8 +240,8 @@ export default function RouletteScreen() {
   if (!session) return null;
 
   return (
-    <View style={styles.root}>
-      {/* Full-screen map behind everything; header and button float on top */}
+    <View style={[styles.root, useMap && styles.rootDark]}>
+      {/* Full-screen dark map behind everything — night-out mood, the photo pins glow; header and button float on top */}
       {useMap && (
         <View style={StyleSheet.absoluteFill}>
           <RouletteMap
@@ -247,12 +252,12 @@ export default function RouletteScreen() {
           />
           {/* Soft fades so the title and button read over the map */}
           <LinearGradient
-            colors={[colors.background, 'rgba(242,242,247,0)']}
+            colors={[NIGHT, NIGHT_CLEAR]}
             style={[styles.mapFade, { top: 0, height: 230 }]}
             pointerEvents="none"
           />
           <LinearGradient
-            colors={['rgba(242,242,247,0)', colors.background]}
+            colors={[NIGHT_CLEAR, NIGHT]}
             style={[styles.mapFade, { bottom: 0, height: 180 }]}
             pointerEvents="none"
           />
@@ -261,16 +266,20 @@ export default function RouletteScreen() {
     <SafeAreaView style={[styles.container, useMap && styles.containerOverMap]} pointerEvents="box-none">
       <View style={styles.content} pointerEvents="box-none">
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={handleLeave} hitSlop={12}>
-            <Text style={styles.leaveText}>{t('common.leave')}</Text>
-          </TouchableOpacity>
-          <View style={styles.codePill}>
-            <Text style={styles.codeValue}>{session.code}</Text>
-          </View>
+          <LeaveButton label={t('common.leave')} onPress={handleLeave} dark={useMap} />
+          <Glass
+            radius={borderRadius.full}
+            scheme={useMap ? 'dark' : 'light'}
+            dark={useMap}
+            tint="rgba(255, 107, 53, 0.22)"
+            style={styles.codePill}
+          >
+            <Text style={[styles.codeValue, useMap && styles.onNight]}>{session.code}</Text>
+          </Glass>
         </View>
 
-        <Text style={styles.title}>{t('roulette.title')}</Text>
-        <Text style={styles.subtitle}>{t('roulette.subtitle')}</Text>
+        <Text style={[styles.title, useMap && styles.onNight]}>{t('roulette.title')}</Text>
+        <Text style={[styles.subtitle, useMap && styles.onNightMuted]}>{t('roulette.subtitle')}</Text>
 
         {useMap ? (
           <View style={styles.mapSpacer} pointerEvents="none" />
@@ -302,7 +311,7 @@ export default function RouletteScreen() {
         )}
 
         {landed && !matchResult && (
-          <Text style={styles.landedText}>
+          <Text style={[styles.landedText, useMap && styles.onNightAccent]}>
             {t('roulette.landed', { name: landed.name })}
           </Text>
         )}
@@ -322,7 +331,7 @@ export default function RouletteScreen() {
               disabled={isSpinning || !!matchResult || restaurants.length === 0}
             />
           ) : (
-            <Text style={styles.guestHint}>
+            <Text style={[styles.guestHint, useMap && styles.onNightMuted]}>
               {isSpinning
                 ? t('roulette.spinning')
                 : t('roulette.waitingHost')}
@@ -352,6 +361,10 @@ export default function RouletteScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  rootDark: { backgroundColor: NIGHT },
+  onNight: { color: '#FFFFFF' },
+  onNightMuted: { color: 'rgba(255,255,255,0.7)' },
+  onNightAccent: { color: colors.primaryLight },
   containerOverMap: { backgroundColor: 'transparent' },
   mapSpacer: { flex: 1 },
   mapFade: { position: 'absolute', left: 0, right: 0 },
@@ -370,15 +383,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
-  leaveText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   codePill: {
-    backgroundColor: colors.primaryMuted,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
   },
   codeValue: {
     ...typography.bodySemiBold,
