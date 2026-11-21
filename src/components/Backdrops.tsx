@@ -1,12 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
   FadeIn,
-  FadeOut,
   cancelAnimation,
   useAnimatedStyle,
   useReducedMotion,
@@ -19,9 +17,7 @@ import { MOCK_RESTAURANTS } from '../utils/mockData';
 import { colors } from '../theme/colors';
 
 // The ambient backdrops besides HomeMosaic, so each screen family has its own:
-//   Aurora     — warm colour fields drifting (create flow: calm, gives glass colour to bend)
 //   PlateOrbit — round dish photos floating around the top (sign-in)
-//   PhotoDrift — one photo at a time, slow zoom + crossfade (join)
 
 const { width: W, height: H } = Dimensions.get('window');
 const PHOTOS = MOCK_RESTAURANTS.map((r) => r.image.replace(/w=\d+/, 'w=500'));
@@ -40,54 +36,6 @@ function useLoop(duration: number, delay = 0) {
     return () => cancelAnimation(v);
   }, [reduceMotion, duration, delay, v]);
   return v;
-}
-
-/* ───────────── Aurora ───────────── */
-
-const BLOBS = [
-  { color: '#FF6B35', size: 1.25, x: -0.35, y: -0.2, dx: 0.25, dy: 0.12, s: 17000 },
-  { color: '#FFB347', size: 1.1, x: 0.35, y: -0.05, dx: -0.2, dy: 0.15, s: 21000 },
-  { color: '#FF7A90', size: 1.0, x: -0.1, y: 0.25, dx: 0.22, dy: -0.12, s: 19000 },
-  { color: '#FFD3A8', size: 0.9, x: 0.45, y: 0.4, dx: -0.18, dy: -0.15, s: 23000 },
-];
-
-function Blob({ b, i }: { b: (typeof BLOBS)[number]; i: number }) {
-  const t = useLoop(b.s, i * 900);
-  const d = W * b.size;
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: (b.x + b.dx * t.value) * W },
-      { translateY: (b.y + b.dy * t.value) * H * 0.6 },
-      { scale: 1 + 0.12 * t.value },
-    ],
-  }));
-  return (
-    <Animated.View style={[styles.blob, { width: d, height: d, left: (W - d) / 2, top: H * 0.1 - d / 4 }, style]}>
-      {/* A soft radial field — no hard circle edge */}
-      <Svg width={d} height={d}>
-        <Defs>
-          <RadialGradient id={`g${i}`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={b.color} stopOpacity={0.55} />
-            <Stop offset="0.55" stopColor={b.color} stopOpacity={0.22} />
-            <Stop offset="1" stopColor={b.color} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Rect width={d} height={d} fill={`url(#g${i})`} />
-      </Svg>
-    </Animated.View>
-  );
-}
-
-/** Warm colour fields drifting behind the content, fading to the page colour below `heightRatio`. */
-export function Aurora({ heightRatio = 0.7 }: { heightRatio?: number }) {
-  return (
-    <View style={[styles.fill, { height: H * heightRatio }]} pointerEvents="none">
-      {BLOBS.map((b, i) => (
-        <Blob key={i} b={b} i={i} />
-      ))}
-      <LinearGradient colors={[BG_CLEAR, BG_CLEAR, BG]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
-    </View>
-  );
 }
 
 /* ───────────── PlateOrbit ───────────── */
@@ -143,48 +91,8 @@ export function PlateOrbit({ heightRatio = 0.6, photos }: { heightRatio?: number
   );
 }
 
-/* ───────────── PhotoDrift ───────────── */
-
-const DRIFT_MS = 6000;
-
-function DriftFrame({ uri }: { uri: string }) {
-  const z = useSharedValue(1);
-  const reduceMotion = useReducedMotion();
-  useEffect(() => {
-    if (!reduceMotion) z.value = withTiming(1.14, { duration: DRIFT_MS + 1200, easing: Easing.linear });
-  }, [reduceMotion, z]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: z.value }] }));
-  return (
-    <Animated.View entering={FadeIn.duration(1200)} exiting={FadeOut.duration(1200)} style={[StyleSheet.absoluteFill, style]}>
-      <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" transition={0} />
-    </Animated.View>
-  );
-}
-
-/** One photo at a time, slowly zooming, crossfading to the next; washed orange and faded into the page. */
-export function PhotoDrift({ heightRatio = 0.55, photos }: { heightRatio?: number; photos?: string[] }) {
-  const pool = photos?.length ? photos : PHOTOS;
-  const [i, setI] = useState(() => Math.floor(Math.random() * pool.length));
-  useEffect(() => {
-    const id = setInterval(() => setI((v) => (v + 1) % pool.length), DRIFT_MS);
-    return () => clearInterval(id);
-  }, [pool.length]);
-  return (
-    <View style={[styles.fill, styles.clip, { height: H * heightRatio }]} pointerEvents="none">
-      <DriftFrame key={i} uri={pool[i % pool.length]} />
-      <LinearGradient
-        colors={['rgba(255,107,53,0.3)', 'rgba(255,107,53,0.38)', 'rgba(242,242,247,0.9)', BG]}
-        locations={[0, 0.45, 0.78, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   fill: { position: 'absolute', top: 0, left: 0, right: 0 },
-  clip: { overflow: 'hidden' },
-  blob: { position: 'absolute' },
   plate: {
     position: 'absolute',
     overflow: 'hidden',
