@@ -59,6 +59,16 @@ export const es: Messages = {
   'auth.errorUserDisabled': 'Esta cuenta ha sido desactivada.',
   'auth.errorGeneric': 'Algo salió mal. Inténtalo de nuevo.',
 
+  'profile.matches': "Matches",
+  'profile.friends': "Amigos",
+  'profile.favCuisine': "Favorita",
+  'profile.yourMatches': "Tus matches",
+  'profile.orderAgain': "Pedir otra vez",
+  'profile.ateWith': "Comiste con",
+  'profile.mealsTogether': "{{count}} comidas",
+  'profile.emptyTitle': "Aún no hay nada",
+  'profile.emptySub': "Tus matches y los amigos con los que comiste aparecerán aquí tras tu primera partida.",
+  'profile.settings': "Ajustes",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

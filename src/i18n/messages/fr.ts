@@ -59,6 +59,16 @@ export const fr: Messages = {
   'auth.errorUserDisabled': 'Ce compte a été désactivé.',
   'auth.errorGeneric': 'Une erreur est survenue. Réessayez.',
 
+  'profile.matches': "Matchs",
+  'profile.friends': "Amis",
+  'profile.favCuisine': "Préférée",
+  'profile.yourMatches': "Tes matchs",
+  'profile.orderAgain': "Recommander",
+  'profile.ateWith': "Tu as mangé avec",
+  'profile.mealsTogether': "{{count}} repas",
+  'profile.emptyTitle': "Rien pour l’instant",
+  'profile.emptySub': "Tes matchs et les amis avec qui tu as mangé apparaîtront ici après ta première partie.",
+  'profile.settings': "Réglages",
   'account.title': 'Compte',
   'account.subtitle':
     'Vous êtes connecté avec Firebase Auth. Les sessions utilisent votre ID utilisateur pour l’hôte et la synchro temps réel quand c’est configuré.',

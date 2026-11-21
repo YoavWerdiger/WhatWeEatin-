@@ -56,6 +56,16 @@ export const he: Messages = {
   'auth.errorUserDisabled': 'החשבון הזה הושבת.',
   'auth.errorGeneric': 'משהו השתבש. נסו שוב.',
 
+  'profile.matches': "התאמות",
+  'profile.friends': "חברים",
+  'profile.favCuisine': "מועדף",
+  'profile.yourMatches': "ההתאמות שלך",
+  'profile.orderAgain': "להזמין שוב",
+  'profile.ateWith': "אכלתם יחד",
+  'profile.mealsTogether': "{{count}} ארוחות",
+  'profile.emptyTitle': "עוד אין כאן כלום",
+  'profile.emptySub': "ההתאמות שלך והחברים שאכלת איתם יופיעו כאן אחרי המשחק הראשון.",
+  'profile.settings': "הגדרות",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

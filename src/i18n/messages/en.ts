@@ -55,6 +55,16 @@ export const en = {
   'auth.errorUserDisabled': 'This account has been disabled.',
   'auth.errorGeneric': 'Something went wrong. Try again.',
 
+  'profile.matches': "Matches",
+  'profile.friends': "Friends",
+  'profile.favCuisine': "Favorite",
+  'profile.yourMatches': "Your matches",
+  'profile.orderAgain': "Order again",
+  'profile.ateWith': "Ate with",
+  'profile.mealsTogether': "{{count}} meals",
+  'profile.emptyTitle': "Nothing here yet",
+  'profile.emptySub': "Your matches and the friends you ate with will show up here after your first game.",
+  'profile.settings': "Settings",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

@@ -56,6 +56,16 @@ export const ar: Messages = {
   'auth.errorUserDisabled': 'تم تعطيل هذا الحساب.',
   'auth.errorGeneric': 'حدث خطأ. حاول مرة أخرى.',
 
+  'profile.matches': "التطابقات",
+  'profile.friends': "الأصدقاء",
+  'profile.favCuisine': "المفضل",
+  'profile.yourMatches': "تطابقاتك",
+  'profile.orderAgain': "اطلب مجددًا",
+  'profile.ateWith': "أكلت مع",
+  'profile.mealsTogether': "{{count}} وجبات",
+  'profile.emptyTitle': "لا شيء هنا بعد",
+  'profile.emptySub': "ستظهر تطابقاتك والأصدقاء الذين أكلت معهم هنا بعد أول لعبة.",
+  'profile.settings': "الإعدادات",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',
