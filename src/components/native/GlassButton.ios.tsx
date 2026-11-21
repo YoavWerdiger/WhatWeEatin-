@@ -20,6 +20,7 @@ import type {
   GlassIconButtonProps,
 } from './GlassButton.types';
 
+const LABEL_H = 22; // one line of the 17pt label
 const FILL = 2000; // SwiftUI .infinity stand-in — the Host clamps it to its own width
 
 /** Native SwiftUI button: `.glassProminent` (tinted Liquid Glass) or `.glass`. */
@@ -61,8 +62,9 @@ export function GlassButton({
           ...(isDisabled ? [disabledModifier()] : []),
         ]}
       >
-        <HStack spacing={8} modifiers={[frame(fullWidth ? { maxWidth: FILL } : {})]}>
-          {loading ? <ProgressView /> : null}
+        {/* Fixed label height, and a small spinner — the default one made the button grow while loading */}
+        <HStack spacing={8} modifiers={[frame(fullWidth ? { maxWidth: FILL, minHeight: LABEL_H, maxHeight: LABEL_H } : { minHeight: LABEL_H, maxHeight: LABEL_H })]}>
+          {loading ? <ProgressView modifiers={[controlSize('small'), frame({ width: 18, height: 18 })]} /> : null}
           <Text
             modifiers={[
               font({ weight: 'semibold', size: 17 }),
