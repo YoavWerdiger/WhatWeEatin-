@@ -84,8 +84,9 @@ export function HomeMosaic() {
         </View>
         {/* Orange wash over the photos, then a fade into the page background (the text sits there) */}
         <LinearGradient
-          colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.6)', 'rgba(242,242,247,0.85)', colors.background]}
-          locations={[0, 0.5, 0.78, 1]}
+          // Light by the title's height (≈60% down) so the dark text reads; the photos only ghost through below
+          colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.55)', 'rgba(242,242,247,0.93)', colors.background]}
+          locations={[0, 0.38, 0.6, 1]}
           style={StyleSheet.absoluteFill}
         />
       </View>
