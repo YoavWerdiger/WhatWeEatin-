@@ -111,7 +111,8 @@ export default function CreateSessionScreen() {
   const [filters, setFilters] = useState<SessionFilters>({
     cuisines: [],
     kosherOnly: false,
-    maxPriceLevel: 4,
+    // Starts at ₪₪₪ on the budget slider
+    maxPriceLevel: 3,
     styles: [],
   });
   const [gameMode, setGameMode] = useState<GameMode>('swipe');

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -26,7 +26,8 @@ const SIGNS = ['₪', '₪₪', '₪₪₪', '₪₪₪₪'];
 const THUMB = 44;
 const TRACK_H = 56;
 const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
-const SPRING = { damping: 18, stiffness: 220 };
+// A short glide, no overshoot — the bouncy spring wobbled too much
+const GLIDE = { duration: 200, easing: Easing.out(Easing.cubic) };
 
 interface Props {
   filters: SessionFilters;
@@ -43,7 +44,7 @@ function BudgetSlider({ level, onLevel }: { level: number; onLevel: (l: 1 | 2 | 
   const lastIdx = useSharedValue(level - 1);
 
   useEffect(() => {
-    if (w > 0) x.value = withSpring((level - 1) * step, SPRING);
+    if (w > 0) x.value = withTiming((level - 1) * step, GLIDE);
   }, [w, level, step, x]);
 
   const tick = () => void Haptics.selectionAsync();
@@ -64,13 +65,13 @@ function BudgetSlider({ level, onLevel }: { level: number; onLevel: (l: 1 | 2 | 
     })
     .onEnd(() => {
       const idx = Math.round(x.value / step);
-      x.value = withSpring(idx * step, SPRING);
+      x.value = withTiming(idx * step, GLIDE);
       scheduleOnRN(commit, idx);
     });
   const tap = Gesture.Tap().onEnd((e) => {
     const idx = Math.min(LEVELS - 1, Math.max(0, Math.round((e.x - 6 - THUMB / 2) / step)));
     lastIdx.value = idx;
-    x.value = withSpring(idx * step, SPRING);
+    x.value = withTiming(idx * step, GLIDE);
     scheduleOnRN(tick);
     scheduleOnRN(commit, idx);
   });
