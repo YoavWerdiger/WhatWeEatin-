@@ -26,6 +26,7 @@ import { GlassButton } from './native/GlassButton';
 import { useTranslation } from '../i18n/t';
 import { PRICE_LABELS } from '../utils/constants';
 import { openRestaurantLink } from '../utils/openRestaurantLink';
+import { useHistoryStore } from '../store/historyStore';
 
 interface MatchAnimationProps {
   result: MatchResult;
@@ -77,6 +78,13 @@ export function MatchAnimation({
     google: t('match.sourceGoogle'),
     mock: t('match.sourceMock'),
   };
+
+  // Keep the match for the profile page (on the device)
+  const addMatch = useHistoryStore((st) => st.addMatch);
+  useEffect(() => {
+    addMatch(result.restaurant, sessionUsers.length ? sessionUsers : result.agreedUsers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.restaurant.id]);
 
   useEffect(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
