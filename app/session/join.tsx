@@ -176,7 +176,7 @@ export default function JoinSessionScreen() {
                   <Glass
                     key={i}
                     radius={borderRadius.md}
-                    tint={char ? 'rgba(255, 107, 53, 0.16)' : RESTING_TINT}
+                    tint={RESTING_TINT}
                     style={[styles.codeBox, isActive && styles.codeBoxActive, !!error && styles.codeBoxError]}
                   >
                     {char ? (
