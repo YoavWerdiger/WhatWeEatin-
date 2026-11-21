@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,6 @@ import { useAuthStore } from '../src/store/authStore';
 import { useHistoryStore } from '../src/store/historyStore';
 import { openRestaurantLink } from '../src/utils/openRestaurantLink';
 import { useTranslation } from '../src/i18n/t';
-import { SUPPORTED_LOCALES, LOCALE_META, type AppLocale } from '../src/i18n/localeStore';
 
 const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
 
@@ -24,12 +23,10 @@ const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
  * the friends you've eaten with, then settings. History lives on the device (historyStore).
  */
 export default function AccountScreen() {
-  const { t, locale, setLocale } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const matches = useHistoryStore((s) => s.matches);
-  const [langOpen, setLangOpen] = useState(false);
 
   const isGuest = !user || user.provider === 'anonymous';
   const name = user?.displayName || user?.email?.split('@')[0] || t('account.providerGuest');
@@ -53,11 +50,16 @@ export default function AccountScreen() {
     return [...byId.values()].sort((a, b) => b.count - a.count);
   }, [matches, user?.uid]);
 
-  const favCuisine = useMemo(() => {
+  const topCuisines = useMemo(() => {
     const count = new Map<string, number>();
     for (const m of matches) if (m.restaurant.cuisine) count.set(m.restaurant.cuisine, (count.get(m.restaurant.cuisine) ?? 0) + 1);
-    return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+    return [...count.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, n]) => ({ name, count: n }));
   }, [matches]);
+  const orderedCount = matches.filter((m) => m.ordered).length;
+  const lovedCount = matches.filter((m) => m.rating === 1).length;
 
   const formatDate = (at: number) =>
     new Date(at).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -70,6 +72,11 @@ export default function AccountScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12}>
             <Glass radius={borderRadius.full} interactive tint={RESTING_TINT} style={styles.backBtn}>
               <Ionicons name="chevron-back" size={22} color={colors.text} />
+            </Glass>
+          </Pressable>
+          <Pressable onPress={() => router.push('/settings')} hitSlop={12} accessibilityLabel={t('profile.settings')}>
+            <Glass radius={borderRadius.full} interactive tint={RESTING_TINT} style={styles.backBtn}>
+              <Ionicons name="settings-outline" size={21} color={colors.text} />
             </Glass>
           </Pressable>
         </View>
@@ -94,24 +101,40 @@ export default function AccountScreen() {
             ) : null}
           </View>
 
-          {/* A few numbers */}
-          <View style={styles.stats}>
-            {[
-              { icon: 'restaurant' as const, value: String(matches.length), label: t('profile.matches') },
-              { icon: 'people' as const, value: String(friends.length), label: t('profile.friends') },
-              { icon: 'heart' as const, value: favCuisine, label: t('profile.favCuisine') },
-            ].map((s) => (
-              <Glass key={s.label} radius={borderRadius.lg} tint={RESTING_TINT} style={styles.stat}>
-                <Ionicons name={s.icon} size={18} color={colors.primary} />
-                <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
-                  {s.value}
-                </Text>
-                <Text style={styles.statLabel} numberOfLines={1}>
-                  {s.label}
-                </Text>
-              </Glass>
-            ))}
-          </View>
+          {/* Your food story: a few sentences instead of bare numbers */}
+          {matches.length > 0 ? (
+            <Glass radius={borderRadius.xl} tint={RESTING_TINT} style={styles.story}>
+              <Text style={styles.storyTitle}>{t('profile.storyTitle')}</Text>
+              {topCuisines.length > 0 ? (
+                <View style={styles.cuisines}>
+                  {topCuisines.map((c) => (
+                    <View key={c.name} style={styles.cuisineRow}>
+                      <Text style={styles.cuisineName} numberOfLines={1}>
+                        {c.name}
+                      </Text>
+                      <View style={styles.cuisineTrack}>
+                        <View style={[styles.cuisineFill, { width: `${Math.max(8, (c.count / topCuisines[0].count) * 100)}%` }]} />
+                      </View>
+                      <Text style={styles.cuisineCount}>{c.count}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              <View style={styles.facts}>
+                <Fact emoji="🍽️" value={String(matches.length)} label={t('profile.factMeals')} />
+                <Fact emoji="🛵" value={String(orderedCount)} label={t('profile.factOrdered')} />
+                <Fact emoji="😍" value={String(lovedCount)} label={t('profile.factLoved')} />
+              </View>
+              {friends[0] ? (
+                <View style={styles.buddy}>
+                  <Avatar name={friends[0].name} color={friends[0].avatar} size={36} />
+                  <Text style={styles.buddyText} numberOfLines={2}>
+                    {t('profile.buddy', { name: friends[0].name, count: friends[0].count })}
+                  </Text>
+                </View>
+              ) : null}
+            </Glass>
+          ) : null}
 
           {/* Your matches — order again */}
           <Text style={styles.section}>{t('profile.yourMatches')}</Text>
@@ -132,7 +155,14 @@ export default function AccountScreen() {
                   onPress={() => m.restaurant.externalUrl && openRestaurantLink(m.restaurant.externalUrl, m.restaurant.source)}
                   style={styles.matchCard}
                 >
-                  <Image source={{ uri: m.restaurant.image }} style={styles.matchPhoto} contentFit="cover" cachePolicy="memory-disk" />
+                  <View>
+                    <Image source={{ uri: m.restaurant.image }} style={styles.matchPhoto} contentFit="cover" cachePolicy="memory-disk" />
+                    {m.rating != null ? (
+                      <View style={styles.matchRating}>
+                        <Text style={styles.matchRatingText}>{m.rating === 1 ? '😍' : m.rating === 0 ? '🙂' : '😕'}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text style={styles.matchName} numberOfLines={1}>
                     {m.restaurant.name}
                   </Text>
@@ -163,49 +193,20 @@ export default function AccountScreen() {
             </>
           ) : null}
 
-          {/* Settings */}
-          <Text style={styles.section}>{t('profile.settings')}</Text>
-          <Glass radius={borderRadius.lg} tint={RESTING_TINT} style={styles.settings}>
-            <Pressable onPress={() => setLangOpen((v) => !v)} style={styles.settingRow}>
-              <Ionicons name="language" size={20} color={colors.primary} />
-              <Text style={styles.settingText}>{t('account.language')}</Text>
-              <Text style={styles.settingValue}>{LOCALE_META[locale as AppLocale]?.nativeName}</Text>
-              <Ionicons name={langOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
-            </Pressable>
-            {langOpen
-              ? SUPPORTED_LOCALES.map((code: AppLocale) => (
-                  <Pressable key={code} onPress={() => setLocale(code)} style={styles.langRow}>
-                    <Text style={[styles.langText, locale === code && styles.langTextOn]}>{LOCALE_META[code].nativeName}</Text>
-                    {locale === code ? <Ionicons name="checkmark" size={18} color={colors.primary} /> : null}
-                  </Pressable>
-                ))
-              : null}
-            <View style={styles.divider} />
-            {user?.email ? (
-              <>
-                <View style={styles.settingRow}>
-                  <Ionicons name="mail-outline" size={20} color={colors.primary} />
-                  <Text style={styles.settingText}>{t('account.email')}</Text>
-                  <Text style={styles.settingValue} numberOfLines={1}>
-                    {user.email}
-                  </Text>
-                </View>
-                <View style={styles.divider} />
-              </>
-            ) : null}
-            <Pressable
-              onPress={async () => {
-                await logout();
-                router.replace('/auth');
-              }}
-              style={styles.settingRow}
-            >
-              <Ionicons name="log-out-outline" size={20} color={colors.danger ?? '#E5484D'} />
-              <Text style={[styles.settingText, styles.signOut]}>{t('account.signOut')}</Text>
-            </Pressable>
-          </Glass>
         </ScrollView>
       </SafeAreaView>
+    </View>
+  );
+}
+
+function Fact({ emoji, value, label }: { emoji: string; value: string; label: string }) {
+  return (
+    <View style={styles.fact}>
+      <Text style={styles.factEmoji}>{emoji}</Text>
+      <Text style={styles.factValue}>{value}</Text>
+      <Text style={styles.factLabel} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -213,7 +214,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  topBar: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
+  topBar: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, flexDirection: 'row', justifyContent: 'space-between' },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
 
@@ -231,15 +232,45 @@ const styles = StyleSheet.create({
   providerText: { ...typography.captionMedium, color: colors.primaryDark },
   signInCta: { alignSelf: 'stretch', marginTop: spacing.sm },
 
-  stats: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xl },
-  stat: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: spacing.md, paddingHorizontal: 6 },
-  statValue: { ...typography.title2, color: colors.text, fontWeight: '800' },
-  statLabel: { ...typography.caption, color: colors.textSecondary },
+  story: { padding: spacing.lg, gap: spacing.md, marginTop: spacing.xl },
+  storyTitle: { ...typography.headline, color: colors.text },
+  cuisines: { gap: 10 },
+  cuisineRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  cuisineName: { ...typography.subheadline, color: colors.text, width: 96 },
+  cuisineTrack: { flex: 1, height: 10, borderRadius: 5, backgroundColor: 'rgba(120,120,128,0.16)', overflow: 'hidden' },
+  cuisineFill: { height: '100%', borderRadius: 5, backgroundColor: colors.primary },
+  cuisineCount: { ...typography.footnote, fontWeight: '700', color: colors.textSecondary, width: 20, textAlign: 'right' },
+  facts: { flexDirection: 'row' },
+  fact: { flex: 1, alignItems: 'center', gap: 2 },
+  factEmoji: { fontSize: 22 },
+  factValue: { fontFamily: fontFamilies.rounded, fontSize: 24, lineHeight: 28, fontWeight: '900', color: colors.text },
+  factLabel: { ...typography.caption, color: colors.textSecondary },
+  buddy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  buddyText: { ...typography.subheadline, color: colors.text, flex: 1 },
 
   section: { ...typography.title3, color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm },
   rail: { gap: spacing.sm, paddingRight: spacing.lg },
   matchCard: { width: 156 },
   matchPhoto: { width: 156, height: 112, borderRadius: borderRadius.lg },
+  matchRating: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  matchRatingText: { fontSize: 16 },
   matchName: { ...typography.headline, color: colors.text, marginTop: 8 },
   matchMeta: { ...typography.footnote, color: colors.textSecondary },
   orderAgain: { ...typography.footnote, color: colors.primaryDark, fontWeight: '700', marginTop: 2 },
@@ -253,13 +284,4 @@ const styles = StyleSheet.create({
   friendName: { ...typography.subheadline, color: colors.text, fontWeight: '600', maxWidth: 76 },
   friendMeta: { ...typography.caption, color: colors.textSecondary },
 
-  settings: { paddingVertical: 4 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: 14 },
-  settingText: { ...typography.body, color: colors.text, flex: 1 },
-  settingValue: { ...typography.body, color: colors.textSecondary, maxWidth: 180 },
-  langRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md + 28, paddingVertical: 10 },
-  langText: { ...typography.body, color: colors.textSecondary },
-  langTextOn: { color: colors.text, fontWeight: '600' },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: spacing.md + 28 },
-  signOut: { color: '#E5484D' },
 });

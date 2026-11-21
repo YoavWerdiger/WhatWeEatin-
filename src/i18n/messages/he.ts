@@ -88,6 +88,12 @@ export const he: Messages = {
   'enjoy.rateHint': "אפשר לדרג עכשיו או אחר כך — זה יופיע בפרופיל.",
   'enjoy.home': "חזרה הביתה",
   'enjoy.reopen': "פתיחת ההזמנה שוב",
+  'settings.account': "חשבון",
+  'profile.storyTitle': "הסיפור הקולינרי שלך",
+  'profile.factMeals': "התאמות",
+  'profile.factOrdered': "הוזמנו",
+  'profile.factLoved': "אהבת",
+  'profile.buddy': "הכי הרבה ארוחות עם {{name}} · {{count}} ביחד",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

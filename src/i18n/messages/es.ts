@@ -91,6 +91,12 @@ export const es: Messages = {
   'enjoy.rateHint': "Puedes valorarlo ahora o después: aparece en tu perfil.",
   'enjoy.home': "Volver al inicio",
   'enjoy.reopen': "Abrir el pedido otra vez",
+  'settings.account': "Cuenta",
+  'profile.storyTitle': "Tu historia gastronómica",
+  'profile.factMeals': "Matches",
+  'profile.factOrdered': "Pedidos",
+  'profile.factLoved': "Favoritos",
+  'profile.buddy': "Más comidas con {{name}} · {{count}} juntos",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

@@ -88,6 +88,12 @@ export const ar: Messages = {
   'enjoy.rateHint': "قيّم الآن أو لاحقًا — سيظهر في ملفك.",
   'enjoy.home': "العودة للرئيسية",
   'enjoy.reopen': "فتح الطلب مجددًا",
+  'settings.account': "الحساب",
+  'profile.storyTitle': "قصتك مع الطعام",
+  'profile.factMeals': "تطابقات",
+  'profile.factOrdered': "طلبات",
+  'profile.factLoved': "أحببتها",
+  'profile.buddy': "أكثر الوجبات مع {{name}} · {{count}} معًا",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',

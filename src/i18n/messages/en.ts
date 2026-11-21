@@ -87,6 +87,12 @@ export const en = {
   'enjoy.rateHint': "You can rate now or later — it shows on your profile.",
   'enjoy.home': "Back home",
   'enjoy.reopen': "Open the order again",
+  'settings.account': "Account",
+  'profile.storyTitle': "Your food story",
+  'profile.factMeals': "Matches",
+  'profile.factOrdered': "Ordered",
+  'profile.factLoved': "Loved",
+  'profile.buddy': "Most meals with {{name}} · {{count}} together",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",
