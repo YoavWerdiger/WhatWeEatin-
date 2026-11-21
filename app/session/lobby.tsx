@@ -173,7 +173,6 @@ export default function LobbyScreen() {
       <HomeMosaic photos={dishPhotos} heightRatio={0.5} />
 
       <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: spacing.lg }]}
         showsVerticalScrollIndicator={false}
@@ -181,9 +180,12 @@ export default function LobbyScreen() {
         <View style={styles.codeBlock}>
           {/* Tap the code to copy it */}
           <Pressable onPress={copyCode} accessibilityRole="button" accessibilityHint={t('lobby.copied')} style={styles.codePress}>
-            <Text style={[styles.codeLabel, copied && styles.codeLabelCopied]}>
-              {copied ? `${t('lobby.copied')} ✓` : t('lobby.title')}
-            </Text>
+            {/* The same glass tag as join / create, so it reads over the grid */}
+            <Glass radius={borderRadius.full} tint="rgba(255, 255, 255, 0.75)" style={styles.kickerPill}>
+              <Text style={[styles.codeLabel, copied && styles.codeLabelCopied]}>
+                {copied ? `${t('lobby.copied')} ✓` : t('lobby.title')}
+              </Text>
+            </Glass>
             <Text style={styles.codeValue} accessibilityLabel={session.code.split('').join(' ')}>
               {session.code}
             </Text>
@@ -263,22 +265,21 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
-  tableArea: { flex: 1, justifyContent: 'center' },
-  codePress: { alignItems: 'center', gap: 4 },
+  // Players follow the code at a fixed gap (no floating in leftover space)
+  tableArea: {},
+  codePress: { alignItems: 'center', gap: spacing.sm },
+  kickerPill: { paddingHorizontal: 12, paddingVertical: 5 },
   codeLabelCopied: { color: colors.accentDark },
 
   codeBlock: {
     alignItems: 'center',
     gap: spacing.sm,
-    // The code sits where the mosaic has faded, a third of the way down
-    paddingTop: SCREEN_H * 0.2,
+    // The code sits where the mosaic has faded — same height as the title on join / create
+    paddingTop: SCREEN_H * 0.27,
   },
-  codeLabel: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-  },
+  codeLabel: { ...typography.footnote, fontWeight: '700', color: colors.primaryDark },
   // Same voice as the home title: rounded, black, big
   codeValue: {
     fontFamily: fontFamilies.rounded,
@@ -294,7 +295,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
-    marginTop: spacing.xs,
   },
   metaChip: {
     flexDirection: 'row',
