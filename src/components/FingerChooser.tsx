@@ -21,7 +21,11 @@ import { typography } from '../theme/typography';
 const { width: W, height: H } = Dimensions.get('window');
 const RING = 116;
 /** Fingers must stay put this long before a finger is chosen */
-const HOLD_MS = 2600;
+const HOLD_MS = 2000;
+/** The zigzag between fingers before the pick */
+const HOP_LOOPS = 3;
+const HOP_FAST_MS = 70;
+const HOP_SLOW_MS = 460;
 const RING_COLORS = ['#FF6B35', '#22A35A', '#3B82F6', '#A855F7', '#EAB308', '#EC4899', '#14B8A6', '#F97316'];
 
 type Touch = { id: number; x: number; y: number; pick: number };
@@ -40,12 +44,15 @@ function FingerRing({
   color,
   dimmed,
   hidden,
+  lit,
 }: {
   touch: Touch;
   restaurant: Restaurant;
   color: string;
   dimmed: boolean;
   hidden?: boolean;
+  /** The zigzag is on this finger right now */
+  lit?: boolean;
 }) {
   const pulse = useSharedValue(1);
   useEffect(() => {
@@ -60,7 +67,15 @@ function FingerRing({
       entering={ZoomIn.duration(180)}
       exiting={FadeOut.duration(220)}
       pointerEvents="none"
-      style={[styles.ringWrap, { left: touch.x - RING / 2, top: touch.y - RING / 2, opacity: hidden ? 0 : dimmed ? 0.15 : 1 }]}
+      style={[
+        styles.ringWrap,
+        {
+          left: touch.x - RING / 2,
+          top: touch.y - RING / 2,
+          opacity: hidden ? 0 : dimmed ? 0.35 : 1,
+          transform: [{ scale: lit ? 1.25 : 1 }],
+        },
+      ]}
     >
       <Animated.View style={[styles.ring, { borderColor: color }, style]}>
         <Image source={{ uri: restaurant.image }} style={styles.ringPhoto} contentFit="cover" transition={0} />
@@ -89,18 +104,43 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
   const chosenRef = useRef(false);
 
   const reveal = useSharedValue(0);
+  // The zigzag: a highlight hops finger to finger (with a tick each hop), slowing into the winner
+  const [hopId, setHopId] = useState<number | null>(null);
+  const hopTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => hopTimers.current.forEach(clearTimeout), []);
 
   const choose = useCallback(() => {
     const live = touchesRef.current;
     if (chosenRef.current || live.length === 0) return;
     chosenRef.current = true;
-    const winner = live[Math.floor(Math.random() * live.length)];
-    setChosen(winner);
     setHolding(false);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    reveal.value = withTiming(1, { duration: 700, easing: Easing.bezier(0.22, 1, 0.36, 1) });
-    // A beat on the full colour with the winning ring, then the match screen
-    setTimeout(() => onChosen(picks[winner.pick % picks.length].id), 1700);
+    // Order by position (left→right) so the hop zigzags across the hands
+    const order = [...live].sort((a, b) => a.x - b.x || a.y - b.y);
+    const winnerIdx = Math.floor(Math.random() * order.length);
+    const winner = order[winnerIdx];
+    const total = (order.length > 1 ? HOP_LOOPS * order.length : 1) + winnerIdx + 1;
+    let at = 0;
+    for (let i = 0; i < total; i++) {
+      const p = i / Math.max(1, total - 1);
+      at += HOP_FAST_MS + (HOP_SLOW_MS - HOP_FAST_MS) * p * p * p; // fast, then slowing
+      const t = order[i % order.length];
+      const last = i === total - 1;
+      hopTimers.current.push(
+        setTimeout(() => {
+          setHopId(t.id);
+          if (!last) {
+            void Haptics.selectionAsync();
+            return;
+          }
+          setChosen(winner);
+          setHopId(null);
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          reveal.value = withTiming(1, { duration: 700, easing: Easing.bezier(0.22, 1, 0.36, 1) });
+          // A beat on the full colour with the winning ring, then the match screen
+          hopTimers.current.push(setTimeout(() => onChosen(picks[winner.pick % picks.length].id), 1700));
+        }, at),
+      );
+    }
   }, [onChosen, picks, reveal]);
 
   // Any change in fingers restarts the hold; ≥2 fingers (or 1 if only one pick) arm it
@@ -200,8 +240,9 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
               touch={t}
               restaurant={r}
               color={RING_COLORS[(t.pick % picks.length) % RING_COLORS.length]}
-              dimmed={!!chosen && chosen.id !== t.id}
+              dimmed={(!!chosen && chosen.id !== t.id) || (hopId != null && hopId !== t.id)}
               hidden={!!chosen && chosen.id !== t.id}
+              lit={hopId === t.id}
             />
           );
         })}

@@ -107,6 +107,13 @@ export function MatchAnimation({
   const voteActive = showUnanimous && keepBrowsingApprovedBy.length > 0;
   // The in-game card, scaled to whatever room is left between the title and the buttons
   const [stageH, setStageH] = useState(0);
+  // Mount the card once the overlay has faded in: glass created under an opacity-0 ancestor
+  // can come out without its effect
+  const [cardReady, setCardReady] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setCardReady(true), 260);
+    return () => clearTimeout(id);
+  }, []);
   const cardScale = stageH > 0 ? Math.min(1, stageH / CARD_HEIGHT) : 1;
 
   return (
@@ -189,7 +196,7 @@ export function MatchAnimation({
             </View>
           ) : (
             <View style={[styles.heroWrap, { width: CARD_WIDTH * cardScale, height: CARD_HEIGHT * cardScale }]}>
-              <SwipeCard restaurant={r} width={CARD_WIDTH * cardScale} />
+              {cardReady ? <SwipeCard restaurant={r} width={CARD_WIDTH * cardScale} /> : null}
             </View>
           )}
         </View>
