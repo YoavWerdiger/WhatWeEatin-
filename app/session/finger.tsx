@@ -8,6 +8,12 @@ import * as Haptics from 'expo-haptics';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { FingerChooser } from '../../src/components/FingerChooser';
 import { Avatar } from '../../src/components/ui/Avatar';
+import { Glass } from '../../src/components/ui/Glass';
+
+// Glass tints, as on the create flow: resting white, chosen orange
+const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
+const ORANGE_SOFT = 'rgba(255, 107, 53, 0.22)';
+const ORANGE_ON = 'rgba(255, 107, 53, 0.9)';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { getFirebaseUid, isFirebaseConfigured } from '../../src/services/firebase';
@@ -163,16 +169,16 @@ export default function FingerScreen() {
             <Pressable onPress={handleLeave} hitSlop={12}>
               <Text style={styles.leaveText}>{t('common.leave')}</Text>
             </Pressable>
-            <View style={styles.codePill}>
+            <Glass radius={borderRadius.full} tint={ORANGE_SOFT} style={styles.codePill}>
               <Text style={styles.codeValue}>{session.code}</Text>
-            </View>
+            </Glass>
           </View>
 
           {showPicker ? (
             <>
               <Text style={styles.title}>{t('finger.pickTitle')}</Text>
               <Text style={styles.subtitle}>{t('finger.pickSub')}</Text>
-              <View style={styles.search}>
+              <Glass radius={borderRadius.full} tint={RESTING_TINT} style={styles.search}>
                 <Ionicons name="search" size={18} color={colors.textMuted} />
                 <TextInput
                   value={query}
@@ -184,7 +190,7 @@ export default function FingerScreen() {
                   returnKeyType="search"
                   clearButtonMode="while-editing"
                 />
-              </View>
+              </Glass>
               {cuisines.length > 1 ? (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsBar}>
                   {cuisines.map((c) => {
@@ -196,9 +202,10 @@ export default function FingerScreen() {
                           void Haptics.selectionAsync();
                           setCuisine(on ? null : c);
                         }}
-                        style={[styles.chip, on && styles.chipOn]}
                       >
-                        <Text style={[styles.chipText, on && styles.chipTextOn]}>{c}</Text>
+                        <Glass radius={borderRadius.full} interactive tint={on ? ORANGE_ON : RESTING_TINT} style={styles.chip}>
+                          <Text style={[styles.chipText, on && styles.chipTextOn]}>{c}</Text>
+                        </Glass>
                       </Pressable>
                     );
                   })}
@@ -216,7 +223,13 @@ export default function FingerScreen() {
                 renderItem={({ item }) => {
                   const selected = item.id === myPickId;
                   return (
-                    <Pressable onPress={() => handlePick(item)} style={[styles.row, selected && styles.rowSelected]}>
+                    <Pressable onPress={() => handlePick(item)}>
+                      <Glass
+                        radius={borderRadius.lg}
+                        interactive
+                        tint={selected ? ORANGE_SOFT : RESTING_TINT}
+                        style={styles.row}
+                      >
                       <Image source={{ uri: item.image }} style={styles.rowPhoto} contentFit="cover" cachePolicy="memory-disk" />
                       <View style={styles.rowText}>
                         <Text style={styles.tileName} numberOfLines={1}>
@@ -231,6 +244,7 @@ export default function FingerScreen() {
                       ) : (
                         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                       )}
+                      </Glass>
                     </Pressable>
                   );
                 }}
@@ -252,7 +266,7 @@ export default function FingerScreen() {
                   const pick = restaurants.find((r) => r.id === picksMap[u.id]);
                   const isMe = u.id === participantId;
                   return (
-                    <View key={u.id} style={[styles.playerCard, !pick && styles.playerCardPending]}>
+                    <Glass key={u.id} radius={borderRadius.lg} tint={RESTING_TINT} style={[styles.playerCard, !pick && styles.playerCardPending]}>
                       {pick ? (
                         <Image source={{ uri: pick.image }} style={styles.playerPhoto} contentFit="cover" cachePolicy="memory-disk" />
                       ) : (
@@ -273,7 +287,7 @@ export default function FingerScreen() {
                         </Text>
                       </View>
                       {pick ? <Ionicons name="checkmark-circle" size={24} color={colors.accentDark} /> : null}
-                    </View>
+                    </Glass>
                   );
                 })}
               </ScrollView>
@@ -314,7 +328,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: spacing.lg },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
   leaveText: { ...typography.body, color: colors.primaryDark, fontWeight: '600' },
-  codePill: { backgroundColor: colors.primaryMuted, paddingHorizontal: 12, paddingVertical: 6, borderRadius: borderRadius.full },
+  codePill: { paddingHorizontal: 12, paddingVertical: 6 },
   codeValue: { ...typography.subheadline, fontWeight: '700', color: colors.primaryDark, letterSpacing: 2 },
   title: { ...typography.largeTitle, color: colors.text, marginTop: spacing.md },
   subtitle: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.md },
@@ -322,8 +336,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     height: 46,
   },
@@ -332,22 +344,16 @@ const styles = StyleSheet.create({
   chipsBar: { flexGrow: 0, flexShrink: 0, height: 48, marginTop: spacing.sm },
   chipsBarContent: { alignItems: 'center' },
   chips: { gap: 8, paddingVertical: 4, alignItems: 'center' },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: borderRadius.full, backgroundColor: colors.card },
-  chipOn: { backgroundColor: colors.primary },
+  chip: { paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { ...typography.subheadline, color: colors.text, fontWeight: '600' },
-  chipTextOn: { color: colors.onPrimary },
+  chipTextOn: { color: '#FFFFFF' },
   list: { paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: 6 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     padding: 8,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
-  rowSelected: { borderColor: colors.primary },
   rowPhoto: { width: 56, height: 56, borderRadius: 12 },
   rowText: { flex: 1, gap: 2 },
   empty: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
@@ -370,8 +376,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     padding: 10,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.card,
   },
   playerCardPending: { opacity: 0.75 },
   playerPhoto: { width: 60, height: 60, borderRadius: 14 },

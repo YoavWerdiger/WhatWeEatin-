@@ -7,6 +7,7 @@ import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
 import { Avatar } from './ui/Avatar';
+import { Glass } from './ui/Glass';
 
 interface Props {
   users: SessionUser[];
@@ -25,12 +26,8 @@ export function LobbyPlayers({ users, readyIds, hostId, hostLabel, onInvite, inv
       {users.map((u) => {
         const ready = readyIds?.has(u.id);
         return (
-          <Animated.View
-            key={u.id}
-            entering={FadeInDown.duration(260)}
-            layout={LinearTransition.duration(220)}
-            style={[styles.card, ready && styles.cardReady]}
-          >
+          <Animated.View key={u.id} entering={FadeInDown.duration(260)} layout={LinearTransition.duration(220)} style={styles.cardWrap}>
+          <Glass radius={borderRadius.lg} tint={ready ? 'rgba(34, 163, 90, 0.18)' : 'rgba(255, 255, 255, 0.6)'} style={[styles.card, styles.cardFill]}>
             <View>
               <Avatar name={u.name} color={u.avatar} size={52} />
               {readyIds ? (
@@ -43,6 +40,7 @@ export function LobbyPlayers({ users, readyIds, hostId, hostLabel, onInvite, inv
               {u.name}
             </Text>
             {u.id === hostId ? <Text style={styles.host}>{hostLabel}</Text> : null}
+          </Glass>
           </Animated.View>
         );
       })}
@@ -79,12 +77,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: spacing.md,
     paddingHorizontal: 6,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
-  cardReady: { borderColor: colors.accentDark },
   badge: {
     position: 'absolute',
     right: -4,
@@ -101,7 +94,7 @@ const styles = StyleSheet.create({
   badgeWaiting: { backgroundColor: colors.textMuted },
   name: { ...typography.subheadline, fontWeight: '600', color: colors.text, maxWidth: '100%' },
   host: { ...typography.caption, color: colors.primaryDark, fontWeight: '600' },
-  invite: { borderStyle: 'dashed', borderColor: colors.primary, backgroundColor: 'transparent' },
+  invite: { borderStyle: 'dashed', borderWidth: 2, borderRadius: borderRadius.lg, borderColor: colors.primary, backgroundColor: 'transparent' },
   inviteIcon: {
     width: 52,
     height: 52,
