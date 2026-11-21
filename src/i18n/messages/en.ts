@@ -70,6 +70,8 @@ export const en = {
   'lobby.confirmBody': "{{ready}} of {{total}} tapped Ready. Start without waiting?",
   'lobby.confirmStart': "Start",
   'lobby.confirmWait': "Wait",
+  'tableReady.copy': "Copy",
+  'tableReady.copied': "Copied",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

@@ -45,6 +45,7 @@ import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
+import { TableReady } from '../../src/components/TableReady';
 import { HomeMosaic } from '../../src/components/HomeMosaic';
 
 const HERO_GAP = Dimensions.get('window').height * 0.12;
@@ -296,40 +297,14 @@ export default function CreateSessionScreen() {
 
             {step === 'ready' && sessionCode && (
               <Question title={t('create.readyTitle')} sub={t('create.readySub')}>
-                <View style={[styles.card, styles.ticket]}>
-                  <Text style={styles.ticketLabel}>{t('create.sessionCode')}</Text>
-                  <Text
-                    style={styles.ticketCode}
-                    selectable
-                    accessibilityLabel={sessionCode.split('').join(' ')}
-                  >
-                    {sessionCode}
-                  </Text>
-                  <Pressable
-                    onPress={handleShare}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
-                  >
-                    <Ionicons name="share-outline" size={18} color={colors.primary} />
-                    <Text style={styles.shareText}>{t('create.shareCode')}</Text>
-                  </Pressable>
-                  <View style={styles.separatorFull} />
-                  {isLoadingRestaurants ? (
-                    <View style={styles.statusRow}>
-                      <ActivityIndicator size="small" color={colors.primary} />
-                      <Text style={styles.statusText}>{t('create.findingRestaurants')}</Text>
-                    </View>
-                  ) : (
-                    <Animated.View entering={FadeIn.duration(200)} style={styles.statusRow}>
-                      <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
-                      <Text style={styles.statusText}>
-                        {t('create.restaurantsFound', { count: restaurantCount })}
-                        {userLocation?.city ? ` · ${userLocation.city}` : ''}
-                      </Text>
-                    </Animated.View>
-                  )}
-                  {loadError && <Text style={styles.errorText}>{loadError}</Text>}
-                </View>
+                <TableReady
+                  code={sessionCode}
+                  restaurants={session?.restaurants ?? []}
+                  loading={isLoadingRestaurants}
+                  city={userLocation?.city}
+                  error={loadError}
+                  onShare={handleShare}
+                />
               </Question>
             )}
           </Animated.View>

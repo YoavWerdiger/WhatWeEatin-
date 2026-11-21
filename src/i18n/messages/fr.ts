@@ -74,6 +74,8 @@ export const fr: Messages = {
   'lobby.confirmBody': "{{ready}} sur {{total}} ont touché Prêt. Lancer sans attendre ?",
   'lobby.confirmStart': "Lancer",
   'lobby.confirmWait': "Attendre",
+  'tableReady.copy': "Copier",
+  'tableReady.copied': "Copié",
   'account.title': 'Compte',
   'account.subtitle':
     'Vous êtes connecté avec Firebase Auth. Les sessions utilisent votre ID utilisateur pour l’hôte et la synchro temps réel quand c’est configuré.',

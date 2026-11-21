@@ -74,6 +74,8 @@ export const es: Messages = {
   'lobby.confirmBody': "{{ready}} de {{total}} tocaron Listo. ¿Empezar sin esperar?",
   'lobby.confirmStart': "Empezar",
   'lobby.confirmWait': "Esperar",
+  'tableReady.copy': "Copiar",
+  'tableReady.copied': "Copiado",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

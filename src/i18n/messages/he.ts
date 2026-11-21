@@ -71,6 +71,8 @@ export const he: Messages = {
   'lobby.confirmBody': "{{ready}} מתוך {{total}} לחצו ״מוכן״. להתחיל בלי לחכות?",
   'lobby.confirmStart': "להתחיל",
   'lobby.confirmWait': "לחכות",
+  'tableReady.copy': "העתקה",
+  'tableReady.copied': "הועתק",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',
