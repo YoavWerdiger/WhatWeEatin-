@@ -189,6 +189,7 @@ export const he: Messages = {
 
   'lobby.title': 'לובי הסשן',
   'lobby.copied': 'הועתק',
+  'lobby.hostLabel': "מארח",
   'lobby.invite': 'הזמנת חבר',
   'lobby.codeLabel': 'קוד',
   'lobby.players': 'שחקנים',

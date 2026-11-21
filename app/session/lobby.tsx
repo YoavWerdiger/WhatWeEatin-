@@ -20,7 +20,7 @@ import { colors } from '../../src/theme/colors';
 import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
-import { LobbyTable } from '../../src/components/LobbyTable';
+import { LobbyPlayers } from '../../src/components/LobbyPlayers';
 import { HomeMosaic } from '../../src/components/HomeMosaic';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -186,14 +186,15 @@ export default function LobbyScreen() {
           </View>
         </View>
 
-        {/* Players take their seats as they join; an empty seat invites a friend */}
+        {/* Who's in (and ready), plus a card to invite one more */}
         <View style={styles.tableArea}>
-          <LobbyTable
+          <LobbyPlayers
             users={session.users}
             readyIds={session.requireLobbyReady ? readySet : undefined}
+            hostId={session.hostId}
+            hostLabel={t('lobby.hostLabel')}
             onInvite={handleShare}
             inviteLabel={t('lobby.invite')}
-            photos={dishPhotos}
           />
         </View>
 

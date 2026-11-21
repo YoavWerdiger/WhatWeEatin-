@@ -195,6 +195,7 @@ export const fr: Messages = {
 
   'lobby.title': 'Lobby de session',
   'lobby.copied': 'Copié',
+  'lobby.hostLabel': "Hôte",
   'lobby.invite': 'Inviter un ami',
   'lobby.codeLabel': 'CODE',
   'lobby.players': 'Joueurs',

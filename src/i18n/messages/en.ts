@@ -188,6 +188,7 @@ export const en = {
 
   'lobby.title': 'Session Lobby',
   'lobby.copied': 'Copied',
+  'lobby.hostLabel': "Host",
   'lobby.invite': 'Invite a friend',
   'lobby.codeLabel': 'CODE',
   'lobby.players': 'Players',

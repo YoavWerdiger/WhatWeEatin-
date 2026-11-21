@@ -328,8 +328,10 @@ const styles = StyleSheet.create({
     height: 46,
   },
   searchInput: { flex: 1, ...typography.body, color: colors.text, paddingVertical: 0 },
-  chipsBar: { flexGrow: 0, marginTop: spacing.sm },
-  chips: { gap: 8, paddingVertical: 4 },
+  // flexShrink 0: the list below squeezed the bar and clipped the chips
+  chipsBar: { flexGrow: 0, flexShrink: 0, height: 48, marginTop: spacing.sm },
+  chipsBarContent: { alignItems: 'center' },
+  chips: { gap: 8, paddingVertical: 4, alignItems: 'center' },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: borderRadius.full, backgroundColor: colors.card },
   chipOn: { backgroundColor: colors.primary },
   chipText: { ...typography.subheadline, color: colors.text, fontWeight: '600' },

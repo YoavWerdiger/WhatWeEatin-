@@ -190,6 +190,7 @@ export const ar: Messages = {
 
   'lobby.title': 'ردهة الجلسة',
   'lobby.copied': 'تم النسخ',
+  'lobby.hostLabel': "المضيف",
   'lobby.invite': 'ادعُ صديقًا',
   'lobby.codeLabel': 'الرمز',
   'lobby.players': 'اللاعبون',
