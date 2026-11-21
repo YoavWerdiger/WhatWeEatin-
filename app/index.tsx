@@ -18,7 +18,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { useSessionStore } from '../src/store/sessionStore';
 import { useTranslation } from '../src/i18n/t';
 import { AdBanner } from '../src/components/ads/AdBanner';
-import { HomeHero } from '../src/components/HomeHero';
+import { HomeMosaic } from '../src/components/HomeMosaic';
 
 const { width } = Dimensions.get('window');
 
@@ -55,8 +55,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* The game, shown: a dealt hand of restaurants, the top one getting liked */}
-      <HomeHero />
+      {/* Backdrop: a tilted grid of food photos drifting under an orange wash */}
+      <HomeMosaic />
 
       <Animated.View
         style={[
@@ -104,22 +104,23 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     gap: spacing.lg,
     paddingBottom: spacing.xxl,
   },
+  // White over the orange wash
   title: {
     ...typography.display,
-    color: colors.text,
+    color: '#FFFFFF',
   },
   subtitle: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.9)',
     lineHeight: 24,
   },
   actions: {
