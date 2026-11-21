@@ -78,6 +78,7 @@ export const he: Messages = {
   'join.kicker': "מצטרפים לשולחן",
   'join.heroTitle': "יש לך קוד?",
   'join.joiningAs': "מצטרף/ת בתור",
+  'create.stepOf': "שלב {{n}} מתוך {{total}}",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

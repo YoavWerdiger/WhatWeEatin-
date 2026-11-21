@@ -77,6 +77,7 @@ export const en = {
   'join.kicker': "Joining a table",
   'join.heroTitle': "Got a code?",
   'join.joiningAs': "Joining as",
+  'create.stepOf': "Step {{n}} of {{total}}",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

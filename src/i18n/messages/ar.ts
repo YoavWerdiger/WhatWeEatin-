@@ -78,6 +78,7 @@ export const ar: Messages = {
   'join.kicker': "الانضمام إلى طاولة",
   'join.heroTitle': "هل لديك رمز؟",
   'join.joiningAs': "تنضم باسم",
+  'create.stepOf': "الخطوة {{n}} من {{total}}",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',

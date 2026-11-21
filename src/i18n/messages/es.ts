@@ -81,6 +81,7 @@ export const es: Messages = {
   'join.kicker': "Unirse a una mesa",
   'join.heroTitle': "¿Tienes un código?",
   'join.joiningAs': "Te unes como",
+  'create.stepOf': "Paso {{n}} de {{total}}",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

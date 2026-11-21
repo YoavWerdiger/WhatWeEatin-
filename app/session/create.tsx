@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Alert,
+  Keyboard,
+  Dimensions,
   Text,
   TextInput,
   StyleSheet,
@@ -22,9 +24,7 @@ import Animated, {
   FadeIn,
   FadeInDown,
   Keyframe,
-  useAnimatedStyle,
   useReducedMotion,
-  withTiming,
   withDelay,
   withSpring,
   ZoomIn,
@@ -45,6 +45,11 @@ import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
+
+const SCREEN_H = Dimensions.get('window').height;
+/** Which question we're on — for the 'Step n of m' pill in each Question */
+const StepContext = React.createContext({ current: 0, total: 1 });
 
 import { useTranslation } from '../../src/i18n/t';
 
@@ -106,6 +111,15 @@ export default function CreateSessionScreen() {
   const signedInName =
     authUser && authUser.provider !== 'anonymous' ? authUser.displayName?.trim() || '' : '';
   const [creating, setCreating] = useState(false);
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const [filters, setFilters] = useState<SessionFilters>({
     cuisines: [],
     kosherOnly: false,
@@ -204,9 +218,12 @@ export default function CreateSessionScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Same hero as join and the lobby: the grid at the top, the question where it fades */}
+      <HomeMosaic heightRatio={0.4} />
       <Stack.Screen
         options={{
-          headerTitle: () => <Progress current={stepIndex} total={questionCount} />,
+          // The 'Step n of m' pill on each question replaces the header bar (it vanished on the grid)
+          headerTitle: () => null,
         }}
       />
       <Stack.Toolbar placement="left">
@@ -219,11 +236,11 @@ export default function CreateSessionScreen() {
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <StepContext.Provider value={{ current: stepIndex, total: questionCount }}>
           <Animated.View key={step} entering={reduceMotion ? FadeIn.duration(150) : stepEnter(direction)}>
             {step === 'name' && (
               <Question title={t('create.qName')} sub={t('create.qNameSub')}>
@@ -286,9 +303,11 @@ export default function CreateSessionScreen() {
               </Question>
             )}
           </Animated.View>
+          </StepContext.Provider>
         </ScrollView>
 
-        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        {/* Sits right on the keyboard when it's up; above the home indicator otherwise */}
+        <View style={[styles.bottomBar, { paddingBottom: keyboardUp ? spacing.sm : Math.max(insets.bottom, spacing.md) }]}>
           <View style={styles.actionsRow}>
             {optional && (
               <View style={styles.flex}>
@@ -312,23 +331,6 @@ export default function CreateSessionScreen() {
       </KeyboardAvoidingView>
     </View>
   );
-}
-
-function Progress({ current, total }: { current: number; total: number }) {
-  return (
-    <View style={styles.progress} accessibilityRole="progressbar" accessibilityValue={{ now: current + 1, max: total }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <ProgressSegment key={i} filled={i <= current} />
-      ))}
-    </View>
-  );
-}
-
-function ProgressSegment({ filled }: { filled: boolean }) {
-  const style = useAnimatedStyle(() => ({
-    opacity: withTiming(filled ? 1 : 0.18, { duration: 200, easing: EASE_OUT }),
-  }));
-  return <Animated.View style={[styles.segment, style]} />;
 }
 
 /** The name field answers back with a hello once there is a name. */
@@ -420,9 +422,15 @@ function KosherPill({ on, label, sub, onToggle }: { on: boolean; label: string; 
 }
 
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+  const { t } = useTranslation();
+  const { current, total } = React.useContext(StepContext);
   return (
     <View style={styles.question}>
       <View style={styles.questionHead}>
+        {/* A glass pill so the small label stays readable over the grid */}
+        <Glass radius={borderRadius.full} tint="rgba(255, 255, 255, 0.75)" style={styles.kickerPill}>
+          <Text style={styles.kicker}>{t('create.stepOf', { n: current + 1, total })}</Text>
+        </Glass>
         <Text style={styles.questionTitle} accessibilityRole="header">
           {title}
         </Text>
@@ -479,17 +487,26 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   flexWide: { flex: 2 },
   container: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  // The question starts where the grid has faded
+  content: { paddingHorizontal: spacing.md, paddingTop: SCREEN_H * 0.23 },
 
-  progress: { flexDirection: 'row', gap: 4, width: 160 },
-  segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.primary },
 
   question: { gap: spacing.lg },
-  questionHead: { gap: spacing.sm, paddingHorizontal: spacing.xs },
-  questionTitle: { ...typography.largeTitle, color: colors.text },
-  questionSub: { ...typography.body, color: colors.textSecondary },
+  questionHead: { gap: spacing.sm, paddingHorizontal: spacing.xs, alignItems: 'center' },
+  kickerPill: { paddingHorizontal: 12, paddingVertical: 5 },
+  kicker: { ...typography.footnote, fontWeight: '700', color: colors.primaryDark },
+  questionTitle: {
+    fontFamily: fontFamilies.rounded,
+    fontSize: 36,
+    lineHeight: 40,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  questionSub: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
 
-  greetText: { ...typography.headline, color: colors.text },
+  greetText: { ...typography.headline, color: colors.text, textAlign: 'center' },
   bigInput: {
     ...typography.body,
     color: colors.text,
