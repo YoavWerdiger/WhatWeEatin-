@@ -291,12 +291,6 @@ export default function CreateSessionScreen() {
             {step === 'mood' && (
               <Question title={t('create.qMood')} sub={t('create.qMoodSub')}>
                 <MoodPicker filters={filters} onChange={setFilters} />
-                <KosherPill
-                  on={filters.kosherOnly}
-                  label={t('filters.kosher')}
-                  sub={t('filters.kosherSub')}
-                  onToggle={() => setFilters({ ...filters, kosherOnly: !filters.kosherOnly })}
-                />
               </Question>
             )}
           </Animated.View>
@@ -389,35 +383,6 @@ function DemoTile({
 }
 
 /** A small glass toggle; kosher is a yes/no on top of the mood. */
-/** Kosher-only as a full-width glass row: icon, what it means, and a switch on the end. */
-function KosherPill({ on, label, sub, onToggle }: { on: boolean; label: string; sub: string; onToggle: () => void }) {
-  return (
-    <Pressable
-      onPress={() => {
-        void Haptics.impactAsync(on ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
-        onToggle();
-      }}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: on }}
-      style={styles.kosherWrap}
-    >
-      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.18)' : RESTING_TINT} style={styles.kosherRow}>
-        <View style={[styles.kosherIcon, on && styles.kosherIconOn]}>
-          <Ionicons name={on ? 'shield-checkmark' : 'shield-outline'} size={20} color={on ? '#FFFFFF' : colors.primary} />
-        </View>
-        <View style={styles.kosherTextCol}>
-          <Text style={styles.kosherText}>{label}</Text>
-          <Text style={styles.kosherSub}>{sub}</Text>
-        </View>
-        {/* Switch-like indicator */}
-        <View style={[styles.kosherSwitch, on && styles.kosherSwitchOn]}>
-          <View style={[styles.kosherKnob, on && styles.kosherKnobOn]} />
-        </View>
-      </Glass>
-    </Pressable>
-  );
-}
-
 function Question({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   const { t } = useTranslation();
   const { current, total } = React.useContext(StepContext);
@@ -525,31 +490,6 @@ const styles = StyleSheet.create({
   },
 
   cards: { gap: 12 },
-  kosherWrap: { alignSelf: 'stretch', marginTop: spacing.lg },
-  kosherRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md },
-  kosherIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primaryMuted,
-  },
-  kosherIconOn: { backgroundColor: colors.primary },
-  kosherTextCol: { flex: 1, gap: 2 },
-  kosherText: { ...typography.headline, color: colors.text },
-  kosherSub: { ...typography.footnote, color: colors.textSecondary },
-  kosherSwitch: {
-    width: 46,
-    height: 28,
-    borderRadius: 14,
-    padding: 3,
-    backgroundColor: 'rgba(120,120,128,0.24)',
-    justifyContent: 'center',
-  },
-  kosherSwitchOn: { backgroundColor: colors.primary },
-  kosherKnob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
-  kosherKnobOn: { alignSelf: 'flex-end' },
   // Three modes: two per row, the third spans the next row
   modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   modeCell: { flexBasis: '46%', flexGrow: 1 },

@@ -93,6 +93,8 @@ export const en = {
   'profile.factOrdered': "Ordered",
   'profile.factLoved': "Loved",
   'profile.buddy': "Most meals with {{name}} · {{count}} together",
+  'create.moodKosher': "Kashrut",
+  'create.kosherAll': "Everything",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

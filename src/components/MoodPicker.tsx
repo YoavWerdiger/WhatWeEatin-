@@ -25,6 +25,7 @@ const LEVELS = 4;
 const SIGNS = ['₪', '₪₪', '₪₪₪', '₪₪₪₪'];
 const THUMB = 44;
 const TRACK_H = 56;
+const STOP_W = 48; // wide enough for ₪₪₪₪ on one line
 const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
 // A short glide, no overshoot — the bouncy spring wobbled too much
 const GLIDE = { duration: 200, easing: Easing.out(Easing.cubic) };
@@ -95,7 +96,7 @@ function BudgetSlider({ level, onLevel }: { level: number; onLevel: (l: 1 | 2 | 
           {/* The stops, under everything */}
           <View style={styles.stops} pointerEvents="none">
             {SIGNS.map((s) => (
-              <Text key={s} style={styles.stopText}>
+              <Text key={s} style={styles.stopText} numberOfLines={1}>
                 {s}
               </Text>
             ))}
@@ -154,6 +155,36 @@ export function MoodPicker({ filters, onChange }: Props) {
       <Text style={styles.hint}>
         {filters.maxPriceLevel === 4 ? t('create.moodBudgetAny') : t('create.moodBudgetUpTo')}
       </Text>
+
+      {/* Kashrut: the same two-card choice as the meal kind, not a settings switch */}
+      <Text style={styles.label}>{t('create.moodKosher')}</Text>
+      <View style={styles.kinds}>
+        {[
+          { kosher: false, icon: 'restaurant' as const, label: t('create.kosherAll') },
+          { kosher: true, icon: 'shield-checkmark' as const, label: t('filters.kosher') },
+        ].map((k) => {
+          const on = filters.kosherOnly === k.kosher;
+          return (
+            <Pressable
+              key={String(k.kosher)}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                onChange({ ...filters, kosherOnly: k.kosher });
+              }}
+              style={styles.kindCell}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.9)' : RESTING_TINT} style={styles.kind}>
+                <Ionicons name={k.icon} size={24} color={on ? '#FFFFFF' : colors.primary} />
+                <Text style={[styles.kindText, on && styles.kindTextOn]} numberOfLines={1}>
+                  {k.label}
+                </Text>
+              </Glass>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -174,9 +205,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 6 + THUMB / 2 - 14,
+    // Each stop label is centred on its thumb position
+    paddingHorizontal: 6 + THUMB / 2 - STOP_W / 2,
   },
-  stopText: { ...typography.footnote, fontWeight: '600', color: colors.textMuted, width: 28, textAlign: 'center' },
+  stopText: { ...typography.footnote, fontWeight: '600', color: colors.textMuted, width: STOP_W, textAlign: 'center' },
   fill: {
     position: 'absolute',
     left: 6,

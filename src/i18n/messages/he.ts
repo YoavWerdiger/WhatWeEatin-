@@ -94,6 +94,8 @@ export const he: Messages = {
   'profile.factOrdered': "הוזמנו",
   'profile.factLoved': "אהבת",
   'profile.buddy': "הכי הרבה ארוחות עם {{name}} · {{count}} ביחד",
+  'create.moodKosher': "כשרות",
+  'create.kosherAll': "הכול",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

@@ -97,6 +97,8 @@ export const es: Messages = {
   'profile.factOrdered': "Pedidos",
   'profile.factLoved': "Favoritos",
   'profile.buddy': "Más comidas con {{name}} · {{count}} juntos",
+  'create.moodKosher': "Kosher",
+  'create.kosherAll': "Todo",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

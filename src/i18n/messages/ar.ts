@@ -94,6 +94,8 @@ export const ar: Messages = {
   'profile.factOrdered': "طلبات",
   'profile.factLoved': "أحببتها",
   'profile.buddy': "أكثر الوجبات مع {{name}} · {{count}} معًا",
+  'create.moodKosher': "الكوشر",
+  'create.kosherAll': "الكل",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',
