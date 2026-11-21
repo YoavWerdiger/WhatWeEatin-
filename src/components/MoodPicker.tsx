@@ -43,8 +43,16 @@ function BudgetSlider({ level, onLevel }: { level: number; onLevel: (l: 1 | 2 | 
   const startX = useSharedValue(0);
   const lastIdx = useSharedValue(level - 1);
 
+  // First layout: place the thumb straight on the level (no slide-in on open); later changes glide
+  const placed = React.useRef(false);
   useEffect(() => {
-    if (w > 0) x.value = withTiming((level - 1) * step, GLIDE);
+    if (w <= 0) return;
+    if (!placed.current) {
+      placed.current = true;
+      x.value = (level - 1) * step;
+      return;
+    }
+    x.value = withTiming((level - 1) * step, GLIDE);
   }, [w, level, step, x]);
 
   const tick = () => void Haptics.selectionAsync();

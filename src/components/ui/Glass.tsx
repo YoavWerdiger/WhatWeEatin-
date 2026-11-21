@@ -45,30 +45,34 @@ export function Glass({
     return () => clearTimeout(id);
   }, [laidOut]);
 
-  if (LIQUID && !settled) {
+  if (LIQUID) {
+    // One stable tree: the glass is a background layer that appears once settled, so the
+    // children are never re-mounted (swapping View → GlassView made whole steps jump).
     return (
       <View
-        style={[shape, dark ? styles.solidDark : styles.solid, tint ? { backgroundColor: tint } : null, style]}
+        style={[shape, settled ? null : [dark ? styles.solidDark : styles.solid, tint ? { backgroundColor: tint } : null], style]}
         onLayout={laidOut ? undefined : () => setLaidOut(true)}
         {...rest}
       >
-        {children}
+        {settled ? (
+          <GlassView
+            colorScheme={scheme}
+            glassEffectStyle={variant}
+            isInteractive={interactive}
+            tintColor={tint}
+            style={[StyleSheet.absoluteFill, shape]}
+          />
+        ) : null}
+        {/* Interactive glass needs the touch itself (shimmer + squish): content lets it through.
+            The Pressable around the Glass still gets the press. */}
+        {interactive ? (
+          <View style={[styles.content, contentLayout(style)]} pointerEvents="none">
+            {children}
+          </View>
+        ) : (
+          children
+        )}
       </View>
-    );
-  }
-
-  if (LIQUID) {
-    return (
-      <GlassView
-        colorScheme={scheme}
-        glassEffectStyle={variant}
-        isInteractive={interactive}
-        tintColor={tint}
-        style={[shape, style]}
-        {...rest}
-      >
-        {children}
-      </GlassView>
     );
   }
 
@@ -87,6 +91,20 @@ export function Glass({
   );
 }
 
+/** The wrapper of interactive content repeats the Glass's own flex layout so children lay out the same. */
+function contentLayout(style: ViewProps['style']) {
+  const f = StyleSheet.flatten(style) ?? {};
+  return {
+    flexDirection: f.flexDirection,
+    alignItems: f.alignItems,
+    justifyContent: f.justifyContent,
+    gap: f.gap,
+    rowGap: f.rowGap,
+    columnGap: f.columnGap,
+    flexWrap: f.flexWrap,
+  };
+}
+
 export const isLiquidGlass = LIQUID;
 
 const styles = StyleSheet.create({
@@ -95,6 +113,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
   },
+  content: { flexGrow: 1, alignSelf: 'stretch' },
   solidDark: {
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
