@@ -254,7 +254,7 @@ export default function AuthScreen() {
   return (
     <View style={styles.container}>
       {/* Same hero as the session lobby: the orange grid drifting at the top, fading into the page */}
-      <HomeMosaic heightRatio={0.4} />
+      <HomeMosaic heightRatio={0.56} />
     <SafeAreaView style={styles.flex}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView
@@ -264,7 +264,10 @@ export default function AuthScreen() {
         >
           <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
             <View style={styles.header}>
-              <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+              {/* The logo as an app-icon badge sitting on the edge of the grid */}
+              <View style={styles.logoBadge}>
+                <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+              </View>
               <Text style={styles.title}>{t('auth.title')}</Text>
               <Text style={styles.subtitle}>
                 {mode === 'login' ? t('auth.subtitleLogin') : t('auth.subtitleRegister')}
@@ -379,7 +382,21 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'flex-end', paddingTop: SCREEN_H * 0.27, paddingBottom: spacing.lg },
   content: { paddingHorizontal: spacing.md, gap: spacing.md },
   header: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
-  logo: { width: 64, height: 64, marginBottom: spacing.sm },
+  logoBadge: {
+    width: 84,
+    height: 84,
+    borderRadius: 24,
+    borderCurve: 'continuous',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    shadowColor: '#C2410C',
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  logo: { width: 56, height: 56 },
   title: {
     fontFamily: fontFamilies.rounded,
     fontSize: 40,
