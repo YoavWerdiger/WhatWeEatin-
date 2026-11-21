@@ -257,7 +257,7 @@ export const en = {
   'match.sourceGoogle': 'View Restaurant',
   'match.sourceMock': 'Order Now',
   'match.orderNow': 'Order Now',
-  'match.waitingOthers': 'Waiting for others…',
+  'match.waitingOthers': 'Waiting…',
   'match.iWantKeepBrowsing': 'I want to keep browsing',
   'match.keepBrowsing': 'Keep browsing',
 

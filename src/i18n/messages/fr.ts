@@ -265,7 +265,7 @@ export const fr: Messages = {
   'match.sourceGoogle': 'Voir le restaurant',
   'match.sourceMock': 'Commander',
   'match.orderNow': 'Commander',
-  'match.waitingOthers': 'En attente des autres…',
+  'match.waitingOthers': 'En attente…',
   'match.iWantKeepBrowsing': 'Je veux continuer à parcourir',
   'match.keepBrowsing': 'Continuer à parcourir',
 

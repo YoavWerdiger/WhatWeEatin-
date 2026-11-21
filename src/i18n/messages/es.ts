@@ -263,7 +263,7 @@ export const es: Messages = {
   'match.sourceGoogle': 'Ver restaurante',
   'match.sourceMock': 'Pedir ahora',
   'match.orderNow': 'Pedir ahora',
-  'match.waitingOthers': 'Esperando a los demás…',
+  'match.waitingOthers': 'Esperando…',
   'match.iWantKeepBrowsing': 'Quiero seguir explorando',
   'match.keepBrowsing': 'Seguir explorando',
 

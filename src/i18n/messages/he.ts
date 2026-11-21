@@ -251,7 +251,7 @@ export const he: Messages = {
   'match.sourceGoogle': 'צפייה במסעדה',
   'match.sourceMock': 'הזמן עכשיו',
   'match.orderNow': 'הזמן עכשיו',
-  'match.waitingOthers': 'מחכים לאחרים…',
+  'match.waitingOthers': 'מחכים…',
   'match.iWantKeepBrowsing': 'רוצה להמשיך לדפדף',
   'match.keepBrowsing': 'להמשיך לדפדף',
 

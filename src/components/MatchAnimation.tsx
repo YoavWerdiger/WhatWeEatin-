@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { SwipeCard, CARD_HEIGHT, CARD_WIDTH } from './SwipeCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -102,14 +103,11 @@ export function MatchAnimation({
     keepBrowsingApprovedBy.includes(currentUserId)
   );
 
-  const meta = [
-    { icon: 'star' as const, text: String(r.rating) },
-    { icon: 'restaurant-outline' as const, text: r.cuisine },
-    { icon: 'time-outline' as const, text: r.deliveryTime },
-    { icon: 'wallet-outline' as const, text: PRICE_LABELS[r.priceLevel] ?? '$$' },
-    ...(r.deliveryFee ? [{ icon: 'bicycle-outline' as const, text: r.deliveryFee }] : []),
-    ...(r.distance ? [{ icon: 'location-outline' as const, text: r.distance }] : []),
-  ].filter((m) => !!m.text);
+  // The vote panel shows only once someone asked to keep browsing — until then it would just push the buttons
+  const voteActive = showUnanimous && keepBrowsingApprovedBy.length > 0;
+  // The in-game card, scaled to whatever room is left between the title and the buttons
+  const [stageH, setStageH] = useState(0);
+  const cardScale = stageH > 0 ? Math.min(1, stageH / CARD_HEIGHT) : 1;
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
@@ -121,50 +119,16 @@ export function MatchAnimation({
         style={StyleSheet.absoluteFill}
       />
 
-      <ScrollView
-        contentContainerStyle={[
+      <View
+        style={[
           styles.content,
           { paddingTop: insets.top + spacing.xl, paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.sm },
         ]}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
       >
         <View style={styles.head}>
           <Animated.Text entering={rise(1)} style={styles.title}>
             {t('match.title')}
           </Animated.Text>
-        </View>
-
-        {/* The winner, front and centre — it lands like a card on the table */}
-        <Animated.View entering={reduceMotion ? FadeIn.duration(200) : heroEnter} style={styles.heroWrap}>
-          <View style={styles.hero}>
-            {/* Photo on top, the details below it — on the card, not over the picture */}
-            <Image source={{ uri: r.image }} style={styles.heroPhoto} resizeMode="cover" />
-            <Glass radius={0} variant="regular" scheme="dark" dark style={styles.cardInfo}>
-              <Text style={styles.name} numberOfLines={2}>
-                {r.name}
-              </Text>
-              <View style={styles.pills}>
-                {meta.map((m) => (
-                  <Glass
-                    key={m.icon}
-                    radius={borderRadius.full}
-                    variant="clear"
-                    scheme="dark"
-                    dark
-                    tint="rgba(255, 255, 255, 0.16)"
-                    style={styles.pill}
-                  >
-                    <Ionicons name={m.icon} size={13} color="rgba(255,255,255,0.9)" />
-                    <Text style={styles.pillText}>{m.text}</Text>
-                  </Glass>
-                ))}
-              </View>
-            </Glass>
-          </View>
-        </Animated.View>
-
-        <View style={styles.body}>
           {result.agreedUsers.length > 0 && (
           <View>
             <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark style={styles.agreed}>
@@ -183,9 +147,12 @@ export function MatchAnimation({
             </Glass>
           </View>
           )}
+        </View>
 
-          {showUnanimous && (
-            <View>
+        {/* Middle: the winner's card — or, once someone asks to keep browsing, just the vote */}
+        <View style={styles.stage} onLayout={(e) => setStageH(e.nativeEvent.layout.height)}>
+          {voteActive ? (
+            <Animated.View entering={FadeIn.duration(200)} style={styles.voteWrap}>
               <Glass radius={borderRadius.lg} variant="clear" scheme="dark" dark style={styles.vote}>
                 <View style={styles.voteHead}>
                   <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
@@ -218,9 +185,20 @@ export function MatchAnimation({
                   })}
                 </View>
               </Glass>
-            </View>
+            </Animated.View>
+          ) : (
+            <Animated.View
+              entering={reduceMotion ? FadeIn.duration(200) : heroEnter}
+              style={[styles.heroWrap, { width: CARD_WIDTH * cardScale, height: CARD_HEIGHT * cardScale }]}
+            >
+              <View style={{ transform: [{ scale: cardScale }], width: CARD_WIDTH, height: CARD_HEIGHT, marginLeft: (CARD_WIDTH * (cardScale - 1)) / 2, marginTop: (CARD_HEIGHT * (cardScale - 1)) / 2 }}>
+                <SwipeCard restaurant={r} />
+              </View>
+            </Animated.View>
           )}
+        </View>
 
+        {/* Buttons stay put at the bottom */}
           <Animated.View entering={rise(5)} style={styles.actions}>
             <GlassButton
               title={r.externalUrl ? sourceLabels[r.source] : t('match.orderNow')}
@@ -255,8 +233,7 @@ export function MatchAnimation({
               )}
             </View>
           </Animated.View>
-        </View>
-      </ScrollView>
+      </View>
     </Animated.View>
   );
 }
@@ -265,19 +242,18 @@ const styles = StyleSheet.create({
   // Above everything on the swipe screen, including the deck's raised top card.
   root: { zIndex: 1000, elevation: 1000 },
   content: {
-    flexGrow: 1,
-    justifyContent: 'space-between',
+    flex: 1,
     paddingHorizontal: spacing.md,
     gap: spacing.lg,
   },
   head: { alignItems: 'center', gap: spacing.md },
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  voteWrap: { alignSelf: 'stretch' },
   title: { ...typography.largeTitle, color: '#FFFFFF', textAlign: 'center' },
 
   body: { gap: spacing.md },
   // Shadow lives on the wrapper: overflow:hidden on the card itself would clip it.
   heroWrap: {
-    flex: 1,
-    justifyContent: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.35,
     shadowRadius: 24,

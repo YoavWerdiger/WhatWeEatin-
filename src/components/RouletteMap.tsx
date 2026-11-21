@@ -19,9 +19,13 @@ const MAX_PINS = 40;
 const PIN = 44;
 const PIN_ACTIVE = 74;
 /** The sweep: fast at first, slowing into the winner */
-const SWEEP_LOOPS = 2;
+const SWEEP_LOOPS = 3;
 const HOP_FAST_MS = 55;
-const HOP_SLOW_MS = 430;
+const HOP_SLOW_MS = 480;
+/** From this share of the spin the camera chases the highlight, zooming from → to */
+const CHASE_FROM = 0.55;
+const CHASE_ZOOM_FROM = 14.2;
+const CHASE_ZOOM_TO = 16.4;
 
 function fitRegion(points: MappedRestaurant[]): Region {
   const lats = points.map((p) => p.lat);
@@ -40,6 +44,8 @@ function fitRegion(points: MappedRestaurant[]): Region {
 }
 
 interface Props {
+  /** Room taken by the floating header / button, so pins and the camera stay in the visible part */
+  mapPadding?: { top: number; right: number; bottom: number; left: number };
   restaurants: MappedRestaurant[];
   /** A new token starts a spin that lands on `winnerId`. */
   spin: { winnerId: string; token: number } | null;
@@ -51,7 +57,7 @@ interface Props {
  * (by angle from the centre), flashing each photo for a beat, slowing down, then the camera
  * flies to the winner.
  */
-export function RouletteMap({ restaurants, spin, onLanded }: Props) {
+export function RouletteMap({ restaurants, spin, onLanded, mapPadding }: Props) {
   const mapRef = useRef<MapView>(null);
   const pins = useMemo(() => restaurants.slice(0, MAX_PINS), [restaurants]);
   const region = useMemo(() => fitRegion(pins), [pins]);
@@ -75,7 +81,8 @@ export function RouletteMap({ restaurants, spin, onLanded }: Props) {
     if (winnerIdx < 0) return;
 
     setLandedId(null);
-    mapRef.current?.animateToRegion(region, 300);
+    const cam = mapRef.current;
+    cam?.animateToRegion(region, 400);
 
     // Hops: a few full loops, then on to the winner; the delay eases from fast to slow
     const total = SWEEP_LOOPS * order.length + winnerIdx + 1;
@@ -84,21 +91,41 @@ export function RouletteMap({ restaurants, spin, onLanded }: Props) {
     for (let i = 0; i < total; i++) {
       const p = i / Math.max(1, total - 1);
       const eased = p * p * p; // ease-in on the delay = ease-out on the motion
-      at += HOP_FAST_MS + (HOP_SLOW_MS - HOP_FAST_MS) * eased;
+      const hop = HOP_FAST_MS + (HOP_SLOW_MS - HOP_FAST_MS) * eased;
+      at += hop;
       const pin = order[i % order.length];
       const last = i === total - 1;
       timers.push(
         setTimeout(() => {
           setActiveId(pin.id);
           void Haptics.selectionAsync();
-          if (!last) return;
+          if (!last) {
+            // Cinematic camera: wide and slowly turning while it races, then chasing pin to pin
+            // and closing in as it slows down
+            if (p < CHASE_FROM) {
+              cam?.animateCamera({ heading: p * 40 }, { duration: 220 });
+            } else {
+              const k = (p - CHASE_FROM) / (1 - CHASE_FROM);
+              cam?.animateCamera(
+                {
+                  center: { latitude: pin.lat, longitude: pin.lng },
+                  zoom: CHASE_ZOOM_FROM + (CHASE_ZOOM_TO - CHASE_ZOOM_FROM) * k,
+                  heading: 40 - 20 * k,
+                  pitch: 20 * k,
+                },
+                { duration: Math.min(650, Math.max(160, hop * 0.95)) },
+              );
+            }
+            return;
+          }
           setLandedId(pin.id);
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          mapRef.current?.animateCamera(
-            { center: { latitude: pin.lat, longitude: pin.lng }, zoom: 17, pitch: 0, heading: 0 },
-            { duration: 900 },
+          // The landing: dive in and tilt
+          cam?.animateCamera(
+            { center: { latitude: pin.lat, longitude: pin.lng }, zoom: 17.6, pitch: 55, heading: 15 },
+            { duration: 1300 },
           );
-          timers.push(setTimeout(() => onLandedRef.current(pin.id), 1300));
+          timers.push(setTimeout(() => onLandedRef.current(pin.id), 1800));
         }, at),
       );
     }
@@ -117,6 +144,8 @@ export function RouletteMap({ restaurants, spin, onLanded }: Props) {
         showsBuildings={false}
         pitchEnabled={false}
         rotateEnabled={false}
+        showsCompass={false}
+        mapPadding={mapPadding}
         toolbarEnabled={false}
       >
         {pins.map((r) => {
@@ -169,8 +198,6 @@ export function RouletteMap({ restaurants, spin, onLanded }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    borderRadius: 28,
-    overflow: 'hidden',
     backgroundColor: colors.card,
   },
   pinWrap: {

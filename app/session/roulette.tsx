@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { RouletteMap, hasCoords, MIN_MAP_PINS } from '../../src/components/RouletteMap';
 import { Button } from '../../src/components/ui/Button';
@@ -233,8 +234,31 @@ export default function RouletteScreen() {
   if (!session) return null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <View style={styles.root}>
+      {/* Full-screen map behind everything; header and button float on top */}
+      {useMap && (
+        <View style={StyleSheet.absoluteFill}>
+          <RouletteMap
+            restaurants={mapRestaurants}
+            spin={mapSpin}
+            onLanded={handleMapLanded}
+            mapPadding={{ top: 170, right: 0, bottom: 140, left: 0 }}
+          />
+          {/* Soft fades so the title and button read over the map */}
+          <LinearGradient
+            colors={[colors.background, 'rgba(242,242,247,0)']}
+            style={[styles.mapFade, { top: 0, height: 230 }]}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['rgba(242,242,247,0)', colors.background]}
+            style={[styles.mapFade, { bottom: 0, height: 180 }]}
+            pointerEvents="none"
+          />
+        </View>
+      )}
+    <SafeAreaView style={[styles.container, useMap && styles.containerOverMap]} pointerEvents="box-none">
+      <View style={styles.content} pointerEvents="box-none">
         <View style={styles.topBar}>
           <TouchableOpacity onPress={handleLeave} hitSlop={12}>
             <Text style={styles.leaveText}>{t('common.leave')}</Text>
@@ -248,9 +272,7 @@ export default function RouletteScreen() {
         <Text style={styles.subtitle}>{t('roulette.subtitle')}</Text>
 
         {useMap ? (
-          <View style={styles.mapFrame}>
-            <RouletteMap restaurants={mapRestaurants} spin={mapSpin} onLanded={handleMapLanded} />
-          </View>
+          <View style={styles.mapSpacer} pointerEvents="none" />
         ) : (
         <View style={styles.reelFrame}>
           <View style={styles.reelWindow} pointerEvents="none">
@@ -323,14 +345,15 @@ export default function RouletteScreen() {
         />
       )}
     </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mapFrame: {
-    flex: 1,
-    marginVertical: spacing.md,
-  },
+  root: { flex: 1, backgroundColor: colors.background },
+  containerOverMap: { backgroundColor: 'transparent' },
+  mapSpacer: { flex: 1 },
+  mapFade: { position: 'absolute', left: 0, right: 0 },
   container: {
     flex: 1,
     backgroundColor: colors.background,

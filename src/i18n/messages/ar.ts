@@ -252,7 +252,7 @@ export const ar: Messages = {
   'match.sourceGoogle': 'عرض المطعم',
   'match.sourceMock': 'اطلب الآن',
   'match.orderNow': 'اطلب الآن',
-  'match.waitingOthers': 'بانتظار الآخرين…',
+  'match.waitingOthers': 'بانتظار…',
   'match.iWantKeepBrowsing': 'أريد متابعة التصفح',
   'match.keepBrowsing': 'متابعة التصفح',
 
