@@ -118,24 +118,22 @@ export function MatchAnimation({
   const voteActive = showUnanimous && keepBrowsingApprovedBy.length > 0;
   // The in-game card, scaled to whatever room is left between the title and the buttons
   const [stageH, setStageH] = useState(0);
-  // Mount the card once the overlay has faded in: glass created under an opacity-0 ancestor
-  // can come out without its effect
-  const [cardReady, setCardReady] = useState(false);
-  useEffect(() => {
-    const id = setTimeout(() => setCardReady(true), 260);
-    return () => clearTimeout(id);
-  }, []);
   const cardScale = stageH > 0 ? Math.min(1, stageH / CARD_HEIGHT) : 1;
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, styles.root, fade]} pointerEvents={exiting ? 'none' : 'auto'}>
+    // No animated opacity on the root while it's on screen: iOS won't draw glass under an
+    // opacity-animated ancestor. Only the backdrop fades in (the card stays put, as if lifted
+    // off the deck); the whole overlay fades only on exit.
+    <Animated.View style={[StyleSheet.absoluteFill, styles.root, exiting && fade]} pointerEvents={exiting ? 'none' : 'auto'}>
       {/* The winner's photo is the backdrop — rich content for the glass to sit on */}
-      <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
-      <LinearGradient
-        colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
-        locations={[0, 0.4, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <Animated.View style={[StyleSheet.absoluteFill, exiting ? null : fade]} pointerEvents="none">
+        <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={14} />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
+          locations={[0, 0.4, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
 
       <View
         style={[
@@ -174,9 +172,6 @@ export function MatchAnimation({
             <View style={styles.voteWrap}>
               {/* Keep-browsing vote: who's in, as faces with a tick, and a bar filling to everyone */}
               <Glass radius={borderRadius.xl} variant="clear" scheme="dark" dark style={styles.vote}>
-                <View style={styles.voteIcon}>
-                  <Ionicons name="albums" size={26} color="#FFFFFF" />
-                </View>
                 <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
                 <Text style={styles.voteHint}>{t('match.keepBrowsingHint')}</Text>
 
@@ -216,7 +211,7 @@ export function MatchAnimation({
             </View>
           ) : (
             <View style={[styles.heroWrap, { width: CARD_WIDTH * cardScale, height: CARD_HEIGHT * cardScale }]}>
-              {cardReady ? <SwipeCard restaurant={r} width={CARD_WIDTH * cardScale} /> : null}
+              <SwipeCard restaurant={r} width={CARD_WIDTH * cardScale} />
             </View>
           )}
         </View>
@@ -319,15 +314,6 @@ const styles = StyleSheet.create({
   agreedText: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF' },
 
   vote: { padding: spacing.lg, gap: spacing.sm, alignItems: 'center' },
-  voteIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    marginBottom: 4,
-  },
   voteTitle: {
     fontFamily: fontFamilies.rounded,
     fontSize: 26,

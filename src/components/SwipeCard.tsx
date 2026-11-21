@@ -23,6 +23,8 @@ const SOURCE_CONFIG: Record<RestaurantSource, { label: string; brand: string }> 
   mock: { label: 'Sample', brand: 'rgba(255, 255, 255, 0.2)' },
 };
 
+const PILL_TINT = 'rgba(255, 255, 255, 0.22)';
+
 /** Rounded clear glass over the photo; dark scheme keeps the white text legible. */
 function Pill({
   children,
@@ -34,7 +36,8 @@ function Pill({
   tint?: string;
 }) {
   return (
-    <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark tint={tint} style={[styles.pill, style]}>
+    // Untinted clear glass all but vanished over dark photos — a light frost keeps the capsule visible
+    <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark tint={tint ?? PILL_TINT} style={[styles.pill, style]}>
       {children}
     </Glass>
   );
