@@ -95,6 +95,12 @@ export const en = {
   'profile.buddy': "Most meals with {{name}} · {{count}} together",
   'create.moodKosher': "Kashrut",
   'create.kosherAll': "Everything",
+  'profile.tileMatches': "matches so far",
+  'profile.tileOrdered': "{{count}} ordered",
+  'profile.tileLoved': "{{count}} loved",
+  'profile.tileTopCuisine': "Your go-to",
+  'profile.tileTimes': "{{count}} times",
+  'profile.tileBuddy': "Top buddy",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

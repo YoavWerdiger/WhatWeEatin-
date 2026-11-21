@@ -96,6 +96,12 @@ export const he: Messages = {
   'profile.buddy': "הכי הרבה ארוחות עם {{name}} · {{count}} ביחד",
   'create.moodKosher': "כשרות",
   'create.kosherAll': "הכול",
+  'profile.tileMatches': "התאמות עד עכשיו",
+  'profile.tileOrdered': "{{count}} הוזמנו",
+  'profile.tileLoved': "{{count}} אהבת",
+  'profile.tileTopCuisine': "המטבח שלך",
+  'profile.tileTimes': "{{count}} פעמים",
+  'profile.tileBuddy': "שותף/ה קבוע/ה",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

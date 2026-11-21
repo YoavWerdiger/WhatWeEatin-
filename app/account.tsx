@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../src/theme/colors';
 import { typography, fontFamilies } from '../src/theme/typography';
@@ -101,39 +102,52 @@ export default function AccountScreen() {
             ) : null}
           </View>
 
-          {/* Your food story: a few sentences instead of bare numbers */}
+          {/* Your food story as a few bold tiles — big numbers, one idea each, no zeros */}
           {matches.length > 0 ? (
-            <Glass radius={borderRadius.xl} tint={RESTING_TINT} style={styles.story}>
-              <Text style={styles.storyTitle}>{t('profile.storyTitle')}</Text>
-              {topCuisines.length > 0 ? (
-                <View style={styles.cuisines}>
-                  {topCuisines.map((c) => (
-                    <View key={c.name} style={styles.cuisineRow}>
-                      <Text style={styles.cuisineName} numberOfLines={1}>
-                        {c.name}
-                      </Text>
-                      <View style={styles.cuisineTrack}>
-                        <View style={[styles.cuisineFill, { width: `${Math.max(8, (c.count / topCuisines[0].count) * 100)}%` }]} />
-                      </View>
-                      <Text style={styles.cuisineCount}>{c.count}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-              <View style={styles.facts}>
-                <Fact emoji="🍽️" value={String(matches.length)} label={t('profile.factMeals')} />
-                <Fact emoji="🛵" value={String(orderedCount)} label={t('profile.factOrdered')} />
-                <Fact emoji="😍" value={String(lovedCount)} label={t('profile.factLoved')} />
-              </View>
-              {friends[0] ? (
-                <View style={styles.buddy}>
-                  <Avatar name={friends[0].name} color={friends[0].avatar} size={36} />
-                  <Text style={styles.buddyText} numberOfLines={2}>
-                    {t('profile.buddy', { name: friends[0].name, count: friends[0].count })}
+            <View style={styles.tiles}>
+              <LinearGradient
+                colors={[colors.primaryLight, colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.tile, styles.tileHero]}
+              >
+                <Text style={styles.heroNumber}>{matches.length}</Text>
+                <Text style={styles.heroLabel}>{t('profile.tileMatches')}</Text>
+                {orderedCount > 0 || lovedCount > 0 ? (
+                  <Text style={styles.heroSub}>
+                    {[
+                      orderedCount > 0 ? t('profile.tileOrdered', { count: orderedCount }) : null,
+                      lovedCount > 0 ? t('profile.tileLoved', { count: lovedCount }) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Text>
-                </View>
-              ) : null}
-            </Glass>
+                ) : null}
+              </LinearGradient>
+              <View style={styles.tileCol}>
+                {topCuisines[0] ? (
+                  <Glass radius={borderRadius.xl} tint={RESTING_TINT} style={styles.tile}>
+                    <Text style={styles.tileKicker}>{t('profile.tileTopCuisine')}</Text>
+                    <Text style={styles.tileBig} numberOfLines={1} adjustsFontSizeToFit>
+                      {topCuisines[0].name}
+                    </Text>
+                    <Text style={styles.tileSub}>{t('profile.tileTimes', { count: topCuisines[0].count })}</Text>
+                  </Glass>
+                ) : null}
+                {friends[0] ? (
+                  <Glass radius={borderRadius.xl} tint={RESTING_TINT} style={[styles.tile, styles.tileBuddy]}>
+                    <Avatar name={friends[0].name} color={friends[0].avatar} size={36} />
+                    <View style={styles.flex}>
+                      <Text style={styles.tileKicker}>{t('profile.tileBuddy')}</Text>
+                      <Text style={styles.tileName} numberOfLines={1}>
+                        {friends[0].name}
+                      </Text>
+                      <Text style={styles.tileSub}>{t('profile.mealsTogether', { count: friends[0].count })}</Text>
+                    </View>
+                  </Glass>
+                ) : null}
+              </View>
+            </View>
           ) : null}
 
           {/* Your matches — order again */}
@@ -157,6 +171,12 @@ export default function AccountScreen() {
                 >
                   <View>
                     <Image source={{ uri: m.restaurant.image }} style={styles.matchPhoto} contentFit="cover" cachePolicy="memory-disk" />
+                    {m.restaurant.externalUrl ? (
+                      <Glass radius={borderRadius.full} variant="clear" scheme="dark" dark tint="rgba(255,255,255,0.22)" style={styles.orderPill}>
+                        <Ionicons name="bag-handle-outline" size={13} color="#FFFFFF" />
+                        <Text style={styles.orderPillText}>{t('profile.orderAgain')}</Text>
+                      </Glass>
+                    ) : null}
                     {m.rating != null ? (
                       <View style={styles.matchRating}>
                         <Text style={styles.matchRatingText}>{m.rating === 1 ? '😍' : m.rating === 0 ? '🙂' : '😕'}</Text>
@@ -169,7 +189,6 @@ export default function AccountScreen() {
                   <Text style={styles.matchMeta} numberOfLines={1}>
                     {formatDate(m.at)} · {m.restaurant.cuisine}
                   </Text>
-                  {m.restaurant.externalUrl ? <Text style={styles.orderAgain}>{t('profile.orderAgain')}</Text> : null}
                 </Pressable>
               ))}
             </ScrollView>
@@ -199,18 +218,6 @@ export default function AccountScreen() {
   );
 }
 
-function Fact({ emoji, value, label }: { emoji: string; value: string; label: string }) {
-  return (
-    <View style={styles.fact}>
-      <Text style={styles.factEmoji}>{emoji}</Text>
-      <Text style={styles.factValue}>{value}</Text>
-      <Text style={styles.factLabel} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
@@ -232,28 +239,18 @@ const styles = StyleSheet.create({
   providerText: { ...typography.captionMedium, color: colors.primaryDark },
   signInCta: { alignSelf: 'stretch', marginTop: spacing.sm },
 
-  story: { padding: spacing.lg, gap: spacing.md, marginTop: spacing.xl },
-  storyTitle: { ...typography.headline, color: colors.text },
-  cuisines: { gap: 10 },
-  cuisineRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  cuisineName: { ...typography.subheadline, color: colors.text, width: 96 },
-  cuisineTrack: { flex: 1, height: 10, borderRadius: 5, backgroundColor: 'rgba(120,120,128,0.16)', overflow: 'hidden' },
-  cuisineFill: { height: '100%', borderRadius: 5, backgroundColor: colors.primary },
-  cuisineCount: { ...typography.footnote, fontWeight: '700', color: colors.textSecondary, width: 20, textAlign: 'right' },
-  facts: { flexDirection: 'row' },
-  fact: { flex: 1, alignItems: 'center', gap: 2 },
-  factEmoji: { fontSize: 22 },
-  factValue: { fontFamily: fontFamilies.rounded, fontSize: 24, lineHeight: 28, fontWeight: '900', color: colors.text },
-  factLabel: { ...typography.caption, color: colors.textSecondary },
-  buddy: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-  },
-  buddyText: { ...typography.subheadline, color: colors.text, flex: 1 },
+  tiles: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xl },
+  tileCol: { flex: 1, gap: spacing.sm },
+  tile: { padding: spacing.md, gap: 2, flex: 1 },
+  tileHero: { borderRadius: borderRadius.xl, borderCurve: 'continuous', justifyContent: 'flex-end', minHeight: 190 },
+  heroNumber: { fontFamily: fontFamilies.rounded, fontSize: 64, lineHeight: 68, fontWeight: '900', color: '#FFFFFF' },
+  heroLabel: { ...typography.headline, color: '#FFFFFF' },
+  heroSub: { ...typography.footnote, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
+  tileKicker: { ...typography.caption, fontWeight: '600', color: colors.textSecondary },
+  tileBig: { fontFamily: fontFamilies.rounded, fontSize: 24, lineHeight: 28, fontWeight: '900', color: colors.text },
+  tileName: { ...typography.headline, color: colors.text },
+  tileSub: { ...typography.caption, color: colors.textSecondary },
+  tileBuddy: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 
   section: { ...typography.title3, color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm },
   rail: { gap: spacing.sm, paddingRight: spacing.lg },
@@ -273,7 +270,17 @@ const styles = StyleSheet.create({
   matchRatingText: { fontSize: 16 },
   matchName: { ...typography.headline, color: colors.text, marginTop: 8 },
   matchMeta: { ...typography.footnote, color: colors.textSecondary },
-  orderAgain: { ...typography.footnote, color: colors.primaryDark, fontWeight: '700', marginTop: 2 },
+  orderPill: {
+    position: 'absolute',
+    left: 8,
+    bottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  orderPillText: { ...typography.caption, fontWeight: '700', color: '#FFFFFF' },
 
   empty: { alignItems: 'center', gap: 6, padding: spacing.lg },
   emptyTitle: { ...typography.headline, color: colors.text, textAlign: 'center' },

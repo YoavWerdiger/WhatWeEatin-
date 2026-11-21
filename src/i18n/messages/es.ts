@@ -99,6 +99,12 @@ export const es: Messages = {
   'profile.buddy': "Más comidas con {{name}} · {{count}} juntos",
   'create.moodKosher': "Kosher",
   'create.kosherAll': "Todo",
+  'profile.tileMatches': "matches hasta ahora",
+  'profile.tileOrdered': "{{count}} pedidos",
+  'profile.tileLoved': "{{count}} favoritos",
+  'profile.tileTopCuisine': "Tu favorita",
+  'profile.tileTimes': "{{count}} veces",
+  'profile.tileBuddy': "Compañero top",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

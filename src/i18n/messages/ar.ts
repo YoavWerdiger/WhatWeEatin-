@@ -96,6 +96,12 @@ export const ar: Messages = {
   'profile.buddy': "أكثر الوجبات مع {{name}} · {{count}} معًا",
   'create.moodKosher': "الكوشر",
   'create.kosherAll': "الكل",
+  'profile.tileMatches': "تطابقات حتى الآن",
+  'profile.tileOrdered': "{{count}} طلبات",
+  'profile.tileLoved': "{{count}} أحببتها",
+  'profile.tileTopCuisine': "مطبخك المفضل",
+  'profile.tileTimes': "{{count}} مرات",
+  'profile.tileBuddy': "رفيقك الدائم",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',
