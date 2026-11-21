@@ -101,6 +101,9 @@ export const ar: Messages = {
   'finger.change': "تغيير",
   'finger.searchPlaceholder': "ابحث بالاسم أو المطبخ",
   'finger.noResults': "لا توجد أماكن مطابقة",
+  'finger.progress': "{{done}}/{{total}} اختاروا",
+  'finger.nextStep': "عندما يختار الجميع، ضعوا أصابعكم على هاتف {{name}}.",
+  'finger.choosing': "يختار…",
   'create.modeRoulette': 'روليت الجوع',
   'create.modeRouletteHint':
     'بدون تمرير — المضيف يدير العجلة ويُختار مطعم واحد للجميع.',

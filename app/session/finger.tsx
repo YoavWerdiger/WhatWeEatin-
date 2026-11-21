@@ -15,7 +15,7 @@ import { useParticipantNoticeAlert } from '../../src/hooks/useParticipantNoticeA
 import { openRestaurantLink } from '../../src/utils/openRestaurantLink';
 import { useTranslation } from '../../src/i18n/t';
 import { colors } from '../../src/theme/colors';
-import { typography } from '../../src/theme/typography';
+import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius } from '../../src/theme/spacing';
 import { Restaurant } from '../../src/types';
 
@@ -238,33 +238,46 @@ export default function FingerScreen() {
             </>
           ) : (
             <View style={styles.waiting}>
-              <Text style={styles.title}>
+              {/* Progress and what happens next — so the wait is understandable */}
+              <Text style={styles.waitTitle}>
                 {allPicked ? t('finger.putFingersGuest', { name: hostName }) : t('finger.waitingTitle')}
               </Text>
-              {/* Who has picked — with each player's choice */}
-              <View style={styles.players}>
+              <Text style={styles.waitProgress}>
+                {t('finger.progress', { done: users.filter((u) => !!picksMap[u.id]).length, total: users.length })}
+              </Text>
+              {!allPicked ? <Text style={styles.waitNext}>{t('finger.nextStep', { name: hostName })}</Text> : null}
+
+              <ScrollView contentContainerStyle={styles.players} showsVerticalScrollIndicator={false}>
                 {users.map((u) => {
                   const pick = restaurants.find((r) => r.id === picksMap[u.id]);
+                  const isMe = u.id === participantId;
                   return (
-                    <View key={u.id} style={styles.playerRow}>
-                      <Avatar name={u.name} color={u.avatar} size={36} />
-                      <Text style={styles.playerName} numberOfLines={1}>
-                        {u.name}
-                      </Text>
+                    <View key={u.id} style={[styles.playerCard, !pick && styles.playerCardPending]}>
                       {pick ? (
-                        <View style={styles.pickChip}>
-                          <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                          <Text style={styles.pickChipText} numberOfLines={1}>
-                            {pick.name}
+                        <Image source={{ uri: pick.image }} style={styles.playerPhoto} contentFit="cover" cachePolicy="memory-disk" />
+                      ) : (
+                        <View style={[styles.playerPhoto, styles.playerPhotoPending]}>
+                          <Ionicons name="hourglass-outline" size={22} color={colors.textMuted} />
+                        </View>
+                      )}
+                      <View style={styles.playerText}>
+                        <View style={styles.playerHead}>
+                          <Avatar name={u.name} color={u.avatar} size={22} />
+                          <Text style={styles.playerName} numberOfLines={1}>
+                            {u.name}
+                            {isMe ? t('match.youSuffix') : ''}
                           </Text>
                         </View>
-                      ) : (
-                        <Text style={styles.pendingText}>…</Text>
-                      )}
+                        <Text style={pick ? styles.playerPick : styles.playerChoosing} numberOfLines={1}>
+                          {pick ? pick.name : t('finger.choosing')}
+                        </Text>
+                      </View>
+                      {pick ? <Ionicons name="checkmark-circle" size={24} color={colors.accentDark} /> : null}
                     </View>
                   );
                 })}
-              </View>
+              </ScrollView>
+
               {!allPicked ? (
                 <Pressable onPress={() => setChanging(true)} style={styles.changeBtn} hitSlop={8}>
                   <Text style={styles.changeText}>{t('finger.change')}</Text>
@@ -338,23 +351,34 @@ const styles = StyleSheet.create({
   empty: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
   tileName: { ...typography.headline, color: colors.text },
   tileMeta: { ...typography.footnote, color: colors.textSecondary },
-  waiting: { flex: 1 },
-  players: { marginTop: spacing.lg, gap: spacing.sm },
-  playerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6 },
-  playerName: { ...typography.headline, color: colors.text, flexShrink: 1 },
-  pickChip: {
-    marginLeft: 'auto',
+  waiting: { flex: 1, paddingTop: spacing.xl },
+  waitTitle: {
+    fontFamily: fontFamilies.rounded,
+    fontSize: 32,
+    lineHeight: 36,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: colors.text,
+  },
+  waitProgress: { ...typography.title2, color: colors.primary, marginTop: spacing.xs, fontVariant: ['tabular-nums'] },
+  waitNext: { ...typography.body, color: colors.textSecondary, marginTop: spacing.sm },
+  players: { paddingTop: spacing.lg, paddingBottom: spacing.lg, gap: spacing.sm },
+  playerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: borderRadius.full,
-    maxWidth: 180,
+    gap: spacing.sm,
+    padding: 10,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.card,
   },
-  pickChipText: { ...typography.footnote, color: '#FFFFFF', fontWeight: '600' },
-  pendingText: { marginLeft: 'auto', ...typography.headline, color: colors.textMuted },
+  playerCardPending: { opacity: 0.75 },
+  playerPhoto: { width: 60, height: 60, borderRadius: 14 },
+  playerPhotoPending: { alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: colors.border },
+  playerText: { flex: 1, gap: 4 },
+  playerHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  playerName: { ...typography.subheadline, color: colors.textSecondary, fontWeight: '600', flexShrink: 1 },
+  playerPick: { ...typography.headline, color: colors.text },
+  playerChoosing: { ...typography.headline, color: colors.textMuted },
   changeBtn: { alignSelf: 'center', marginTop: spacing.xl },
   changeText: { ...typography.body, color: colors.primaryDark, fontWeight: '600' },
 });

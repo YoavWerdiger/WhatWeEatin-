@@ -100,6 +100,9 @@ export const he: Messages = {
   'finger.change': "שינוי",
   'finger.searchPlaceholder': "חיפוש לפי שם או מטבח",
   'finger.noResults': "לא נמצאו מקומות",
+  'finger.progress': "{{done}}/{{total}} בחרו",
+  'finger.nextStep': "כשכולם יבחרו — כולם שמים אצבע על הטלפון של {{name}}.",
+  'finger.choosing': "בוחר…",
   'create.modeRoulette': 'רולטת רעב',
   'create.modeRouletteHint':
     'בלי החלקות — המארח מסובב ובוחרים מסעדה אחת לכולם.',

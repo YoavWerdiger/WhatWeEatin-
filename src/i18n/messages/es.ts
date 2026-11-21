@@ -105,6 +105,9 @@ export const es: Messages = {
   'finger.change': "Cambiar",
   'finger.searchPlaceholder': "Buscar por nombre o cocina",
   'finger.noResults': "Ningún sitio coincide",
+  'finger.progress': "{{done}}/{{total}} eligieron",
+  'finger.nextStep': "Cuando todos elijan, poned los dedos en el móvil de {{name}}.",
+  'finger.choosing': "eligiendo…",
   'create.modeRoulette': 'Ruleta del hambre',
   'create.modeRouletteHint':
     'Sin deslizar — el anfitrión gira y se elige un restaurante para todos.',

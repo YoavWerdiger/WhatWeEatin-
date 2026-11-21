@@ -99,6 +99,9 @@ export const en = {
   'finger.change': "Change",
   'finger.searchPlaceholder': "Search by name or cuisine",
   'finger.noResults': "No places match",
+  'finger.progress': "{{done}}/{{total}} picked",
+  'finger.nextStep': "When everyone has picked, put your fingers on {{name}}’s phone.",
+  'finger.choosing': "choosing…",
   'create.modeRoulette': 'Hunger roulette',
   'create.modeRouletteHint':
     'No swiping — the host spins and one restaurant is picked for everyone.',
