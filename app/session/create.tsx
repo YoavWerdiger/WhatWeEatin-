@@ -47,6 +47,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
 import { useTranslation } from '../../src/i18n/t';
+import { Aurora } from '../../src/components/Backdrops';
 
 type Step =
   | 'name'
@@ -208,6 +209,7 @@ export default function CreateSessionScreen() {
 
   return (
     <View style={styles.container}>
+      <Aurora />
       <Stack.Screen
         options={{
           headerTitle: () =>

@@ -25,6 +25,7 @@ import { spacing, borderRadius } from '../src/theme/spacing';
 import { GlassButton } from '../src/components/native/GlassButton';
 import { useAuthStore } from '../src/store/authStore';
 import { useTranslation } from '../src/i18n/t';
+import { PlateOrbit } from '../src/components/Backdrops';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -248,7 +249,9 @@ export default function AuthScreen() {
   const MODES: Mode[] = ['login', 'register'];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <PlateOrbit />
+    <SafeAreaView style={styles.flex}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -360,6 +363,7 @@ export default function AuthScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </View>
   );
 }
 

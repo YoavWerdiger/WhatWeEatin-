@@ -32,6 +32,7 @@ import { useSessionStore } from '../../src/store/sessionStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
+import { PhotoDrift } from '../../src/components/Backdrops';
 
 const CODE_LENGTH = 6;
 const charLand = new Keyframe({
@@ -129,6 +130,7 @@ export default function JoinSessionScreen() {
 
   return (
     <View style={styles.container}>
+      <PhotoDrift />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="chevron.backward"
