@@ -29,18 +29,18 @@ const LOOP_S = [46, 38, 52, 42, 49];
 // Small thumbnails: the grid is a backdrop, not a gallery
 const PHOTOS = MOCK_RESTAURANTS.map((r) => r.image.replace(/w=\d+/, 'w=400'));
 
-function Column({ index }: { index: number }) {
+function Column({ index, photos }: { index: number; photos: string[] }) {
   const reduceMotion = useReducedMotion();
   const tiles = useMemo(() => {
     const out: { uri: string; h: number }[] = [];
     for (let i = 0; i < HEIGHTS.length; i++) {
       out.push({
-        uri: PHOTOS[(i * COLS + index * 2) % PHOTOS.length],
+        uri: photos[(i * COLS + index * 2) % photos.length],
         h: TILE_W * HEIGHTS[(i + index * 2) % HEIGHTS.length],
       });
     }
     return out;
-  }, [index]);
+  }, [index, photos]);
   // One copy's height — the column holds two copies and slides by exactly one for a seamless loop
   const loopH = tiles.reduce((sum, t) => sum + t.h + GAP, 0);
   const goesUp = index % 2 === 0; // neighbouring columns run opposite ways
@@ -73,13 +73,26 @@ function Column({ index }: { index: number }) {
  * Home backdrop: a tilted grid of food photos drifting in columns across the top of the screen,
  * under an orange wash that fades out into the app's normal background just above the title.
  */
-export function HomeMosaic() {
+export function HomeMosaic({
+  photos,
+  heightRatio = 0.74,
+}: {
+  /** Photos to drift (e.g. the session's restaurants); defaults to the sample dishes */
+  photos?: string[];
+  /** How far down the screen the mosaic reaches before it has faded out */
+  heightRatio?: number;
+} = {}) {
+  const pics = useMemo(() => {
+    const own = (photos ?? []).filter(Boolean);
+    // A few real photos are padded with the samples so the columns never look sparse
+    return own.length >= 8 ? own : [...own, ...PHOTOS];
+  }, [photos]);
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="none">
-      <View style={styles.mosaicArea}>
+      <View style={[styles.mosaicArea, { height: H * heightRatio }]}>
         <View style={styles.grid}>
           {Array.from({ length: COLS }, (_, i) => (
-            <Column key={i} index={i} />
+            <Column key={i} index={i} photos={pics} />
           ))}
         </View>
         {/* Orange wash over the photos, then a fade into the page background (the text sits there) */}

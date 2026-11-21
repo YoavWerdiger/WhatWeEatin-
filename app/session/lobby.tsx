@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Dimensions,
   View,
   Text,
   StyleSheet,
@@ -16,11 +17,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../../src/theme/colors';
-import { typography } from '../../src/theme/typography';
+import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { LobbyTable } from '../../src/components/LobbyTable';
-import { MenuMarquee } from '../../src/components/MenuMarquee';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { getFirebaseUid, isFirebaseConfigured } from '../../src/services/firebase';
@@ -159,6 +160,9 @@ export default function LobbyScreen() {
         />
       </Stack.Toolbar>
 
+      {/* Same language as home: tonight's restaurants drifting under the orange wash */}
+      <HomeMosaic photos={dishPhotos} heightRatio={0.5} />
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={styles.scroll}
@@ -193,11 +197,6 @@ export default function LobbyScreen() {
           />
         </View>
 
-        {/* Tonight's menu drifts past while the table fills up */}
-        <MenuMarquee
-          images={dishPhotos}
-          label={t('create.restaurantsFound', { count: session.restaurants.length })}
-        />
       </ScrollView>
 
       {/* In the layout, not floating — content can never slide under the buttons */}
@@ -243,6 +242,8 @@ function MetaChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label
   );
 }
 
+const SCREEN_H = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -260,16 +261,21 @@ const styles = StyleSheet.create({
   codeBlock: {
     alignItems: 'center',
     gap: spacing.sm,
-    paddingTop: spacing.sm,
+    // The code sits where the mosaic has faded, a third of the way down
+    paddingTop: SCREEN_H * 0.2,
   },
   codeLabel: {
     ...typography.captionMedium,
     color: colors.textSecondary,
   },
+  // Same voice as the home title: rounded, black, big
   codeValue: {
-    ...typography.code,
-    fontSize: 44,
-    lineHeight: 52,
+    fontFamily: fontFamilies.rounded,
+    fontSize: 60,
+    lineHeight: 64,
+    fontWeight: '900',
+    letterSpacing: 6,
+    fontVariant: ['tabular-nums'],
     color: colors.text,
   },
   metaRow: {
