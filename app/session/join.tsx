@@ -29,6 +29,7 @@ import { typography, fontFamilies } from '../../src/theme/typography';
 import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
 import { useSessionStore } from '../../src/store/sessionStore';
+import { useAuthStore } from '../../src/store/authStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
 
@@ -51,7 +52,11 @@ export default function JoinSessionScreen() {
   const { user, setName } = useUserStore();
   const { joinSession, joinRemoteSession, isOnline, initAuth } = useSessionStore();
   const [code, setCode] = useState('');
-  const [displayName, setDisplayName] = useState(user.name);
+  const authUser = useAuthStore((s) => s.user);
+  // Signed in with a name on the account → the name field is hidden and the account name is used
+  const signedInName =
+    authUser && authUser.provider !== 'anonymous' ? authUser.displayName?.trim() || '' : '';
+  const [displayName, setDisplayName] = useState(signedInName || user.name);
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codeFocused, setCodeFocused] = useState(false);
@@ -213,6 +218,7 @@ export default function JoinSessionScreen() {
             )}
           </View>
 
+          {!signedInName && (
           <View style={styles.group}>
             <Text style={styles.groupLabel}>{t('join.yourName')}</Text>
             <View style={styles.card}>
@@ -229,6 +235,7 @@ export default function JoinSessionScreen() {
               />
             </View>
           </View>
+          )}
 
           <View style={styles.group}>
             <Text style={styles.groupLabel}>{t('join.howTitle')}</Text>

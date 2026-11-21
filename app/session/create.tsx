@@ -104,6 +104,9 @@ export default function CreateSessionScreen() {
   }, [initAuth]);
 
   const [displayName, setDisplayName] = useState(authUser?.displayName || user.name);
+  // Signed in with a name on the account → no need to ask for it
+  const signedInName =
+    authUser && authUser.provider !== 'anonymous' ? authUser.displayName?.trim() || '' : '';
   const [sessionCode, setSessionCode] = useState<string | null>(null);
   const [filters, setFilters] = useState<SessionFilters>({
     cuisines: [],
@@ -124,13 +127,13 @@ export default function CreateSessionScreen() {
       sessionCode
         ? ['ready']
         : [
-            'name',
+            ...(signedInName ? [] : (['name'] as const)),
             'mode',
             ...(gameMode === 'swipe' ? (['timer'] as const) : []),
             'start',
             'mood',
           ],
-    [gameMode, sessionCode],
+    [gameMode, sessionCode, signedInName],
   );
   const step = steps[Math.min(stepIndex, steps.length - 1)];
   const isLastQuestion = !sessionCode && stepIndex === steps.length - 1;
@@ -145,9 +148,10 @@ export default function CreateSessionScreen() {
   };
 
   const handleCreate = async () => {
-    setName(displayName);
+    const name = signedInName || displayName;
+    setName(name);
     const hostId = firebaseUid || authUser?.uid || user.id;
-    const code = createSession(hostId, displayName, {
+    const code = createSession(hostId, name, {
       timerDuration: gameMode === 'swipe' ? timerDuration : 0,
       requireUnanimousKeepBrowsing,
       requireLobbyReady,
