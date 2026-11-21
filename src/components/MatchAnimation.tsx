@@ -151,8 +151,9 @@ export function MatchAnimation({
 
         {/* Middle: the winner's card — or, once someone asks to keep browsing, just the vote */}
         <View style={styles.stage} onLayout={(e) => setStageH(e.nativeEvent.layout.height)}>
+          {/* Plain views here: an entering animation / scale on an ancestor stops iOS glass rendering */}
           {voteActive ? (
-            <Animated.View entering={FadeIn.duration(200)} style={styles.voteWrap}>
+            <View style={styles.voteWrap}>
               <Glass radius={borderRadius.lg} variant="clear" scheme="dark" dark style={styles.vote}>
                 <View style={styles.voteHead}>
                   <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
@@ -185,16 +186,11 @@ export function MatchAnimation({
                   })}
                 </View>
               </Glass>
-            </Animated.View>
+            </View>
           ) : (
-            <Animated.View
-              entering={reduceMotion ? FadeIn.duration(200) : heroEnter}
-              style={[styles.heroWrap, { width: CARD_WIDTH * cardScale, height: CARD_HEIGHT * cardScale }]}
-            >
-              <View style={{ transform: [{ scale: cardScale }], width: CARD_WIDTH, height: CARD_HEIGHT, marginLeft: (CARD_WIDTH * (cardScale - 1)) / 2, marginTop: (CARD_HEIGHT * (cardScale - 1)) / 2 }}>
-                <SwipeCard restaurant={r} />
-              </View>
-            </Animated.View>
+            <View style={[styles.heroWrap, { width: CARD_WIDTH * cardScale, height: CARD_HEIGHT * cardScale }]}>
+              <SwipeCard restaurant={r} width={CARD_WIDTH * cardScale} />
+            </View>
           )}
         </View>
 

@@ -200,7 +200,8 @@ export default function RouletteScreen() {
 
   const handleSpin = () => {
     if (!isHost || isSpinning || matchResult) return;
-    spinRoulette();
+    // On the map the winner must have a pin — otherwise nothing would animate
+    spinRoulette(useMap ? mapRestaurants : undefined);
   };
 
   const handleLeave = () => {

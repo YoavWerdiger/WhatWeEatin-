@@ -139,7 +139,8 @@ interface SessionState {
   ) => Promise<boolean>;
   startSwiping: () => void;
   /** Host-only: pick a restaurant and sync so the group sees the same roulette winner. */
-  spinRoulette: () => Restaurant | null;
+  /** `pool`: draw only from these (map roulette: restaurants with a pin). */
+  spinRoulette: (pool?: Restaurant[]) => Restaurant | null;
   /** Finger mode: this player's own pick (synced per user). */
   pickFingerRestaurant: (userId: string, restaurantId: string) => void;
   /** Finger mode (host): the finger that was chosen → same result path as the roulette. */
@@ -707,9 +708,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  spinRoulette: () => {
+  spinRoulette: (pool) => {
     const { session } = get();
     if (!session || session.restaurants.length === 0) return null;
+    const candidates = pool && pool.length > 0 ? pool : session.restaurants;
 
     const uid = getFirebaseUid();
     if (uid && session.hostId !== uid) {
@@ -717,10 +719,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       return null;
     }
 
-    const pick =
-      session.restaurants[
-        Math.floor(Math.random() * session.restaurants.length)
-      ]!;
+    const pick = candidates[Math.floor(Math.random() * candidates.length)]!;
     const rouletteResult: RouletteSpinResult = {
       restaurantId: pick.id,
       spunAt: Date.now(),

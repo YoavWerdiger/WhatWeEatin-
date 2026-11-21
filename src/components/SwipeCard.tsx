@@ -42,9 +42,11 @@ function Pill({
 
 interface SwipeCardProps {
   restaurant: Restaurant;
+  /** Smaller card (match screen) — sized directly, not scaled: a transform stops the glass pills rendering */
+  width?: number;
 }
 
-export function SwipeCard({ restaurant }: SwipeCardProps) {
+export function SwipeCard({ restaurant, width }: SwipeCardProps) {
   const stars = '★'.repeat(Math.floor(restaurant.rating));
   const src = SOURCE_CONFIG[restaurant.source];
   // Some sources have no photo (empty string) or a dead link — show a placeholder, not an empty card
@@ -52,7 +54,7 @@ export function SwipeCard({ restaurant }: SwipeCardProps) {
   const hasImage = !!restaurant.image && failedUri !== restaurant.image;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, width ? { width, height: width * (CARD_HEIGHT / CARD_WIDTH) } : null]}>
       {/* expo-image: memory+disk cache, so a prefetched photo shows instantly */}
       {hasImage ? (
         <Image
