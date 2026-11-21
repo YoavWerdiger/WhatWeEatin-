@@ -235,13 +235,10 @@ export default function CreateSessionScreen() {
       </Stack.Toolbar>
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        {/* Fixed frame: each Question keeps its pill + title still and scrolls only its answers */}
+        <View style={styles.content}>
           <StepContext.Provider value={{ current: stepIndex, total: questionCount }}>
-          <Animated.View key={step} entering={reduceMotion ? FadeIn.duration(150) : stepEnter(direction)}>
+          <Animated.View key={step} style={styles.flex} entering={reduceMotion ? FadeIn.duration(150) : stepEnter(direction)}>
             {step === 'name' && (
               <Question title={t('create.qName')} sub={t('create.qNameSub')}>
                 <NameGreeting name={displayName} greet={(n) => t('create.greet', { name: n })} />
@@ -304,7 +301,7 @@ export default function CreateSessionScreen() {
             )}
           </Animated.View>
           </StepContext.Provider>
-        </ScrollView>
+        </View>
 
         {/* Sits right on the keyboard when it's up; above the home indicator otherwise */}
         <View style={[styles.bottomBar, { paddingBottom: keyboardUp ? spacing.sm : Math.max(insets.bottom, spacing.md) }]}>
@@ -426,6 +423,7 @@ function Question({ title, sub, children }: { title: string; sub?: string; child
   const { current, total } = React.useContext(StepContext);
   return (
     <View style={styles.question}>
+      {/* Stays put */}
       <View style={styles.questionHead}>
         {/* A glass pill so the small label stays readable over the grid */}
         <Glass radius={borderRadius.full} tint="rgba(255, 255, 255, 0.75)" style={styles.kickerPill}>
@@ -436,7 +434,15 @@ function Question({ title, sub, children }: { title: string; sub?: string; child
         </Text>
         {sub ? <Text style={styles.questionSub}>{sub}</Text> : null}
       </View>
-      {children}
+      {/* Only the answers scroll, between the question and the button */}
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.answers}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {children}
+      </ScrollView>
     </View>
   );
 }
@@ -488,10 +494,11 @@ const styles = StyleSheet.create({
   flexWide: { flex: 2 },
   container: { flex: 1, backgroundColor: colors.background },
   // The question starts where the grid has faded
-  content: { paddingHorizontal: spacing.md, paddingTop: SCREEN_H * 0.23 },
+  content: { flex: 1, paddingHorizontal: spacing.md, paddingTop: SCREEN_H * 0.23 },
 
 
-  question: { gap: spacing.lg },
+  question: { flex: 1, gap: spacing.md },
+  answers: { gap: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xl },
   questionHead: { gap: spacing.sm, paddingHorizontal: spacing.xs, alignItems: 'center' },
   kickerPill: { paddingHorizontal: 12, paddingVertical: 5 },
   kicker: { ...typography.footnote, fontWeight: '700', color: colors.primaryDark },
