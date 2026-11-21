@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
+  Dimensions,
   Text,
   TextInput,
   StyleSheet,
@@ -20,12 +21,14 @@ import * as Google from 'expo-auth-session/providers/google';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../src/theme/colors';
-import { typography } from '../src/theme/typography';
+import { typography, fontFamilies } from '../src/theme/typography';
 import { spacing, borderRadius } from '../src/theme/spacing';
 import { GlassButton } from '../src/components/native/GlassButton';
 import { useAuthStore } from '../src/store/authStore';
 import { useTranslation } from '../src/i18n/t';
-import { PlateOrbit } from '../src/components/Backdrops';
+import { HomeMosaic } from '../src/components/HomeMosaic';
+
+const SCREEN_H = Dimensions.get('window').height;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -250,7 +253,8 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
-      <PlateOrbit />
+      {/* Same hero as the session lobby: the orange grid drifting at the top, fading into the page */}
+      <HomeMosaic heightRatio={0.5} />
     <SafeAreaView style={styles.flex}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView
@@ -370,11 +374,20 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.lg },
+  // The header lands where the grid has faded, like the code on the lobby
+  scroll: { flexGrow: 1, justifyContent: 'flex-end', paddingTop: SCREEN_H * 0.24, paddingBottom: spacing.lg },
   content: { paddingHorizontal: spacing.md, gap: spacing.md },
   header: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
   logo: { width: 64, height: 64, marginBottom: spacing.sm },
-  title: { ...typography.largeTitle, color: colors.text, textAlign: 'center' },
+  title: {
+    fontFamily: fontFamilies.rounded,
+    fontSize: 40,
+    lineHeight: 44,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    color: colors.text,
+    textAlign: 'center',
+  },
   subtitle: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
   configHint: { ...typography.footnote, color: colors.warning, textAlign: 'center' },
   policyHintBox: {
