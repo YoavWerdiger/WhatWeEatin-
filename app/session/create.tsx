@@ -280,7 +280,7 @@ export default function CreateSessionScreen() {
             )}
 
             {step === 'start' && (
-              <Question title={t('create.qStart')}>
+              <Question title={t('create.qStart')} sub={t('create.qStartSub')}>
                 {/* Each option plays out how the game would start */}
                 <View style={styles.modeRow}>
                   <DemoTile
@@ -307,6 +307,7 @@ export default function CreateSessionScreen() {
                 <KosherPill
                   on={filters.kosherOnly}
                   label={t('filters.kosher')}
+                  sub={t('filters.kosherSub')}
                   onToggle={() => setFilters({ ...filters, kosherOnly: !filters.kosherOnly })}
                 />
               </Question>
@@ -463,7 +464,8 @@ function DemoTile({
 }
 
 /** A small glass toggle; kosher is a yes/no on top of the mood. */
-function KosherPill({ on, label, onToggle }: { on: boolean; label: string; onToggle: () => void }) {
+/** Kosher-only as a full-width glass row: icon, what it means, and a switch on the end. */
+function KosherPill({ on, label, sub, onToggle }: { on: boolean; label: string; sub: string; onToggle: () => void }) {
   return (
     <Pressable
       onPress={() => {
@@ -474,14 +476,18 @@ function KosherPill({ on, label, onToggle }: { on: boolean; label: string; onTog
       accessibilityState={{ checked: on }}
       style={styles.kosherWrap}
     >
-      <Glass
-        radius={borderRadius.full}
-        interactive
-        tint={on ? 'rgba(255, 107, 53, 0.9)' : RESTING_TINT}
-        style={styles.kosherPill}
-      >
-        <Ionicons name={on ? 'shield-checkmark' : 'shield-outline'} size={18} color={on ? '#FFFFFF' : colors.primary} />
-        <Text style={[styles.kosherText, on && styles.kosherTextOn]}>{label}</Text>
+      <Glass radius={borderRadius.lg} interactive tint={on ? 'rgba(255, 107, 53, 0.18)' : RESTING_TINT} style={styles.kosherRow}>
+        <View style={[styles.kosherIcon, on && styles.kosherIconOn]}>
+          <Ionicons name={on ? 'shield-checkmark' : 'shield-outline'} size={20} color={on ? '#FFFFFF' : colors.primary} />
+        </View>
+        <View style={styles.kosherTextCol}>
+          <Text style={styles.kosherText}>{label}</Text>
+          <Text style={styles.kosherSub}>{sub}</Text>
+        </View>
+        {/* Switch-like indicator */}
+        <View style={[styles.kosherSwitch, on && styles.kosherSwitchOn]}>
+          <View style={[styles.kosherKnob, on && styles.kosherKnobOn]} />
+        </View>
       </Glass>
     </Pressable>
   );
@@ -569,10 +575,31 @@ const styles = StyleSheet.create({
   },
 
   cards: { gap: 12 },
-  kosherWrap: { alignSelf: 'center' },
-  kosherPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 10 },
-  kosherText: { ...typography.subheadline, fontWeight: '600', color: colors.text },
-  kosherTextOn: { color: '#FFFFFF' },
+  kosherWrap: { alignSelf: 'stretch', marginTop: spacing.lg },
+  kosherRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md },
+  kosherIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryMuted,
+  },
+  kosherIconOn: { backgroundColor: colors.primary },
+  kosherTextCol: { flex: 1, gap: 2 },
+  kosherText: { ...typography.headline, color: colors.text },
+  kosherSub: { ...typography.footnote, color: colors.textSecondary },
+  kosherSwitch: {
+    width: 46,
+    height: 28,
+    borderRadius: 14,
+    padding: 3,
+    backgroundColor: 'rgba(120,120,128,0.24)',
+    justifyContent: 'center',
+  },
+  kosherSwitchOn: { backgroundColor: colors.primary },
+  kosherKnob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
+  kosherKnobOn: { alignSelf: 'flex-end' },
   // Three modes: two per row, the third spans the next row
   modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   modeCell: { flexBasis: '46%', flexGrow: 1 },
