@@ -9,6 +9,7 @@ import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { FingerChooser } from '../../src/components/FingerChooser';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Glass } from '../../src/components/ui/Glass';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
 
 // Glass tints, as on the create flow: resting white, chosen orange
 const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
@@ -165,6 +166,8 @@ export default function FingerScreen() {
         />
       ) : (
         <SafeAreaView style={styles.safe}>
+          {/* Tonight's places drifting under a pale veil — something for the glass to refract */}
+          <HomeMosaic photos={restaurants.map((r) => r.image)} heightRatio={1} tone="light" />
           <View style={styles.topBar}>
             <Pressable onPress={handleLeave} hitSlop={12}>
               <Text style={styles.leaveText}>{t('common.leave')}</Text>

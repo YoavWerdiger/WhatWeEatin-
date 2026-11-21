@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, ViewProps } from 'react-native';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { colors } from '../../theme/colors';
@@ -7,6 +7,7 @@ import { borderRadius as radii } from '../../theme/spacing';
 // Native iOS 26 Liquid Glass (UIGlassEffect in Swift, via expo-glass-effect).
 // No blur imitation: anywhere real glass isn't available we render an honest solid surface.
 const LIQUID = Platform.OS === 'ios' && isLiquidGlassAvailable();
+const GLASS_SETTLE_MS = 300;
 
 interface GlassProps extends ViewProps {
   radius?: number;
@@ -33,13 +34,24 @@ export function Glass({
   ...rest
 }: GlassProps) {
   const shape = { borderRadius: radius, borderCurve: 'continuous' as const };
-  // expo-glass-effect can skip the effect when the view mounts before it has been
-  // laid out (see GlassView.swift). Hold a plain view until the first layout.
+  // expo-glass-effect can skip the effect when the view mounts before it has been laid out,
+  // or while an ancestor is still animating in (screen/step entrances fade from opacity 0).
+  // Hold a solid look-alike until layout + a beat past the usual entrance (~240ms), then mount glass.
   const [laidOut, setLaidOut] = useState(false);
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!LIQUID || !laidOut) return;
+    const id = setTimeout(() => setSettled(true), GLASS_SETTLE_MS);
+    return () => clearTimeout(id);
+  }, [laidOut]);
 
-  if (LIQUID && !laidOut) {
+  if (LIQUID && !settled) {
     return (
-      <View style={[shape, style]} onLayout={() => setLaidOut(true)} {...rest}>
+      <View
+        style={[shape, dark ? styles.solidDark : styles.solid, tint ? { backgroundColor: tint } : null, style]}
+        onLayout={laidOut ? undefined : () => setLaidOut(true)}
+        {...rest}
+      >
         {children}
       </View>
     );

@@ -76,11 +76,14 @@ function Column({ index, photos }: { index: number; photos: string[] }) {
 export function HomeMosaic({
   photos,
   heightRatio = 0.74,
+  tone = 'orange',
 }: {
   /** Photos to drift (e.g. the session's restaurants); defaults to the sample dishes */
   photos?: string[];
   /** How far down the screen the mosaic reaches before it has faded out */
   heightRatio?: number;
+  /** 'light': a strong pale veil over the whole mosaic — texture behind glass, dark text stays readable */
+  tone?: 'orange' | 'light';
 } = {}) {
   const pics = useMemo(() => {
     const own = (photos ?? []).filter(Boolean);
@@ -96,12 +99,19 @@ export function HomeMosaic({
           ))}
         </View>
         {/* Orange wash over the photos, then a fade into the page background (the text sits there) */}
+        {tone === 'light' ? (
+          <LinearGradient
+            colors={['rgba(242,242,247,0.72)', 'rgba(242,242,247,0.82)', 'rgba(242,242,247,0.9)']}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : (
         <LinearGradient
           // Light by the title's height (≈60% down) so the dark text reads; the photos only ghost through below
           colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.55)', 'rgba(242,242,247,0.93)', colors.background]}
           locations={[0, 0.38, 0.6, 1]}
           style={StyleSheet.absoluteFill}
         />
+        )}
       </View>
     </View>
   );
