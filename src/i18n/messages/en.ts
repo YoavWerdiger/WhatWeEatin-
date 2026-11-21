@@ -72,6 +72,8 @@ export const en = {
   'lobby.confirmWait': "Wait",
   'tableReady.copy': "Copy",
   'tableReady.copied': "Copied",
+  'create.loadFailedTitle': "Couldn’t set the table",
+  'create.loadFailedBody': "No restaurants found nearby. Try a different mood or budget.",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

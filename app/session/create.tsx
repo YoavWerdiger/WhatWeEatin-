@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
+  Alert,
   Text,
   TextInput,
   StyleSheet,
@@ -44,7 +45,6 @@ import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
-import { TableReady } from '../../src/components/TableReady';
 
 import { useTranslation } from '../../src/i18n/t';
 
@@ -53,8 +53,7 @@ type Step =
   | 'mode'
   | 'timer'
   | 'cuisine'
-  | 'mood'
-  | 'ready';
+  | 'mood';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 const AUTO_ADVANCE_MS = 220;
@@ -106,7 +105,7 @@ export default function CreateSessionScreen() {
   // Signed in with a name on the account → no need to ask for it
   const signedInName =
     authUser && authUser.provider !== 'anonymous' ? authUser.displayName?.trim() || '' : '';
-  const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [filters, setFilters] = useState<SessionFilters>({
     cuisines: [],
     kosherOnly: false,
@@ -125,18 +124,16 @@ export default function CreateSessionScreen() {
   // Roulette has no round timer, so its flow skips that question.
   const steps = useMemo<Step[]>(
     () =>
-      sessionCode
-        ? ['ready']
-        : [
-            ...(signedInName ? [] : (['name'] as const)),
-            'mode',
-            ...(gameMode === 'swipe' ? (['timer'] as const) : []),
-            'mood',
-          ],
-    [gameMode, sessionCode, signedInName],
+      [
+        ...(signedInName ? [] : (['name'] as const)),
+        'mode',
+        ...(gameMode === 'swipe' ? (['timer'] as const) : []),
+        'mood',
+      ],
+    [gameMode, signedInName],
   );
   const step = steps[Math.min(stepIndex, steps.length - 1)];
-  const isLastQuestion = !sessionCode && stepIndex === steps.length - 1;
+  const isLastQuestion = stepIndex === steps.length - 1;
 
   const goTo = (index: number) => {
     setDirection(index > stepIndex ? 1 : -1);
@@ -151,24 +148,25 @@ export default function CreateSessionScreen() {
     const name = signedInName || displayName;
     setName(name);
     const hostId = firebaseUid || authUser?.uid || user.id;
-    const code = createSession(hostId, name, {
+    createSession(hostId, name, {
       timerDuration: gameMode === 'swipe' ? timerDuration : 0,
       requireUnanimousKeepBrowsing,
       requireLobbyReady,
       gameMode,
     });
-    setDirection(1);
-    setStepIndex(0);
-    setSessionCode(code);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // No separate "table is ready" screen: load the places, then straight into the lobby (it shows the code)
+    setCreating(true);
     await loadRestaurants(filters);
-  };
-
-  const handleShare = async () => {
-    if (!sessionCode) return;
-    try {
-      await Share.share({ message: t('create.shareMessage', { code: sessionCode }) });
-    } catch {}
+    setCreating(false);
+    const st = useSessionStore.getState();
+    if (st.session?.restaurants.length) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/session/lobby');
+      return;
+    }
+    // Nothing found — drop the empty table and stay on the question so they can retry
+    leaveSession(hostId);
+    Alert.alert(t('create.loadFailedTitle'), st.loadError ?? t('create.loadFailedBody'), [{ text: t('common.ok') }]);
   };
 
   const leave = () => {
@@ -178,7 +176,7 @@ export default function CreateSessionScreen() {
   };
 
   const handleBack = () => {
-    if (!sessionCode && stepIndex > 0) goTo(stepIndex - 1);
+    if (stepIndex > 0) goTo(stepIndex - 1);
     else leave();
   };
 
@@ -190,10 +188,7 @@ export default function CreateSessionScreen() {
   };
 
   const restaurantCount = session?.restaurants.length || 0;
-  const isReady = !!sessionCode && !isLoadingRestaurants && restaurantCount > 0;
   const questionCount = steps.length;
-  // Questions in the flow (the code screen counts as one more step after them)
-  const flowLength = (signedInName ? 0 : 1) + 1 + (gameMode === 'swipe' ? 1 : 0) + 1;
 
   const modeTitle = (mode: GameMode) =>
     mode === 'roulette' ? t('create.modeRoulette') : mode === 'finger' ? t('create.modeFinger') : t('create.modeSwipe');
@@ -211,18 +206,12 @@ export default function CreateSessionScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: () =>
-            // On the code screen the bar is full: every question answered, plus this last step
-            sessionCode ? (
-              <Progress current={flowLength} total={flowLength + 1} />
-            ) : (
-              <Progress current={stepIndex} total={questionCount + 1} />
-            ),
+          headerTitle: () => <Progress current={stepIndex} total={questionCount} />,
         }}
       />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
-          icon={sessionCode || stepIndex === 0 ? 'xmark' : 'chevron.backward'}
+          icon={stepIndex === 0 ? 'xmark' : 'chevron.backward'}
           accessibilityLabel={plain(t('common.back'))}
           onPress={handleBack}
         />
@@ -296,50 +285,29 @@ export default function CreateSessionScreen() {
                 />
               </Question>
             )}
-
-            {step === 'ready' && sessionCode && (
-              <Question title={t('create.readyTitle')} sub={t('create.readySub')}>
-                <TableReady
-                  code={sessionCode}
-                  restaurants={session?.restaurants ?? []}
-                  loading={isLoadingRestaurants}
-                  city={userLocation?.city}
-                  error={loadError}
-                  onShare={handleShare}
-                />
-              </Question>
-            )}
           </Animated.View>
         </ScrollView>
 
         <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-          {step === 'ready' ? (
-            <GlassButton
-              title={isReady ? plain(t('create.letsGo')) : t('common.loading')}
-              onPress={() => router.push('/session/lobby')}
-              disabled={!isReady}
-              loading={isLoadingRestaurants}
-            />
-          ) : (
-            <View style={styles.actionsRow}>
-              {optional && (
-                <View style={styles.flex}>
-                  <GlassButton
-                    title={t('create.skip')}
-                    prominent={false}
-                    onPress={isLastQuestion ? handleCreate : next}
-                  />
-                </View>
-              )}
-              <View style={optional ? styles.flexWide : styles.flex}>
+          <View style={styles.actionsRow}>
+            {optional && (
+              <View style={styles.flex}>
                 <GlassButton
-                  title={isLastQuestion ? t('create.createBtn') : t('create.continue')}
+                  title={t('create.skip')}
+                  prominent={false}
                   onPress={isLastQuestion ? handleCreate : next}
-                  disabled={step === 'name' && !displayName.trim()}
                 />
               </View>
+            )}
+            <View style={optional ? styles.flexWide : styles.flex}>
+              <GlassButton
+                title={isLastQuestion ? t('create.createBtn') : t('create.continue')}
+                onPress={isLastQuestion ? handleCreate : next}
+                loading={isLastQuestion && creating}
+                disabled={(step === 'name' && !displayName.trim()) || creating}
+              />
             </View>
-          )}
+          </View>
         </View>
       </KeyboardAvoidingView>
     </View>

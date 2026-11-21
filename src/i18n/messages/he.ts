@@ -73,6 +73,8 @@ export const he: Messages = {
   'lobby.confirmWait': "לחכות",
   'tableReady.copy': "העתקה",
   'tableReady.copied': "הועתק",
+  'create.loadFailedTitle': "לא הצלחנו לערוך את השולחן",
+  'create.loadFailedBody': "לא נמצאו מסעדות באזור. נסו מצב רוח או תקציב אחר.",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

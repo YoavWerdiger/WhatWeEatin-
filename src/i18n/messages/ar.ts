@@ -73,6 +73,8 @@ export const ar: Messages = {
   'lobby.confirmWait': "انتظر",
   'tableReady.copy': "نسخ",
   'tableReady.copied': "تم النسخ",
+  'create.loadFailedTitle': "تعذّر تجهيز الطاولة",
+  'create.loadFailedBody': "لم نجد مطاعم قريبة. جرّب مزاجًا أو ميزانية أخرى.",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',
