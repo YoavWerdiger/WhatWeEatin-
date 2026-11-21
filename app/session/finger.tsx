@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -44,6 +44,8 @@ export default function FingerScreen() {
   const [displayedMatch, setDisplayedMatch] = useState(matchResult);
   const [matchExiting, setMatchExiting] = useState(false);
   const [changing, setChanging] = useState(false);
+  const [query, setQuery] = useState('');
+  const [cuisine, setCuisine] = useState<string | null>(null);
 
   const myUid = getFirebaseUid() ?? firebaseUid ?? user.id;
   const participantId =
@@ -67,6 +69,21 @@ export default function FingerScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [users, restaurants, JSON.stringify(picksMap)],
   );
+
+  // Picker helpers: the most common cuisines as quick filters, plus search by name / cuisine
+  const cuisines = useMemo(() => {
+    const count = new Map<string, number>();
+    for (const r of restaurants) if (r.cuisine) count.set(r.cuisine, (count.get(r.cuisine) ?? 0) + 1);
+    return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([c]) => c);
+  }, [restaurants]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return restaurants.filter(
+      (r) =>
+        (!cuisine || r.cuisine === cuisine) &&
+        (!q || r.name.toLowerCase().includes(q) || r.cuisine?.toLowerCase().includes(q)),
+    );
+  }, [restaurants, query, cuisine]);
 
   useEffect(() => {
     if (session?.status === 'waiting') router.replace('/session/lobby');
@@ -155,26 +172,65 @@ export default function FingerScreen() {
             <>
               <Text style={styles.title}>{t('finger.pickTitle')}</Text>
               <Text style={styles.subtitle}>{t('finger.pickSub')}</Text>
+              <View style={styles.search}>
+                <Ionicons name="search" size={18} color={colors.textMuted} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder={t('finger.searchPlaceholder')}
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.searchInput}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  clearButtonMode="while-editing"
+                />
+              </View>
+              {cuisines.length > 1 ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsBar}>
+                  {cuisines.map((c) => {
+                    const on = cuisine === c;
+                    return (
+                      <Pressable
+                        key={c}
+                        onPress={() => {
+                          void Haptics.selectionAsync();
+                          setCuisine(on ? null : c);
+                        }}
+                        style={[styles.chip, on && styles.chipOn]}
+                      >
+                        <Text style={[styles.chipText, on && styles.chipTextOn]}>{c}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : null}
+              {/* Compact rows: more places per screen, quicker to scan than big tiles */}
               <FlatList
-                data={restaurants}
+                data={visible}
                 keyExtractor={(r) => r.id}
-                numColumns={2}
-                columnWrapperStyle={styles.gridRow}
-                contentContainerStyle={styles.grid}
+                contentContainerStyle={styles.list}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 showsVerticalScrollIndicator={false}
+                ListEmptyComponent={<Text style={styles.empty}>{t('finger.noResults')}</Text>}
                 renderItem={({ item }) => {
                   const selected = item.id === myPickId;
                   return (
-                    <Pressable onPress={() => handlePick(item)} style={[styles.tile, selected && styles.tileSelected]}>
-                      <Image source={{ uri: item.image }} style={styles.tilePhoto} contentFit="cover" cachePolicy="memory-disk" />
-                      <View style={styles.tileInfo}>
+                    <Pressable onPress={() => handlePick(item)} style={[styles.row, selected && styles.rowSelected]}>
+                      <Image source={{ uri: item.image }} style={styles.rowPhoto} contentFit="cover" cachePolicy="memory-disk" />
+                      <View style={styles.rowText}>
                         <Text style={styles.tileName} numberOfLines={1}>
                           {item.name}
                         </Text>
                         <Text style={styles.tileMeta} numberOfLines={1}>
-                          {item.cuisine} · ★ {item.rating}
+                          {[item.cuisine, `★ ${item.rating}`, item.deliveryTime].filter(Boolean).join(' · ')}
                         </Text>
                       </View>
+                      {selected ? (
+                        <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                      ) : (
+                        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                      )}
                     </Pressable>
                   );
                 }}
@@ -249,12 +305,37 @@ const styles = StyleSheet.create({
   codeValue: { ...typography.subheadline, fontWeight: '700', color: colors.primaryDark, letterSpacing: 2 },
   title: { ...typography.largeTitle, color: colors.text, marginTop: spacing.md },
   subtitle: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.md },
-  grid: { paddingBottom: spacing.xxl, gap: spacing.sm },
-  gridRow: { gap: spacing.sm },
-  tile: { flex: 1, borderRadius: borderRadius.lg, overflow: 'hidden', backgroundColor: colors.card, borderWidth: 3, borderColor: 'transparent' },
-  tileSelected: { borderColor: colors.primary },
-  tilePhoto: { width: '100%', aspectRatio: 1.2 },
-  tileInfo: { padding: spacing.sm, gap: 2 },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    height: 46,
+  },
+  searchInput: { flex: 1, ...typography.body, color: colors.text, paddingVertical: 0 },
+  chipsBar: { flexGrow: 0, marginTop: spacing.sm },
+  chips: { gap: 8, paddingVertical: 4 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: borderRadius.full, backgroundColor: colors.card },
+  chipOn: { backgroundColor: colors.primary },
+  chipText: { ...typography.subheadline, color: colors.text, fontWeight: '600' },
+  chipTextOn: { color: colors.onPrimary },
+  list: { paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: 6 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: 8,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  rowSelected: { borderColor: colors.primary },
+  rowPhoto: { width: 56, height: 56, borderRadius: 12 },
+  rowText: { flex: 1, gap: 2 },
+  empty: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
   tileName: { ...typography.headline, color: colors.text },
   tileMeta: { ...typography.footnote, color: colors.textSecondary },
   waiting: { flex: 1 },

@@ -99,6 +99,8 @@ export const ar: Messages = {
   'finger.putFingersGuest': "الجميع اختار! ضع إصبعك على هاتف {{name}}",
   'finger.picked': "اختار",
   'finger.change': "تغيير",
+  'finger.searchPlaceholder': "ابحث بالاسم أو المطبخ",
+  'finger.noResults': "لا توجد أماكن مطابقة",
   'create.modeRoulette': 'روليت الجوع',
   'create.modeRouletteHint':
     'بدون تمرير — المضيف يدير العجلة ويُختار مطعم واحد للجميع.',

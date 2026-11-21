@@ -103,6 +103,8 @@ export const es: Messages = {
   'finger.putFingersGuest': "¡Todos eligieron! Pon tu dedo en el móvil de {{name}}",
   'finger.picked': "Elegido",
   'finger.change': "Cambiar",
+  'finger.searchPlaceholder': "Buscar por nombre o cocina",
+  'finger.noResults': "Ningún sitio coincide",
   'create.modeRoulette': 'Ruleta del hambre',
   'create.modeRouletteHint':
     'Sin deslizar — el anfitrión gira y se elige un restaurante para todos.',

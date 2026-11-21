@@ -98,6 +98,8 @@ export const he: Messages = {
   'finger.putFingersGuest': "כולם בחרו! שימו אצבע על הטלפון של {{name}}",
   'finger.picked': "בחר",
   'finger.change': "שינוי",
+  'finger.searchPlaceholder': "חיפוש לפי שם או מטבח",
+  'finger.noResults': "לא נמצאו מקומות",
   'create.modeRoulette': 'רולטת רעב',
   'create.modeRouletteHint':
     'בלי החלקות — המארח מסובב ובוחרים מסעדה אחת לכולם.',

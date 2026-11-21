@@ -97,6 +97,8 @@ export const en = {
   'finger.putFingersGuest': "Everyone picked! Put your finger on {{name}}’s phone",
   'finger.picked': "Picked",
   'finger.change': "Change",
+  'finger.searchPlaceholder': "Search by name or cuisine",
+  'finger.noResults': "No places match",
   'create.modeRoulette': 'Hunger roulette',
   'create.modeRouletteHint':
     'No swiping — the host spins and one restaurant is picked for everyone.',
