@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
+  Dimensions,
   Text,
   TextInput,
   StyleSheet,
@@ -32,6 +33,9 @@ import { useSessionStore } from '../../src/store/sessionStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
+
+const HERO_GAP = Dimensions.get('window').height * 0.12;
 
 const CODE_LENGTH = 6;
 const charLand = new Keyframe({
@@ -129,6 +133,8 @@ export default function JoinSessionScreen() {
 
   return (
     <View style={styles.container}>
+      {/* A short strip of the lobby's grid behind the header, fading out before the question */}
+      <HomeMosaic heightRatio={0.3} />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="chevron.backward"
@@ -281,6 +287,8 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
+    // Title starts where the grid strip has faded
+    paddingTop: HERO_GAP,
     gap: spacing.lg,
   },
   title: {

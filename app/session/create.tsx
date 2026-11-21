@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
+  Dimensions,
   Text,
   TextInput,
   StyleSheet,
@@ -44,6 +45,9 @@ import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
+
+const HERO_GAP = Dimensions.get('window').height * 0.12;
 import { useTranslation } from '../../src/i18n/t';
 
 type Step =
@@ -205,6 +209,8 @@ export default function CreateSessionScreen() {
 
   return (
     <View style={styles.container}>
+      {/* A short strip of the lobby's grid behind the header, fading out before the question */}
+      <HomeMosaic heightRatio={0.3} />
       <Stack.Screen
         options={{
           headerTitle: () =>
@@ -528,7 +534,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   flexWide: { flex: 2 },
   container: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  // Questions start where the grid strip has faded
+  content: { paddingHorizontal: spacing.md, paddingTop: HERO_GAP },
 
   progress: { flexDirection: 'row', gap: 4, width: 160 },
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.primary },
