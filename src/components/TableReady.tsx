@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -51,9 +51,9 @@ export function TableReady({ code, restaurants, loading, city, error, onShare }:
       {/* The code, one tile per character */}
       <View style={styles.codeRow} accessible accessibilityLabel={code.split('').join(' ')}>
         {code.split('').map((ch, i) => (
-          // Glass stays still (it skips its effect under an animating ancestor); the letter pops in
+          // Glass stays still (it skips its effect under an animating ancestor); the letter fades in, gently
           <Glass key={i} radius={borderRadius.md} tint={RESTING_TINT} style={styles.tile}>
-            <Animated.Text entering={ZoomIn.delay(200 + i * 80).springify().damping(14)} style={styles.tileText}>
+            <Animated.Text entering={FadeInDown.delay(120 + i * 45).duration(220)} style={styles.tileText}>
               {ch}
             </Animated.Text>
           </Glass>
