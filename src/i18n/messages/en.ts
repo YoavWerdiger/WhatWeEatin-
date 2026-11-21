@@ -74,6 +74,9 @@ export const en = {
   'tableReady.copied': "Copied",
   'create.loadFailedTitle': "Couldn’t set the table",
   'create.loadFailedBody': "No restaurants found nearby. Try a different mood or budget.",
+  'join.kicker': "Joining a table",
+  'join.heroTitle': "Got a code?",
+  'join.joiningAs': "Joining as",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

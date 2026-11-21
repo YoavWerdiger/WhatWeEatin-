@@ -75,6 +75,9 @@ export const ar: Messages = {
   'tableReady.copied': "تم النسخ",
   'create.loadFailedTitle': "تعذّر تجهيز الطاولة",
   'create.loadFailedBody': "لم نجد مطاعم قريبة. جرّب مزاجًا أو ميزانية أخرى.",
+  'join.kicker': "الانضمام إلى طاولة",
+  'join.heroTitle': "هل لديك رمز؟",
+  'join.joiningAs': "تنضم باسم",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',

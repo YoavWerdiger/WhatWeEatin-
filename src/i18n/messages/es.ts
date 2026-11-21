@@ -78,6 +78,9 @@ export const es: Messages = {
   'tableReady.copied': "Copiado",
   'create.loadFailedTitle': "No pudimos preparar la mesa",
   'create.loadFailedBody': "No hay restaurantes cerca. Prueba otro ánimo o presupuesto.",
+  'join.kicker': "Unirse a una mesa",
+  'join.heroTitle': "¿Tienes un código?",
+  'join.joiningAs': "Te unes como",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

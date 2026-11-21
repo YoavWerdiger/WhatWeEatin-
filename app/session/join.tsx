@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -26,24 +27,22 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors } from '../../src/theme/colors';
 import { typography, fontFamilies } from '../../src/theme/typography';
-import { spacing, borderRadius, continuous } from '../../src/theme/spacing';
+import { spacing, borderRadius } from '../../src/theme/spacing';
 import { GlassButton } from '../../src/components/native/GlassButton';
+import { Glass } from '../../src/components/ui/Glass';
+import { Avatar } from '../../src/components/ui/Avatar';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useTranslation } from '../../src/i18n/t';
-
 
 const CODE_LENGTH = 6;
 const charLand = new Keyframe({
   0: { opacity: 0, transform: [{ scale: 1.5 }, { translateY: -6 }] },
   100: { opacity: 1, transform: [{ scale: 1 }, { translateY: 0 }], easing: Easing.bezier(0.23, 1, 0.32, 1) },
 }).duration(200);
-const HOW_STEPS = [
-  { icon: 'key-outline', key: 'join.step1' },
-  { icon: 'albums-outline', key: 'join.step2' },
-  { icon: 'restaurant-outline', key: 'join.step3' },
-] as const;
+const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
 const plain = (s: string) => s.replace(/[→←]/g, '').trim();
 
 export default function JoinSessionScreen() {
@@ -130,6 +129,8 @@ export default function JoinSessionScreen() {
 
   return (
     <View style={styles.container}>
+      {/* The other side of the lobby: same grid hero, and the code lands where it fades */}
+      <HomeMosaic heightRatio={0.46} />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="chevron.backward"
@@ -142,89 +143,78 @@ export default function JoinSessionScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           bounces={false}
         >
-          <Text style={styles.title}>{t('join.title')}</Text>
-          <Text style={styles.subtitle}>{t('join.subtitle')}</Text>
+          <Text style={styles.kicker}>{t('join.kicker')}</Text>
+          <Text style={styles.title}>{t('join.heroTitle')}</Text>
 
-          <View style={styles.group}>
-            <View style={styles.groupHeader}>
-              <Text style={styles.groupLabel}>{t('join.sessionCode')}</Text>
-              <Pressable
-                onPress={handlePaste}
-                hitSlop={12}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.pasteButton, pressed && styles.pressed]}
-              >
-                <Ionicons name="clipboard-outline" size={16} color={colors.primary} />
+          <Animated.View style={[styles.codeWrap, shakeStyle]}>
+            <Pressable
+              style={styles.codeRow}
+              onPress={() => codeInputRef.current?.focus()}
+              accessibilityRole="none"
+            >
+              {Array.from({ length: CODE_LENGTH }).map((_, i) => {
+                const char = code[i];
+                const isActive = codeFocused && i === Math.min(code.length, CODE_LENGTH - 1);
+                return (
+                  <Glass
+                    key={i}
+                    radius={borderRadius.md}
+                    tint={char ? 'rgba(255, 107, 53, 0.16)' : RESTING_TINT}
+                    style={[styles.codeBox, isActive && styles.codeBoxActive, !!error && styles.codeBoxError]}
+                  >
+                    {char ? (
+                      // Each character lands in its tile
+                      <Animated.Text key={`${i}-${char}`} entering={charLand} style={styles.codeChar}>
+                        {char}
+                      </Animated.Text>
+                    ) : isActive ? (
+                      <View style={styles.caret} />
+                    ) : null}
+                  </Glass>
+                );
+              })}
+            </Pressable>
+          </Animated.View>
+          {/* One real input drives the six tiles — keeps paste, autofill and VoiceOver working */}
+          <TextInput
+            ref={codeInputRef}
+            value={code}
+            onChangeText={handleCodeChange}
+            onFocus={() => setCodeFocused(true)}
+            onBlur={() => setCodeFocused(false)}
+            maxLength={CODE_LENGTH}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            autoFocus
+            textContentType="oneTimeCode"
+            accessibilityLabel={t('join.sessionCode')}
+            style={styles.hiddenInput}
+            caretHidden
+          />
+          {error ? (
+            <Animated.Text entering={FadeIn.duration(150)} exiting={FadeOut.duration(120)} style={styles.errorText}>
+              {error}
+            </Animated.Text>
+          ) : (
+            <Pressable onPress={handlePaste} hitSlop={8} accessibilityRole="button" style={styles.pasteWrap}>
+              <Glass radius={borderRadius.full} interactive tint={RESTING_TINT} style={styles.pasteChip}>
+                <Ionicons name="clipboard-outline" size={16} color={colors.primaryDark} />
                 <Text style={styles.pasteText}>{t('join.paste')}</Text>
-              </Pressable>
-            </View>
-            <Animated.View style={shakeStyle}>
-              <Pressable
-                style={styles.codeRow}
-                onPress={() => codeInputRef.current?.focus()}
-                accessibilityRole="none"
-              >
-                {Array.from({ length: CODE_LENGTH }).map((_, i) => {
-                  const char = code[i];
-                  const isActive = codeFocused && i === Math.min(code.length, CODE_LENGTH - 1);
-                  return (
-                    <View
-                      key={i}
-                      style={[
-                        styles.codeBox,
-                        isActive && styles.codeBoxActive,
-                        !!error && styles.codeBoxError,
-                      ]}
-                    >
-                      {char ? (
-                        // Each character lands in its box
-                        <Animated.Text key={`${i}-${char}`} entering={charLand} style={styles.codeChar}>
-                          {char}
-                        </Animated.Text>
-                      ) : null}
-                    </View>
-                  );
-                })}
-              </Pressable>
-            </Animated.View>
-            {/* One real input drives the six boxes — keeps paste, autofill and VoiceOver working */}
-            <TextInput
-              ref={codeInputRef}
-              value={code}
-              onChangeText={handleCodeChange}
-              onFocus={() => setCodeFocused(true)}
-              onBlur={() => setCodeFocused(false)}
-              maxLength={CODE_LENGTH}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              autoFocus
-              textContentType="oneTimeCode"
-              accessibilityLabel={t('join.sessionCode')}
-              style={styles.hiddenInput}
-              caretHidden
-            />
-            {error && (
-              <Animated.Text
-                entering={FadeIn.duration(150)}
-                exiting={FadeOut.duration(120)}
-                style={styles.errorText}
-              >
-                {error}
-              </Animated.Text>
-            )}
-          </View>
+              </Glass>
+            </Pressable>
+          )}
 
-          {!signedInName && (
-          <View style={styles.group}>
-            <Text style={styles.groupLabel}>{t('join.yourName')}</Text>
-            <View style={styles.card}>
+          {/* Guests: who you'll appear as — tap to change */}
+          {!signedInName ? (
+            <Glass radius={borderRadius.full} tint={RESTING_TINT} style={styles.nameChip}>
+              <Avatar name={displayName || '?'} size={30} />
+              <Text style={styles.nameLabel}>{t('join.joiningAs')}</Text>
               <TextInput
-                style={styles.input}
+                style={styles.nameInput}
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder={t('join.namePlaceholder')}
@@ -234,24 +224,9 @@ export default function JoinSessionScreen() {
                 returnKeyType="go"
                 onSubmitEditing={() => void handleJoin()}
               />
-            </View>
-          </View>
-          )}
-
-          <View style={styles.group}>
-            <Text style={styles.groupLabel}>{t('join.howTitle')}</Text>
-            <View style={[styles.card, styles.steps]}>
-              {HOW_STEPS.map(({ icon, key }, i) => (
-                <View key={key} style={styles.stepRow}>
-                  <View style={styles.stepIcon}>
-                    <Ionicons name={icon} size={18} color={colors.primary} />
-                  </View>
-                  <Text style={styles.stepText}>{t(key)}</Text>
-                  <Text style={styles.stepNumber}>{i + 1}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
+              <Ionicons name="pencil" size={14} color={colors.textMuted} />
+            </Glass>
+          ) : null}
         </ScrollView>
 
         <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
@@ -267,119 +242,84 @@ export default function JoinSessionScreen() {
   );
 }
 
+const SCREEN_H = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-    alignItems: 'flex-start',
-  },
   content: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.largeTitle,
-    color: colors.text,
-    paddingHorizontal: spacing.xs,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginTop: -spacing.md,
-    paddingHorizontal: spacing.xs,
-  },
-  group: { gap: spacing.sm },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingEnd: spacing.xs,
-  },
-  pasteButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  pasteText: { ...typography.subheadline, fontWeight: '600', color: colors.primaryDark },
-  pressed: { opacity: 0.6 },
-  steps: { paddingVertical: spacing.xs },
-  stepRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    // The title sits where the grid has faded, like the code on the lobby
+    paddingTop: SCREEN_H * 0.27,
   },
-  stepIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primaryMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepText: { ...typography.subheadline, color: colors.text, flex: 1 },
-  stepNumber: { ...typography.footnote, color: colors.textMuted, fontVariant: ['tabular-nums'] },
-  groupLabel: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
-    paddingHorizontal: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    ...continuous,
-  },
-  input: {
-    ...typography.body,
+  kicker: { ...typography.captionMedium, color: colors.textSecondary },
+  title: {
+    fontFamily: fontFamilies.rounded,
+    fontSize: 40,
+    lineHeight: 44,
+    fontWeight: '900',
+    letterSpacing: -0.5,
     color: colors.text,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
   },
 
+  codeWrap: { alignSelf: 'stretch' },
   // Codes read left-to-right in every locale
   codeRow: {
     flexDirection: 'row',
     direction: 'ltr',
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   codeBox: {
     flex: 1,
-    aspectRatio: 0.82,
-    borderRadius: borderRadius.md,
-    ...continuous,
-    backgroundColor: colors.surface,
+    aspectRatio: 0.78,
     borderWidth: 2,
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  codeBoxActive: {
-    borderColor: colors.primary,
-  },
-  codeBoxError: {
-    borderColor: colors.danger,
-  },
+  codeBoxActive: { borderColor: colors.primary },
+  codeBoxError: { borderColor: colors.danger },
   codeChar: {
-    ...typography.title1,
-    fontFamily: fontFamilies.mono,
+    fontFamily: fontFamilies.rounded,
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '900',
     color: colors.text,
   },
+  caret: { width: 2, height: 28, borderRadius: 1, backgroundColor: colors.primary },
   hiddenInput: {
     position: 'absolute',
     width: 1,
     height: 1,
     opacity: 0,
   },
-  errorText: {
-    ...typography.captionMedium,
-    color: colors.danger,
-    paddingHorizontal: spacing.md,
+  errorText: { ...typography.subheadline, fontWeight: '600', color: colors.danger, textAlign: 'center' },
+  pasteWrap: { alignSelf: 'center' },
+  pasteChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
+  pasteText: { ...typography.subheadline, fontWeight: '600', color: colors.primaryDark },
+
+  nameChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingStart: 6,
+    paddingEnd: spacing.md,
+    height: 44,
+    marginTop: spacing.lg,
+    alignSelf: 'center',
+    minWidth: 220,
   },
+  nameLabel: { ...typography.subheadline, color: colors.textSecondary },
+  nameInput: { ...typography.headline, color: colors.text, flexGrow: 1, minWidth: 60, paddingVertical: 0 },
 
   bottomBar: {
     paddingHorizontal: spacing.md,

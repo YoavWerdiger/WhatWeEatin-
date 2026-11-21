@@ -75,6 +75,9 @@ export const he: Messages = {
   'tableReady.copied': "הועתק",
   'create.loadFailedTitle': "לא הצלחנו לערוך את השולחן",
   'create.loadFailedBody': "לא נמצאו מסעדות באזור. נסו מצב רוח או תקציב אחר.",
+  'join.kicker': "מצטרפים לשולחן",
+  'join.heroTitle': "יש לך קוד?",
+  'join.joiningAs': "מצטרף/ת בתור",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',
