@@ -34,7 +34,19 @@ interface Props {
   onChosen: (restaurantId: string) => void;
 }
 
-function FingerRing({ touch, restaurant, color, dimmed }: { touch: Touch; restaurant: Restaurant; color: string; dimmed: boolean }) {
+function FingerRing({
+  touch,
+  restaurant,
+  color,
+  dimmed,
+  hidden,
+}: {
+  touch: Touch;
+  restaurant: Restaurant;
+  color: string;
+  dimmed: boolean;
+  hidden?: boolean;
+}) {
   const pulse = useSharedValue(1);
   useEffect(() => {
     pulse.value = withRepeat(
@@ -48,7 +60,7 @@ function FingerRing({ touch, restaurant, color, dimmed }: { touch: Touch; restau
       entering={ZoomIn.duration(180)}
       exiting={FadeOut.duration(220)}
       pointerEvents="none"
-      style={[styles.ringWrap, { left: touch.x - RING / 2, top: touch.y - RING / 2, opacity: dimmed ? 0.15 : 1 }]}
+      style={[styles.ringWrap, { left: touch.x - RING / 2, top: touch.y - RING / 2, opacity: hidden ? 0 : dimmed ? 0.15 : 1 }]}
     >
       <Animated.View style={[styles.ring, { borderColor: color }, style]}>
         <Image source={{ uri: restaurant.image }} style={styles.ringPhoto} contentFit="cover" transition={0} />
@@ -86,8 +98,9 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
     setChosen(winner);
     setHolding(false);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    reveal.value = withTiming(1, { duration: 900, easing: Easing.bezier(0.22, 1, 0.36, 1) });
-    setTimeout(() => onChosen(picks[winner.pick % picks.length].id), 1500);
+    reveal.value = withTiming(1, { duration: 700, easing: Easing.bezier(0.22, 1, 0.36, 1) });
+    // A beat on the full colour with the winning ring, then the match screen
+    setTimeout(() => onChosen(picks[winner.pick % picks.length].id), 1700);
   }, [onChosen, picks, reveal]);
 
   // Any change in fingers restarts the hold; ≥2 fingers (or 1 if only one pick) arm it
@@ -144,7 +157,8 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
 
   // The chosen finger's restaurant grows out of its ring to fill the screen
   const revealStyle = useAnimatedStyle(() => {
-    const size = RING + (Math.hypot(W, H) * 2.2 - RING) * reveal.value;
+    // Just big enough to cover the screen from the finger — a flood, not a zoom
+    const size = RING + (Math.hypot(W, H) * 2 - RING) * reveal.value;
     return {
       width: size,
       height: size,
@@ -170,6 +184,14 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
           </Animated.Text>
         ) : null}
 
+        {/* The chosen ring's colour floods the screen from under the finger; the ring stays on top */}
+        {chosen && chosenPick ? (
+          <Animated.View
+            style={[styles.reveal, { backgroundColor: RING_COLORS[(chosen.pick % picks.length) % RING_COLORS.length] }, revealStyle]}
+            pointerEvents="none"
+          />
+        ) : null}
+
         {touches.map((t) => {
           const r = picks[t.pick % picks.length];
           return (
@@ -179,15 +201,11 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
               restaurant={r}
               color={RING_COLORS[(t.pick % picks.length) % RING_COLORS.length]}
               dimmed={!!chosen && chosen.id !== t.id}
+              hidden={!!chosen && chosen.id !== t.id}
             />
           );
         })}
 
-        {chosen && chosenPick ? (
-          <Animated.View style={[styles.reveal, revealStyle]} pointerEvents="none">
-            <Image source={{ uri: chosenPick.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={0} />
-          </Animated.View>
-        ) : null}
       </View>
     </GestureDetector>
   );
