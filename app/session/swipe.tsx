@@ -107,6 +107,10 @@ export default function SwipeScreen() {
       router.replace('/');
       return;
     }
+    if (session.gameMode === 'finger' && session.status === 'swiping') {
+      router.replace('/session/finger');
+      return;
+    }
     if (
       session.gameMode === 'roulette' &&
       (session.status === 'swiping' ||

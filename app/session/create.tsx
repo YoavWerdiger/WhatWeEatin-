@@ -38,6 +38,7 @@ import {
   HostStartPreview,
   ReadyPreview,
   RoulettePreview,
+  FingerPreview,
   SwipePreview,
 } from '../../src/components/ModePreview';
 import { useSessionStore } from '../../src/store/sessionStore';
@@ -76,6 +77,7 @@ function stepEnter(direction: 1 | -1) {
 const MODE_OPTIONS: { mode: GameMode; icon: keyof typeof Ionicons.glyphMap }[] = [
   { mode: 'swipe', icon: 'albums' },
   { mode: 'roulette', icon: 'dice' },
+  { mode: 'finger', icon: 'finger-print' },
 ];
 
 export default function CreateSessionScreen() {
@@ -146,7 +148,7 @@ export default function CreateSessionScreen() {
     setName(displayName);
     const hostId = firebaseUid || authUser?.uid || user.id;
     const code = createSession(hostId, displayName, {
-      timerDuration: gameMode === 'roulette' ? 0 : timerDuration,
+      timerDuration: gameMode === 'swipe' ? timerDuration : 0,
       requireUnanimousKeepBrowsing,
       requireLobbyReady,
       gameMode,
@@ -188,9 +190,13 @@ export default function CreateSessionScreen() {
   const questionCount = steps.length;
 
   const modeTitle = (mode: GameMode) =>
-    mode === 'roulette' ? t('create.modeRoulette') : t('create.modeSwipe');
+    mode === 'roulette' ? t('create.modeRoulette') : mode === 'finger' ? t('create.modeFinger') : t('create.modeSwipe');
   const modeHint = (mode: GameMode) =>
-    mode === 'roulette' ? t('create.modeRouletteHint') : t('create.modeSwipeHint');
+    mode === 'roulette'
+      ? t('create.modeRouletteHint')
+      : mode === 'finger'
+        ? t('create.modeFingerHint')
+        : t('create.modeSwipeHint');
 
   // Only the food filters are optional; the rule questions have a default and advance on tap.
   const optional = step === 'mood';
@@ -244,7 +250,9 @@ export default function CreateSessionScreen() {
                   {MODE_OPTIONS.map(({ mode }) => (
                     <DemoTile
                       key={mode}
-                      preview={mode === 'roulette' ? <RoulettePreview /> : <SwipePreview />}
+                      preview={
+                        mode === 'roulette' ? <RoulettePreview /> : mode === 'finger' ? <FingerPreview /> : <SwipePreview />
+                      }
                       title={modeTitle(mode)}
                       hint={modeHint(mode)}
                       selected={gameMode === mode}
@@ -560,9 +568,10 @@ const styles = StyleSheet.create({
   kosherPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 10 },
   kosherText: { ...typography.subheadline, fontWeight: '600', color: colors.text },
   kosherTextOn: { color: '#FFFFFF' },
-  modeRow: { flexDirection: 'row', gap: 12 },
-  modeCell: { flex: 1 },
-  modeTile: { height: 284, padding: spacing.md, gap: spacing.sm },
+  // Three modes: two per row, the third spans the next row
+  modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  modeCell: { flexBasis: '46%', flexGrow: 1 },
+  modeTile: { height: 250, padding: spacing.md, gap: spacing.sm },
   modeText: { flex: 1, gap: 4 },
   modeCheck: { alignSelf: 'flex-start' },
   modeTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },

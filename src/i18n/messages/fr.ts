@@ -93,6 +93,16 @@ export const fr: Messages = {
   'create.modeSwipe': 'Swipe',
   'create.modeSwipeHint':
     'Likes classiques jusqu’à ce que le groupe matche.',
+  'create.modeFinger': "Choix au doigt",
+  'create.modeFingerHint': "Chacun choisit un lieu, puis tous les doigts sur un téléphone — un seul gagne.",
+  'finger.pickTitle': "Ton choix",
+  'finger.pickSub': "Choisis le lieu que tu veux. Chacun en choisit un.",
+  'finger.waitingTitle': "On attend que tout le monde choisisse",
+  'finger.putFingersHost': "Tout le monde, un doigt sur l’écran",
+  'finger.holdStill': "Ne bougez plus…",
+  'finger.putFingersGuest': "Tout le monde a choisi ! Pose ton doigt sur le téléphone de {{name}}",
+  'finger.picked': "Choisi",
+  'finger.change': "Changer",
   'create.modeRoulette': 'Roulette faim',
   'create.modeRouletteHint':
     'Pas de swipe — l’hôte tourne et un resto est tiré pour tout le monde.',

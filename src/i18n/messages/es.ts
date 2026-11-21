@@ -93,6 +93,16 @@ export const es: Messages = {
   'create.modeSwipe': 'Deslizar',
   'create.modeSwipeHint':
     'Likes clásicos hasta que el grupo haga match.',
+  'create.modeFinger': "Elige un dedo",
+  'create.modeFingerHint': "Cada uno elige un sitio, luego todos ponen un dedo en un móvil — uno gana.",
+  'finger.pickTitle': "Tu elección",
+  'finger.pickSub': "Elige el sitio que quieres. Cada uno elige uno.",
+  'finger.waitingTitle': "Esperando a que todos elijan",
+  'finger.putFingersHost': "Todos, un dedo en la pantalla",
+  'finger.holdStill': "No os mováis…",
+  'finger.putFingersGuest': "¡Todos eligieron! Pon tu dedo en el móvil de {{name}}",
+  'finger.picked': "Elegido",
+  'finger.change': "Cambiar",
   'create.modeRoulette': 'Ruleta del hambre',
   'create.modeRouletteHint':
     'Sin deslizar — el anfitrión gira y se elige un restaurante para todos.',

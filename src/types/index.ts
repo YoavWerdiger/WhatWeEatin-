@@ -57,7 +57,7 @@ export interface SessionUser {
 export type MatchStrategy = 'consensus' | 'majority' | 'weighted';
 
 /** How the group picks a restaurant. Default `swipe` for older sessions. */
-export type GameMode = 'swipe' | 'roulette';
+export type GameMode = 'swipe' | 'roulette' | 'finger';
 
 /** Host-triggered roulette spin — synced so guests animate to the same winner. */
 export interface RouletteSpinResult {
@@ -92,6 +92,8 @@ export interface Session {
   gameMode: GameMode;
   /** Latest roulette spin (host-only write); cleared when match is dismissed. */
   rouletteResult?: RouletteSpinResult;
+  /** Finger mode: each player's own pick — userId → restaurantId */
+  fingerPicks?: Record<string, string>;
   createdAt: number;
 }
 

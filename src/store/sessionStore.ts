@@ -38,6 +38,7 @@ import {
   removeUserFromSessionDoc,
   approveKeepBrowsingVote,
   syncSessionMatched,
+  setFingerPick,
 } from '../services/session';
 import {
   ensureAnonymousAuth,
@@ -139,6 +140,10 @@ interface SessionState {
   startSwiping: () => void;
   /** Host-only: pick a restaurant and sync so the group sees the same roulette winner. */
   spinRoulette: () => Restaurant | null;
+  /** Finger mode: this player's own pick (synced per user). */
+  pickFingerRestaurant: (userId: string, restaurantId: string) => void;
+  /** Finger mode (host): the finger that was chosen → same result path as the roulette. */
+  chooseFingerWinner: (restaurantId: string) => void;
   /** After the reel lands, lock in the spun restaurant as the match. */
   confirmRouletteMatch: () => void;
   castVote: (userId: string, restaurantId: string, vote: VoteType) => void;
@@ -409,6 +414,7 @@ function dismissKeepBrowsingCore(
       snoozedMatchRestaurantIds: nextSnoozed,
       keepBrowsingApprovedBy: [],
       rouletteResult: undefined,
+      fingerPicks: undefined,
       ...(resumeTimer ? { timerStartedAt } : {}),
     },
   });
@@ -725,6 +731,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     });
     get()._syncToFirebase({ rouletteResult });
     return pick;
+  },
+
+  pickFingerRestaurant: (userId, restaurantId) => {
+    const { session } = get();
+    if (!session) return;
+    set({ session: { ...session, fingerPicks: { ...(session.fingerPicks ?? {}), [userId]: restaurantId } } });
+    void setFingerPick(session.code, userId, restaurantId);
+  },
+
+  chooseFingerWinner: (restaurantId) => {
+    const { session } = get();
+    if (!session) return;
+    const uid = getFirebaseUid();
+    if (uid && session.hostId !== uid) return;
+    const rouletteResult: RouletteSpinResult = { restaurantId, spunAt: Date.now() };
+    set({ session: { ...session, rouletteResult } });
+    get()._syncToFirebase({ rouletteResult });
   },
 
   confirmRouletteMatch: () => {

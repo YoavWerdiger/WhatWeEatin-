@@ -75,7 +75,9 @@ export default function LobbyScreen() {
   const modeLabel =
     session.gameMode === 'roulette'
       ? t('lobby.modeRoulette')
-      : t('lobby.modeSwipe');
+      : session.gameMode === 'finger'
+        ? t('create.modeFinger')
+        : t('lobby.modeSwipe');
 
   const handleStart = () => {
     if (session.requireLobbyReady) {
@@ -174,7 +176,7 @@ export default function LobbyScreen() {
             </Text>
           </Pressable>
           <View style={styles.metaRow}>
-            <MetaChip icon={session.gameMode === 'roulette' ? 'dice' : 'albums'} label={modeLabel} />
+            <MetaChip icon={session.gameMode === 'roulette' ? 'dice' : session.gameMode === 'finger' ? 'finger-print' : 'albums'} label={modeLabel} />
             <MetaChip icon="restaurant" label={`${session.restaurants.length} ${t('lobby.spots')}`} />
             <MetaChip icon={session.timerDuration > 0 ? 'time' : 'infinite'} label={formatTimer(session.timerDuration)} />
           </View>

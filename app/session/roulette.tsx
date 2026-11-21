@@ -96,7 +96,7 @@ export default function RouletteScreen() {
       return;
     }
     if (session.gameMode !== 'roulette' && session.status === 'swiping') {
-      router.replace('/session/swipe');
+      router.replace(session.gameMode === 'finger' ? '/session/finger' : '/session/swipe');
     }
   }, [session, router]);
 

@@ -8,14 +8,18 @@ export const APP_NAME = "What We Eatin'";
  */
 export function resolveGameMode(mode: GameMode | string | undefined): GameMode {
   if (mode === 'roulette') return 'roulette';
+  if (mode === 'finger') return 'finger';
   return 'swipe';
 }
 
 /** Play screen for a session mode. */
 export function getPlayRouteForGameMode(
   mode: GameMode | string | undefined,
-): '/session/swipe' | '/session/roulette' {
-  return resolveGameMode(mode) === 'roulette' ? '/session/roulette' : '/session/swipe';
+): '/session/swipe' | '/session/roulette' | '/session/finger' {
+  const m = resolveGameMode(mode);
+  if (m === 'roulette') return '/session/roulette';
+  if (m === 'finger') return '/session/finger';
+  return '/session/swipe';
 }
 
 export const SESSION = {

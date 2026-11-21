@@ -56,6 +56,7 @@ interface SessionDoc {
   /** May still contain retired values (e.g. `blind_budget`) from older clients. */
   gameMode?: GameMode | string;
   rouletteResult?: RouletteSpinResult;
+  fingerPicks?: Record<string, string>;
   createdAt: unknown;
 }
 
@@ -131,6 +132,7 @@ function sessionToDoc(session: Session, uid: string): SessionDoc {
       : undefined,
     gameMode: resolveGameMode(session.gameMode),
     rouletteResult: session.rouletteResult,
+    fingerPicks: session.fingerPicks,
     createdAt: serverTimestamp(),
   }) as unknown as SessionDoc;
 }
@@ -161,6 +163,7 @@ function docToSession(data: SessionDoc): Session {
     lobbyReadyIds: data.lobbyReadyIds ?? [],
     gameMode: resolveGameMode(data.gameMode),
     rouletteResult: data.rouletteResult,
+    fingerPicks: data.fingerPicks,
     createdAt:
       data.createdAt instanceof Timestamp
         ? data.createdAt.toMillis()
@@ -252,6 +255,7 @@ export async function updateSessionField(
       | 'lobbyReadyIds'
       | 'gameMode'
       | 'rouletteResult'
+      | 'fingerPicks'
     >
   >,
 ): Promise<void> {
@@ -329,6 +333,8 @@ export async function dismissMatchContinueBrowsing(
       snoozedMatchRestaurantIds: nextSnoozedList,
       keepBrowsingApprovedBy: [],
       rouletteResult: deleteField(),
+      // Finger mode: everyone picks again after keep browsing
+      fingerPicks: deleteField(),
       ...(extra?.timerStartedAt !== undefined
         ? { timerStartedAt: extra.timerStartedAt }
         : {}),
@@ -415,4 +421,14 @@ export function subscribeToSession(
       console.warn('[Firebase] Subscription error:', error);
     },
   );
+}
+
+/** Finger mode: write one player's pick without overwriting the others' (field path). */
+export async function setFingerPick(code: string, userId: string, restaurantId: string): Promise<void> {
+  if (!isFirebaseConfigured()) return;
+  try {
+    await updateDoc(getRef(code), { [`fingerPicks.${userId}`]: restaurantId });
+  } catch (err) {
+    console.warn('[Firebase] setFingerPick failed:', String(err));
+  }
 }

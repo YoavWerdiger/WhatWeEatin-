@@ -84,7 +84,47 @@ export function RoulettePreview() {
   );
 }
 
+const FINGER_COLORS = [colors.primary, '#22A35A', '#3B82F6'];
+
+/** Three finger rings on a dark pad; the pick hops between them and settles — how Finger pick plays. */
+export function FingerPreview() {
+  const reduceMotion = useReducedMotion();
+  const [lit, setLit] = React.useState(0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const id = setInterval(() => setLit((i) => (i + 1) % FINGER_COLORS.length), 700);
+    return () => clearInterval(id);
+  }, [reduceMotion]);
+  return (
+    <View style={[styles.stage, styles.fingerPad]}>
+      {FINGER_COLORS.map((c, i) => (
+        <View
+          key={c}
+          style={[
+            styles.fingerRing,
+            { borderColor: c, left: 18 + i * 34, top: i === 1 ? 18 : 40, opacity: lit === i ? 1 : 0.35 },
+            lit === i && { transform: [{ scale: 1.15 }] },
+          ]}
+        >
+          <Ionicons name="finger-print" size={18} color={c} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  fingerPad: { backgroundColor: '#1C1C1E', borderRadius: 14 },
+  fingerRing: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
   stage: { height: 110, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   card: {
     position: 'absolute',
