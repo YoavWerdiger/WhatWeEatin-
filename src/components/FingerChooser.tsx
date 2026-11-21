@@ -27,6 +27,8 @@ const HOP_LOOPS = 3;
 const HOP_FAST_MS = 70;
 const HOP_SLOW_MS = 460;
 const LABEL_W = 220;
+/** The chooser's dark surface — also the winner's halo */
+const SURFACE = '#111114';
 const HALO = 6;
 const RING_COLORS = ['#FF6B35', '#22A35A', '#3B82F6', '#A855F7', '#EAB308', '#EC4899', '#14B8A6', '#F97316'];
 
@@ -264,16 +266,16 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#111114' },
+  root: { flex: 1, backgroundColor: SURFACE },
   prompt: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   promptText: { ...typography.title1, color: '#FFFFFF', textAlign: 'center' },
   holdText: { position: 'absolute', top: 90, alignSelf: 'center', ...typography.headline, color: 'rgba(255,255,255,0.85)' },
   // Wider than the ring so long names fit (up to two lines), centred on the finger
   ringWrap: { position: 'absolute', width: LABEL_W, alignItems: 'center' },
   halo: { padding: HALO, borderRadius: RING / 2 + HALO },
-  // Winner on its own flood colour: a white halo + shadow to separate photo from background
+  // Winner on its own flood colour: a halo in the chooser's surface colour separates photo from flood
   haloOn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SURFACE,
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 18,

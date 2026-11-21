@@ -45,7 +45,6 @@ import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
 import { MoodPicker } from '../../src/components/MoodPicker';
 import { useTranslation } from '../../src/i18n/t';
-import { HomeMosaic } from '../../src/components/HomeMosaic';
 
 type Step =
   | 'name'
@@ -206,8 +205,6 @@ export default function CreateSessionScreen() {
 
   return (
     <View style={styles.container}>
-      {/* The same drifting grid as the other screens, under a pale veil so the questions stay readable */}
-      <HomeMosaic heightRatio={0.75} tone="light" />
       <Stack.Screen
         options={{
           headerTitle: () =>
