@@ -14,8 +14,8 @@ import Animated, {
 import { MOCK_RESTAURANTS } from '../utils/mockData';
 import { colors } from '../theme/colors';
 
-const { width: W } = Dimensions.get('window');
-const COLS = 3;
+const { width: W, height: H } = Dimensions.get('window');
+const COLS = 4;
 const GAP = 10;
 // Tilted and oversized so the rotated grid still covers the corners
 const TILT = '-8deg';
@@ -24,7 +24,7 @@ const TILE_W = (W * OVERSIZE - GAP * (COLS - 1)) / COLS;
 // Varied heights so the columns don't line up into a plain table
 const HEIGHTS = [1.35, 1.05, 1.5, 1.2, 1.4, 1.1];
 /** Seconds for one full loop — slow, ambient, never something to watch */
-const LOOP_S = [46, 38, 52];
+const LOOP_S = [46, 38, 52, 42];
 
 // Small thumbnails: the grid is a backdrop, not a gallery
 const PHOTOS = MOCK_RESTAURANTS.map((r) => r.image.replace(/w=\d+/, 'w=400'));
@@ -43,7 +43,7 @@ function Column({ index }: { index: number }) {
   }, [index]);
   // One copy's height — the column holds two copies and slides by exactly one for a seamless loop
   const loopH = tiles.reduce((sum, t) => sum + t.h + GAP, 0);
-  const goesUp = index !== 1; // middle column runs the other way
+  const goesUp = index % 2 === 0; // neighbouring columns run opposite ways
 
   const y = useSharedValue(goesUp ? 0 : -loopH);
   useEffect(() => {
@@ -69,28 +69,42 @@ function Column({ index }: { index: number }) {
   );
 }
 
-/** Home backdrop: a tilted grid of food photos drifting in columns, under a warm orange wash. */
+/**
+ * Home backdrop: a tilted grid of food photos drifting in columns across the top of the screen,
+ * melting through orange into a solid deep orange where the title and buttons sit (contrast).
+ */
 export function HomeMosaic() {
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="none">
-      <View style={styles.grid}>
-        {Array.from({ length: COLS }, (_, i) => (
-          <Column key={i} index={i} />
-        ))}
+      <View style={styles.mosaicArea}>
+        <View style={styles.grid}>
+          {Array.from({ length: COLS }, (_, i) => (
+            <Column key={i} index={i} />
+          ))}
+        </View>
+        {/* Light orange tint on the photos, then a fade to the solid base */}
+        <LinearGradient
+          colors={['rgba(255,107,53,0.25)', 'rgba(255,107,53,0.55)', colors.primaryDark]}
+          locations={[0, 0.55, 1]}
+          style={StyleSheet.absoluteFill}
+        />
       </View>
-      {/* Orange wash: lighter on top so the photos read, deep at the bottom where the buttons sit */}
-      <LinearGradient
-        colors={['rgba(255,107,53,0.45)', 'rgba(255,107,53,0.72)', 'rgba(194,65,12,0.96)']}
-        locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFill}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: colors.primary,
+    // Solid base under the text — the mosaic fades into it
+    backgroundColor: colors.primaryDark,
+    overflow: 'hidden',
+  },
+  mosaicArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: H * 0.62,
     overflow: 'hidden',
   },
   grid: {
