@@ -26,6 +26,8 @@ const HOLD_MS = 2000;
 const HOP_LOOPS = 3;
 const HOP_FAST_MS = 70;
 const HOP_SLOW_MS = 460;
+const LABEL_W = 220;
+const HALO = 6;
 const RING_COLORS = ['#FF6B35', '#22A35A', '#3B82F6', '#A855F7', '#EAB308', '#EC4899', '#14B8A6', '#F97316'];
 
 type Touch = { id: number; x: number; y: number; pick: number };
@@ -45,6 +47,7 @@ function FingerRing({
   dimmed,
   hidden,
   lit,
+  won,
 }: {
   touch: Touch;
   restaurant: Restaurant;
@@ -53,6 +56,8 @@ function FingerRing({
   hidden?: boolean;
   /** The zigzag is on this finger right now */
   lit?: boolean;
+  /** Winner: sits on its own colour, so it gets a white halo and a white label */
+  won?: boolean;
 }) {
   const pulse = useSharedValue(1);
   useEffect(() => {
@@ -70,18 +75,20 @@ function FingerRing({
       style={[
         styles.ringWrap,
         {
-          left: touch.x - RING / 2,
-          top: touch.y - RING / 2,
+          left: touch.x - LABEL_W / 2,
+          top: touch.y - RING / 2 - HALO,
           opacity: hidden ? 0 : dimmed ? 0.35 : 1,
           transform: [{ scale: lit ? 1.25 : 1 }],
         },
       ]}
     >
-      <Animated.View style={[styles.ring, { borderColor: color }, style]}>
-        <Image source={{ uri: restaurant.image }} style={styles.ringPhoto} contentFit="cover" transition={0} />
+      <Animated.View style={[styles.halo, won && styles.haloOn, style]}>
+        <View style={[styles.ring, { borderColor: color }]}>
+          <Image source={{ uri: restaurant.image }} style={styles.ringPhoto} contentFit="cover" transition={0} />
+        </View>
       </Animated.View>
-      <View style={[styles.ringLabel, { backgroundColor: color }]}>
-        <Text style={styles.ringLabelText} numberOfLines={1}>
+      <View style={[styles.ringLabel, { backgroundColor: won ? '#FFFFFF' : color }]}>
+        <Text style={[styles.ringLabelText, won && { color }]} numberOfLines={2}>
           {restaurant.name}
         </Text>
       </View>
@@ -246,6 +253,7 @@ export function FingerChooser({ picks, title, holdLabel, onChosen }: Props) {
               dimmed={(!!chosen && chosen.id !== t.id) || (hopId != null && hopId !== t.id)}
               hidden={!!chosen && chosen.id !== t.id}
               lit={hopId === t.id}
+              won={!!chosen && chosen.id === t.id}
             />
           );
         })}
@@ -260,10 +268,20 @@ const styles = StyleSheet.create({
   prompt: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   promptText: { ...typography.title1, color: '#FFFFFF', textAlign: 'center' },
   holdText: { position: 'absolute', top: 90, alignSelf: 'center', ...typography.headline, color: 'rgba(255,255,255,0.85)' },
-  ringWrap: { position: 'absolute', width: RING, alignItems: 'center' },
+  // Wider than the ring so long names fit (up to two lines), centred on the finger
+  ringWrap: { position: 'absolute', width: LABEL_W, alignItems: 'center' },
+  halo: { padding: HALO, borderRadius: RING / 2 + HALO },
+  // Winner on its own flood colour: a white halo + shadow to separate photo from background
+  haloOn: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
+  },
   ring: { width: RING, height: RING, borderRadius: RING / 2, borderWidth: 5, overflow: 'hidden', backgroundColor: colors.primaryMuted },
   ringPhoto: { width: '100%', height: '100%' },
-  ringLabel: { marginTop: 8, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, maxWidth: 170 },
-  ringLabelText: { ...typography.captionMedium, color: '#FFFFFF', fontWeight: '700' },
+  ringLabel: { marginTop: 10, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, maxWidth: LABEL_W },
+  ringLabelText: { ...typography.captionMedium, color: '#FFFFFF', fontWeight: '700', textAlign: 'center' },
   reveal: { position: 'absolute', overflow: 'hidden' },
 });
