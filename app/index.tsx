@@ -104,7 +104,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
   },
   content: {
@@ -113,14 +113,14 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  // White over the orange wash
+  // On the page background, under the faded mosaic
   title: {
     ...typography.display,
-    color: '#FFFFFF',
+    color: colors.text,
   },
   subtitle: {
     ...typography.body,
-    color: 'rgba(255,255,255,0.9)',
+    color: colors.textSecondary,
     lineHeight: 24,
   },
   actions: {

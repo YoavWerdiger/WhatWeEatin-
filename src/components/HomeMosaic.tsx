@@ -71,7 +71,7 @@ function Column({ index }: { index: number }) {
 
 /**
  * Home backdrop: a tilted grid of food photos drifting in columns across the top of the screen,
- * melting through orange into a solid deep orange where the title and buttons sit (contrast).
+ * under an orange wash that fades out into the app's normal background just above the title.
  */
 export function HomeMosaic() {
   return (
@@ -82,10 +82,10 @@ export function HomeMosaic() {
             <Column key={i} index={i} />
           ))}
         </View>
-        {/* Light orange tint on the photos, then a fade to the solid base */}
+        {/* Orange wash over the photos, then a fade into the page background (the text sits there) */}
         <LinearGradient
-          colors={['rgba(255,107,53,0.25)', 'rgba(255,107,53,0.55)', colors.primaryDark]}
-          locations={[0, 0.55, 1]}
+          colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.6)', colors.background]}
+          locations={[0, 0.6, 1]}
           style={StyleSheet.absoluteFill}
         />
       </View>
@@ -95,8 +95,8 @@ export function HomeMosaic() {
 
 const styles = StyleSheet.create({
   root: {
-    // Solid base under the text — the mosaic fades into it
-    backgroundColor: colors.primaryDark,
+    // The page background — the mosaic fades into it
+    backgroundColor: colors.background,
     overflow: 'hidden',
   },
   mosaicArea: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: H * 0.62,
+    height: H * 0.48,
     overflow: 'hidden',
   },
   grid: {
