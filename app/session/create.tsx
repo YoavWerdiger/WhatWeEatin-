@@ -45,7 +45,7 @@ import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
 import { useAuthStore } from '../../src/store/authStore';
 import { SessionFilters, GameMode } from '../../src/types';
-import { MoodPad } from '../../src/components/MoodPad';
+import { MoodPicker } from '../../src/components/MoodPicker';
 import { useTranslation } from '../../src/i18n/t';
 
 type Step =
@@ -302,7 +302,7 @@ export default function CreateSessionScreen() {
 
             {step === 'mood' && (
               <Question title={t('create.qMood')} sub={t('create.qMoodSub')}>
-                <MoodPad filters={filters} onChange={setFilters} />
+                <MoodPicker filters={filters} onChange={setFilters} />
                 <KosherPill
                   on={filters.kosherOnly}
                   label={t('filters.kosher')}
