@@ -23,6 +23,7 @@ import { MatchAnimation } from '../../src/components/MatchAnimation';
 import { RoundCountdown } from '../../src/components/RoundCountdown';
 import { GlassButton, GlassCircleButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
+import { HomeMosaic } from '../../src/components/HomeMosaic';
 import { Restaurant, VoteType } from '../../src/types';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -265,6 +266,10 @@ export default function SwipeScreen() {
 
   return (
     <View style={styles.root}>
+      {/* All swiped: the session's places drifting behind the whole page, under a pale veil */}
+      {isFinished ? (
+        <HomeMosaic photos={session.restaurants.map((r) => r.image).filter(Boolean)} heightRatio={1} tone="light" />
+      ) : null}
       {/* Backdrop — same recipe as the match screen: the current photo, lightly blurred, under a dark gradient */}
       {hasBackdrop ? (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -590,6 +595,9 @@ const styles = StyleSheet.create({
 
   finishedScroll: { flex: 1, alignSelf: 'stretch' },
   finishedContainer: {
+    // Centred on the page; scrolls when the shortlist is long
+    flexGrow: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.md,
