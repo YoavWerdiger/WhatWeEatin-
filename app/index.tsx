@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '../src/theme/colors';
-import { typography } from '../src/theme/typography';
+import { typography, fontFamilies } from '../src/theme/typography';
 import { spacing, borderRadius, shadows } from '../src/theme/spacing';
 import { GlassButton } from '../src/components/native/GlassButton';
 import { useUserStore } from '../src/store/userStore';
@@ -67,7 +67,15 @@ export default function HomeScreen() {
           },
         ]}
       >
-        <Text style={styles.title}>{t('home.title')}</Text>
+        {/* Two-tone title: the question's second line in brand orange */}
+        <Text style={styles.title}>
+          {t('home.title').split('\n').map((line, i, all) => (
+            <Text key={i} style={i === all.length - 1 && all.length > 1 ? styles.titleAccent : undefined}>
+              {line}
+              {i < all.length - 1 ? '\n' : ''}
+            </Text>
+          ))}
+        </Text>
         <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
 
         <View style={styles.actions}>
@@ -113,15 +121,24 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingBottom: spacing.xl,
   },
-  // On the page background, under the faded mosaic
+  // SF Pro Rounded, black and tight — friendly and loud, like a menu headline
   title: {
-    ...typography.display,
+    fontFamily: fontFamilies.rounded,
+    fontSize: 54,
+    lineHeight: 56,
+    fontWeight: '900',
+    letterSpacing: -1.5,
     color: colors.text,
+  },
+  titleAccent: {
+    color: colors.primary,
   },
   subtitle: {
     ...typography.body,
+    fontSize: 16,
+    lineHeight: 23,
     color: colors.textSecondary,
-    lineHeight: 24,
+    maxWidth: 300,
   },
   actions: {
     gap: spacing.md,

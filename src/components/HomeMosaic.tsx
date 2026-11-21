@@ -15,16 +15,16 @@ import { MOCK_RESTAURANTS } from '../utils/mockData';
 import { colors } from '../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
-const COLS = 4;
+const COLS = 5;
 const GAP = 10;
 // Tilted and oversized so the rotated grid still covers the corners
 const TILT = '-8deg';
-const OVERSIZE = 1.35;
+const OVERSIZE = 1.6;
 const TILE_W = (W * OVERSIZE - GAP * (COLS - 1)) / COLS;
 // Varied heights so the columns don't line up into a plain table
 const HEIGHTS = [1.35, 1.05, 1.5, 1.2, 1.4, 1.1];
 /** Seconds for one full loop — slow, ambient, never something to watch */
-const LOOP_S = [46, 38, 52, 42];
+const LOOP_S = [46, 38, 52, 42, 49];
 
 // Small thumbnails: the grid is a backdrop, not a gallery
 const PHOTOS = MOCK_RESTAURANTS.map((r) => r.image.replace(/w=\d+/, 'w=400'));
