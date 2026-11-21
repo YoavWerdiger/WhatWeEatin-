@@ -18,7 +18,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 import { MatchResult, RestaurantSource, SessionUser } from '../types';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
+import { typography, fontFamilies } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
 import { Avatar } from './ui/Avatar';
 import { Glass } from './ui/Glass';
@@ -169,34 +169,43 @@ export function MatchAnimation({
           {/* Plain views here: an entering animation / scale on an ancestor stops iOS glass rendering */}
           {voteActive ? (
             <View style={styles.voteWrap}>
-              <Glass radius={borderRadius.lg} variant="clear" scheme="dark" dark style={styles.vote}>
-                <View style={styles.voteHead}>
-                  <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
-                  <Text style={styles.voteCount}>
-                    {keepBrowsingApprovedBy.length}/{sessionUsers.length}
-                  </Text>
+              {/* Keep-browsing vote: who's in, as faces with a tick, and a bar filling to everyone */}
+              <Glass radius={borderRadius.xl} variant="clear" scheme="dark" dark style={styles.vote}>
+                <View style={styles.voteIcon}>
+                  <Ionicons name="albums" size={26} color="#FFFFFF" />
                 </View>
+                <Text style={styles.voteTitle}>{t('match.keepBrowsingTitle')}</Text>
                 <Text style={styles.voteHint}>{t('match.keepBrowsingHint')}</Text>
-                <View style={styles.voteChips}>
+
+                <View style={styles.voteBar}>
+                  {sessionUsers.map((u) => (
+                    <View
+                      key={u.id}
+                      style={[styles.voteSeg, keepBrowsingApprovedBy.includes(u.id) && styles.voteSegOn]}
+                    />
+                  ))}
+                </View>
+                <Text style={styles.voteCount}>
+                  {keepBrowsingApprovedBy.length}/{sessionUsers.length}
+                </Text>
+
+                <View style={styles.voteFaces}>
                   {sessionUsers.map((u) => {
                     const done = keepBrowsingApprovedBy.includes(u.id);
                     const isMe = currentUserId && u.id === currentUserId;
                     return (
-                      <Glass
-                        key={u.id}
-                        radius={borderRadius.full}
-                        variant="clear"
-                        scheme="dark"
-                        dark
-                        tint={done ? 'rgba(34, 163, 90, 0.6)' : undefined}
-                        style={styles.voteChip}
-                      >
-                        {done && <Ionicons name="checkmark" size={13} color="#FFFFFF" />}
-                        <Text style={styles.voteChipText} numberOfLines={1}>
+                      <View key={u.id} style={[styles.voteFace, !done && styles.voteFacePending]}>
+                        <View>
+                          <Avatar name={u.name} color={u.avatar} size={48} />
+                          <View style={[styles.voteBadge, done ? styles.voteBadgeOn : styles.voteBadgeWait]}>
+                            <Ionicons name={done ? 'checkmark' : 'ellipsis-horizontal'} size={12} color="#FFFFFF" />
+                          </View>
+                        </View>
+                        <Text style={styles.voteName} numberOfLines={1}>
                           {u.name}
                           {isMe ? t('match.youSuffix') : ''}
                         </Text>
-                      </Glass>
+                      </View>
                     );
                   })}
                 </View>
@@ -299,14 +308,47 @@ const styles = StyleSheet.create({
   avatarOverlap: { marginStart: -8 },
   agreedText: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF' },
 
-  vote: { padding: spacing.md, gap: spacing.sm },
-  voteHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  voteTitle: { ...typography.headline, color: '#FFFFFF' },
-  voteCount: { ...typography.subheadline, fontWeight: '600', color: '#FFFFFF', fontVariant: ['tabular-nums'] },
-  voteHint: { ...typography.footnote, color: 'rgba(255,255,255,0.75)' },
-  voteChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  voteChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5 },
-  voteChipText: { ...typography.footnote, color: '#FFFFFF', maxWidth: 160 },
+  vote: { padding: spacing.lg, gap: spacing.sm, alignItems: 'center' },
+  voteIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    marginBottom: 4,
+  },
+  voteTitle: {
+    fontFamily: fontFamilies.rounded,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  voteHint: { ...typography.subheadline, color: 'rgba(255,255,255,0.75)', textAlign: 'center' },
+  voteBar: { flexDirection: 'row', gap: 4, alignSelf: 'stretch', marginTop: spacing.sm },
+  voteSeg: { flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.18)' },
+  voteSegOn: { backgroundColor: '#3DDC84' },
+  voteCount: { ...typography.footnote, fontWeight: '700', color: 'rgba(255,255,255,0.8)', fontVariant: ['tabular-nums'] },
+  voteFaces: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md, marginTop: spacing.xs },
+  voteFace: { alignItems: 'center', gap: 4, width: 64 },
+  voteFacePending: { opacity: 0.55 },
+  voteBadge: {
+    position: 'absolute',
+    right: -3,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#1C1C1E',
+  },
+  voteBadgeOn: { backgroundColor: '#22A35A' },
+  voteBadgeWait: { backgroundColor: '#6C6C71' },
+  voteName: { ...typography.caption, fontWeight: '600', color: '#FFFFFF', maxWidth: 64 },
 
   actions: { gap: spacing.sm },
   actionRow: { flexDirection: 'row', gap: spacing.sm },
