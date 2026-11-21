@@ -102,6 +102,9 @@ export const ar: Messages = {
   'profile.tileTopCuisine': "مطبخك المفضل",
   'profile.tileTimes': "{{count}} مرات",
   'profile.tileBuddy': "رفيقك الدائم",
+  'auth.continueEmail': "المتابعة بالبريد الإلكتروني",
+  'auth.allOptions': "كل الخيارات",
+  'auth.subtitleChoose': "قرّروا معًا أين تأكلون — في دقيقة.",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',

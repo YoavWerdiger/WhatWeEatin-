@@ -185,7 +185,7 @@ export default function AccountScreen() {
                   </Text>
                   {/* Under the photo, a glass pill to reorder */}
                   {m.restaurant.externalUrl ? (
-                    <Glass radius={borderRadius.full} interactive tint="rgba(255, 107, 53, 0.16)" style={styles.orderPill}>
+                    <Glass radius={borderRadius.full} interactive tint={RESTING_TINT} style={styles.orderPill}>
                       <Ionicons name="bag-handle-outline" size={14} color={colors.primaryDark} />
                       <Text style={styles.orderPillText}>{t('profile.orderAgain')}</Text>
                     </Glass>
@@ -248,7 +248,8 @@ const styles = StyleSheet.create({
   heroLabel: { ...typography.headline, color: '#FFFFFF' },
   heroSub: { ...typography.footnote, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
   tileKicker: { ...typography.caption, fontWeight: '600', color: colors.textSecondary },
-  tileBig: { fontFamily: fontFamilies.rounded, fontSize: 24, lineHeight: 28, fontWeight: '900', color: colors.text },
+  // Same weight as the buddy's name next to it — the 900 black was too loud for a word
+  tileBig: { ...typography.title3, fontWeight: '700', color: colors.text },
   tileName: { ...typography.headline, color: colors.text },
   tileSub: { ...typography.caption, color: colors.textSecondary },
   tileBuddy: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

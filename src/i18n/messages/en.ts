@@ -101,6 +101,9 @@ export const en = {
   'profile.tileTopCuisine': "Your go-to",
   'profile.tileTimes': "{{count}} times",
   'profile.tileBuddy': "Top buddy",
+  'auth.continueEmail': "Continue with email",
+  'auth.allOptions': "All options",
+  'auth.subtitleChoose': "Decide where to eat together — in a minute.",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",

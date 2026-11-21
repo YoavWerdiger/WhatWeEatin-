@@ -102,6 +102,9 @@ export const he: Messages = {
   'profile.tileTopCuisine': "המטבח שלך",
   'profile.tileTimes': "{{count}} פעמים",
   'profile.tileBuddy': "שותף/ה קבוע/ה",
+  'auth.continueEmail': "המשך עם אימייל",
+  'auth.allOptions': "כל האפשרויות",
+  'auth.subtitleChoose': "מחליטים ביחד איפה אוכלים — תוך דקה.",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

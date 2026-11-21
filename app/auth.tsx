@@ -12,7 +12,7 @@ import {
   Pressable,
   Image,
 } from 'react-native';
-import { SegmentedControl } from '@expo/ui/community/segmented-control';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -24,6 +24,7 @@ import { colors } from '../src/theme/colors';
 import { typography, fontFamilies } from '../src/theme/typography';
 import { spacing, borderRadius } from '../src/theme/spacing';
 import { GlassButton } from '../src/components/native/GlassButton';
+import { Glass } from '../src/components/ui/Glass';
 import { useAuthStore } from '../src/store/authStore';
 import { useTranslation } from '../src/i18n/t';
 import { HomeMosaic } from '../src/components/HomeMosaic';
@@ -61,6 +62,9 @@ export default function AuthScreen() {
   const [name, setName] = useState('');
   const [googlePolicyHint, setGooglePolicyHint] = useState<string | null>(null);
   const [googleBusy, setGoogleBusy] = useState(false);
+  // Ways in first; the email form only once chosen
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const finishingGoogleRef = useRef(false);
 
@@ -249,7 +253,6 @@ export default function AuthScreen() {
       ? email.trim() && password.length >= 6 && name.trim()
       : email.trim() && password.length >= 1;
 
-  const MODES: Mode[] = ['login', 'register'];
 
   return (
     <View style={styles.container}>
@@ -270,101 +273,130 @@ export default function AuthScreen() {
               </View>
               <Text style={styles.title}>{t('auth.title')}</Text>
               <Text style={styles.subtitle}>
-                {mode === 'login' ? t('auth.subtitleLogin') : t('auth.subtitleRegister')}
+                {!emailOpen ? t('auth.subtitleChoose') : mode === 'login' ? t('auth.subtitleLogin') : t('auth.subtitleRegister')}
               </Text>
             </View>
 
-            {/* Sign in / Create account — a native segmented control, not a link at the bottom */}
-            <SegmentedControl
-              values={[t('auth.signIn'), t('auth.createAccount')]}
-              selectedIndex={MODES.indexOf(mode)}
-              onChange={(e) => {
-                if (MODES[e.nativeEvent.selectedSegmentIndex] !== mode) toggleMode();
-              }}
-            />
-
-            <GlassButton
-              title={t('auth.continueGoogle')}
-              prominent={false}
-              loading={googleBusy}
-              disabled={isLoading || !GOOGLE_WEB_CLIENT_ID || !googleRequest}
-              onPress={() => {
-                void handleGooglePress();
-              }}
-            />
-            {!GOOGLE_WEB_CLIENT_ID ? <Text style={styles.configHint}>{t('auth.configHint')}</Text> : null}
-            {googlePolicyHint ? (
-              <View style={styles.policyHintBox}>
-                <Text style={styles.policyHintText}>{googlePolicyHint}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t('auth.or')}</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Grouped fields, iOS Settings style */}
-            <View style={styles.fields}>
-              {mode === 'register' && (
-                <>
-                  <TextInput
-                    style={styles.field}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder={t('auth.placeholderName')}
-                    placeholderTextColor={colors.textMuted}
-                    autoCapitalize="words"
-                    textContentType="name"
-                    autoComplete="name"
-                    accessibilityLabel={t('auth.name')}
-                  />
+            {!emailOpen ? (
+              <>
+                {/* Step 1: just the ways in — no form until you pick email */}
+                <GlassButton
+                  title={t('auth.continueGoogle')}
+                  loading={googleBusy}
+                  disabled={isLoading || !GOOGLE_WEB_CLIENT_ID || !googleRequest}
+                  onPress={() => {
+                    void handleGooglePress();
+                  }}
+                />
+                {!GOOGLE_WEB_CLIENT_ID ? <Text style={styles.configHint}>{t('auth.configHint')}</Text> : null}
+                {googlePolicyHint ? (
+                  <View style={styles.policyHintBox}>
+                    <Text style={styles.policyHintText}>{googlePolicyHint}</Text>
+                  </View>
+                ) : null}
+                <GlassButton
+                  title={t('auth.continueEmail')}
+                  prominent={false}
+                  onPress={() => {
+                    clearError();
+                    setEmailOpen(true);
+                  }}
+                />
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              </>
+            ) : (
+              <>
+                {/* Step 2: email — glass fields with icons; sign in and sign up share one form */}
+                <Glass radius={borderRadius.lg} tint="rgba(255, 255, 255, 0.7)" style={styles.fields}>
+                  {mode === 'register' && (
+                    <>
+                      <View style={styles.fieldRow}>
+                        <Ionicons name="person-outline" size={18} color={colors.textMuted} />
+                        <TextInput
+                          style={styles.field}
+                          value={name}
+                          onChangeText={setName}
+                          placeholder={t('auth.placeholderName')}
+                          placeholderTextColor={colors.textMuted}
+                          autoCapitalize="words"
+                          textContentType="name"
+                          autoComplete="name"
+                          accessibilityLabel={t('auth.name')}
+                        />
+                      </View>
+                      <View style={styles.fieldSeparator} />
+                    </>
+                  )}
+                  <View style={styles.fieldRow}>
+                    <Ionicons name="mail-outline" size={18} color={colors.textMuted} />
+                    <TextInput
+                      style={styles.field}
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder={t('auth.placeholderEmail')}
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                      textContentType="emailAddress"
+                      autoComplete="email"
+                      accessibilityLabel={t('auth.email')}
+                    />
+                  </View>
                   <View style={styles.fieldSeparator} />
-                </>
-              )}
-              <TextInput
-                style={styles.field}
-                value={email}
-                onChangeText={setEmail}
-                placeholder={t('auth.placeholderEmail')}
-                placeholderTextColor={colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="emailAddress"
-                autoComplete="email"
-                accessibilityLabel={t('auth.email')}
-              />
-              <View style={styles.fieldSeparator} />
-              <TextInput
-                style={styles.field}
-                value={password}
-                onChangeText={setPassword}
-                placeholder={
-                  mode === 'register' ? t('auth.placeholderPasswordRegister') : t('auth.placeholderPasswordLogin')
-                }
-                placeholderTextColor={colors.textMuted}
-                secureTextEntry
-                textContentType={mode === 'register' ? 'newPassword' : 'password'}
-                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                accessibilityLabel={t('auth.password')}
-                returnKeyType="go"
-                onSubmitEditing={() => isFormValid && void handleEmailAuth()}
-              />
-            </View>
+                  <View style={styles.fieldRow}>
+                    <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />
+                    <TextInput
+                      style={styles.field}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder={
+                        mode === 'register' ? t('auth.placeholderPasswordRegister') : t('auth.password')
+                      }
+                      placeholderTextColor={colors.textMuted}
+                      secureTextEntry={!showPassword}
+                      textContentType={mode === 'register' ? 'newPassword' : 'password'}
+                      autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                      accessibilityLabel={t('auth.password')}
+                      returnKeyType="go"
+                      onSubmitEditing={() => isFormValid && void handleEmailAuth()}
+                    />
+                    <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={10} accessibilityRole="button">
+                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
+                    </Pressable>
+                  </View>
+                </Glass>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <GlassButton
-              title={mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
-              onPress={handleEmailAuth}
-              disabled={!isFormValid}
-              loading={isLoading}
-            />
+                <GlassButton
+                  title={mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
+                  onPress={handleEmailAuth}
+                  disabled={!isFormValid}
+                  loading={isLoading}
+                />
 
-            <Pressable onPress={handleSkip} hitSlop={8} style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}>
-              <Text style={styles.skipText}>{t('auth.skipGuest')}</Text>
+                <View style={styles.emailFoot}>
+                  <Pressable onPress={() => setEmailOpen(false)} hitSlop={8} style={styles.footLink}>
+                    <Ionicons name="chevron-back" size={14} color={colors.textSecondary} />
+                    <Text style={styles.footText}>{t('auth.allOptions')}</Text>
+                  </Pressable>
+                  <Pressable onPress={toggleMode} hitSlop={8}>
+                    <Text style={styles.footAction}>
+                      {mode === 'login' ? t('auth.switchToRegister') : t('auth.switchToLogin')}
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {/* Guests can always just start */}
+            <Pressable onPress={handleSkip} hitSlop={8} style={styles.skipWrap} accessibilityRole="button">
+              <Glass radius={borderRadius.full} interactive tint="rgba(255, 255, 255, 0.6)" style={styles.skipPill}>
+                <Text style={styles.skipText}>{t('auth.skipGuest')}</Text>
+                <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
+              </Glass>
             </Pressable>
           </Animated.View>
         </ScrollView>
@@ -415,19 +447,17 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   policyHintText: { ...typography.footnote, color: colors.textSecondary },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
-  dividerText: { ...typography.footnote, color: colors.textMuted },
-  fields: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-  },
-  field: { ...typography.body, color: colors.text, paddingHorizontal: spacing.md, paddingVertical: 14 },
-  fieldSeparator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md },
+  fields: { overflow: 'hidden' },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
+  field: { ...typography.body, color: colors.text, flex: 1, paddingVertical: 14 },
+  fieldSeparator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginStart: spacing.md + 26 },
   errorText: { ...typography.footnote, color: colors.danger, textAlign: 'center' },
-  skipButton: { alignSelf: 'center', paddingVertical: spacing.sm },
+  skipWrap: { alignSelf: 'center', marginTop: spacing.sm },
+  skipPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 9 },
+  emailFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.xs },
+  footLink: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  footText: { ...typography.subheadline, color: colors.textSecondary },
+  footAction: { ...typography.subheadline, fontWeight: '700', color: colors.primaryDark },
   skipText: { ...typography.subheadline, fontWeight: '600', color: colors.textSecondary },
   pressed: { opacity: 0.6 },
 });

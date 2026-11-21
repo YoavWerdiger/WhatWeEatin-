@@ -105,6 +105,9 @@ export const fr: Messages = {
   'profile.tileTopCuisine': "Ta préférée",
   'profile.tileTimes': "{{count}} fois",
   'profile.tileBuddy': "Meilleur binôme",
+  'auth.continueEmail': "Continuer avec un e-mail",
+  'auth.allOptions': "Toutes les options",
+  'auth.subtitleChoose': "Décidez ensemble où manger — en une minute.",
   'account.title': 'Compte',
   'account.subtitle':
     'Vous êtes connecté avec Firebase Auth. Les sessions utilisent votre ID utilisateur pour l’hôte et la synchro temps réel quand c’est configuré.',
