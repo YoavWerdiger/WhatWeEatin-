@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { MatchAnimation } from '../../src/components/MatchAnimation';
+import { RouletteMap, hasCoords, MIN_MAP_PINS } from '../../src/components/RouletteMap';
 import { Button } from '../../src/components/ui/Button';
 import { useSessionStore } from '../../src/store/sessionStore';
 import { useUserStore } from '../../src/store/userStore';
@@ -76,6 +77,11 @@ export default function RouletteScreen() {
 
   const restaurants = session?.restaurants ?? [];
   const reelItems = useMemo(() => buildReel(restaurants), [restaurants]);
+  // Map roulette: restaurants with a real venue position (Wolt / Google); too few → the reel
+  const mapRestaurants = useMemo(() => restaurants.filter(hasCoords), [restaurants]);
+  const useMap = mapRestaurants.length >= MIN_MAP_PINS;
+  const [mapSpin, setMapSpin] = useState<{ winnerId: string; token: number } | null>(null);
+  const mapDoneRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (session?.status === 'waiting') {
@@ -124,6 +130,17 @@ export default function RouletteScreen() {
       setLanded(null);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      // Map: the sweep between pins lands on the winner (RouletteMap → handleMapLanded)
+      if (useMap && hasCoords(winner)) {
+        mapDoneRef.current = () => {
+          setIsSpinning(false);
+          setLanded(winner);
+          onDone?.();
+        };
+        setMapSpin({ winnerId: winner.id, token: Date.now() });
+        return;
+      }
+
       const centerPad = Math.floor(VISIBLE_ROWS / 2);
       const targetLoop = REEL_LOOPS - 2;
       const targetIndex = targetLoop * restaurants.length + deckIndex;
@@ -143,8 +160,14 @@ export default function RouletteScreen() {
         onDone?.();
       });
     },
-    [restaurants, reelItems.length, reelOffset],
+    [restaurants, reelItems.length, reelOffset, useMap],
   );
+
+  const handleMapLanded = useCallback(() => {
+    const done = mapDoneRef.current;
+    mapDoneRef.current = null;
+    done?.();
+  }, []);
 
   /** Host spin or guest watching a synced result. */
   useEffect(() => {
@@ -224,6 +247,11 @@ export default function RouletteScreen() {
         <Text style={styles.title}>{t('roulette.title')}</Text>
         <Text style={styles.subtitle}>{t('roulette.subtitle')}</Text>
 
+        {useMap ? (
+          <View style={styles.mapFrame}>
+            <RouletteMap restaurants={mapRestaurants} spin={mapSpin} onLanded={handleMapLanded} />
+          </View>
+        ) : (
         <View style={styles.reelFrame}>
           <View style={styles.reelWindow} pointerEvents="none">
             <Animated.View
@@ -248,6 +276,7 @@ export default function RouletteScreen() {
           </View>
           <View style={styles.reelPointer} pointerEvents="none" />
         </View>
+        )}
 
         {landed && !matchResult && (
           <Text style={styles.landedText}>
@@ -298,6 +327,10 @@ export default function RouletteScreen() {
 }
 
 const styles = StyleSheet.create({
+  mapFrame: {
+    flex: 1,
+    marginVertical: spacing.md,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

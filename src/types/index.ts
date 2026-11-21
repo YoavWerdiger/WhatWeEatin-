@@ -24,6 +24,9 @@ export interface Restaurant {
   tags?: string[];
   /** A few dishes, when the list already includes them. */
   dishes?: Dish[];
+  /** Venue position (when the source gives one) — pins on the roulette map. */
+  lat?: number;
+  lng?: number;
 }
 
 export interface Dish {

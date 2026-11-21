@@ -107,6 +107,8 @@ interface WoltVenue {
   price_range?: number;
   tags?: string[];
   venue_preview_items?: { name: string; price?: number; image?: { url?: string } }[];
+  /** [lng, lat] */
+  location?: [number, number];
 }
 
 function woltScoreTo5(score: number | undefined): number {
@@ -198,6 +200,9 @@ async function fetchFromWolt(lat: number, lon: number): Promise<Restaurant[]> {
       cuisine: inferWoltCuisine(v.tags),
       address: v.address || undefined,
       isOpen: v.online && v.delivers,
+      ...(Array.isArray(v.location) && v.location.length === 2
+        ? { lng: v.location[0], lat: v.location[1] }
+        : {}),
       source: 'wolt',
       slug: v.slug,
       externalUrl: `https://wolt.com/en/isr/${citySlug}/restaurant/${v.slug}`,
@@ -455,6 +460,8 @@ async function fetchFromGoogle(
       (p): Restaurant => ({
         id: `google-${p.place_id}`,
         name: p.name,
+        lat: p.geometry?.location?.lat,
+        lng: p.geometry?.location?.lng,
         image: p.photos?.[0]
           ? getPhotoUrl(p.photos[0].photo_reference)
           : MOCK_RESTAURANTS[0].image,

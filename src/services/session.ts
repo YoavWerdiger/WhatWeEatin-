@@ -96,6 +96,9 @@ export function sanitizeRestaurantForFirestore(r: Restaurant): Restaurant {
     minimumOrder: r.minimumOrder,
     slug: r.slug,
     externalUrl: r.externalUrl,
+    // Roulette map pins (guests need them too)
+    lat: typeof r.lat === 'number' ? r.lat : undefined,
+    lng: typeof r.lng === 'number' ? r.lng : undefined,
   }) as Restaurant;
 }
 
