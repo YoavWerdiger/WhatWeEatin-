@@ -66,6 +66,11 @@ export const he: Messages = {
   'profile.emptyTitle': "עוד אין כאן כלום",
   'profile.emptySub': "ההתאמות שלך והחברים שאכלת איתם יופיעו כאן אחרי המשחק הראשון.",
   'profile.settings': "הגדרות",
+  'lobby.btnStartAnyway': "להתחיל עכשיו ({{ready}}/{{total}} מוכנים)",
+  'lobby.confirmTitle': "לא כולם מוכנים",
+  'lobby.confirmBody': "{{ready}} מתוך {{total}} לחצו ״מוכן״. להתחיל בלי לחכות?",
+  'lobby.confirmStart': "להתחיל",
+  'lobby.confirmWait': "לחכות",
   'account.title': 'חשבון',
   'account.subtitle':
     'אתם מחוברים עם Firebase Auth. סשנים משתמשים ב־user ID לאירוח וסנכרון בזמן אמת כשמוגדר.',

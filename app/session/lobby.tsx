@@ -80,18 +80,27 @@ export default function LobbyScreen() {
         ? t('create.modeFinger')
         : t('lobby.modeSwipe');
 
-  const handleStart = () => {
-    if (session.requireLobbyReady) {
-      const ready = new Set(session.lobbyReadyIds ?? []);
-      const allReady = session.users.every((u) => ready.has(u.id));
-      if (!allReady) {
-        Alert.alert(t('lobby.alertAlmostTitle'), t('lobby.alertAlmostBody'));
-        return;
-      }
-    }
+  const go = (force: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    startSwiping();
+    startSwiping(force);
     router.replace(playPath);
+  };
+  // The host can always start; if someone isn't ready yet, confirm first
+  const handleStart = () => {
+    const ready = new Set(session.lobbyReadyIds ?? []);
+    const readyN = session.users.filter((u) => ready.has(u.id)).length;
+    if (session.requireLobbyReady && readyN < session.users.length) {
+      Alert.alert(
+        t('lobby.confirmTitle'),
+        t('lobby.confirmBody', { ready: readyN, total: session.users.length }),
+        [
+          { text: t('lobby.confirmWait'), style: 'cancel' },
+          { text: t('lobby.confirmStart'), onPress: () => go(true) },
+        ],
+      );
+      return;
+    }
+    go(false);
   };
 
   const myUid = getFirebaseUid() ?? firebaseUid ?? user.id;
@@ -222,11 +231,12 @@ export default function LobbyScreen() {
               !canStart
                 ? t('lobby.btnNeedPlayers', { min: SESSION.MIN_USERS })
                 : !allReady
-                  ? t('lobby.btnWaitAll')
+                  ? t('lobby.btnStartAnyway', { ready: readyCount, total: session.users.length })
                   : plain(t('lobby.btnStart'))
             }
+            prominent={allReady}
             onPress={handleStart}
-            disabled={!canStart || !allReady}
+            disabled={!canStart}
           />
         )}
       </View>

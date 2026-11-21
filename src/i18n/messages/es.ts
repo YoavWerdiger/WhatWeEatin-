@@ -69,6 +69,11 @@ export const es: Messages = {
   'profile.emptyTitle': "Aún no hay nada",
   'profile.emptySub': "Tus matches y los amigos con los que comiste aparecerán aquí tras tu primera partida.",
   'profile.settings': "Ajustes",
+  'lobby.btnStartAnyway': "Empezar ya ({{ready}}/{{total}} listos)",
+  'lobby.confirmTitle': "No todos están listos",
+  'lobby.confirmBody': "{{ready}} de {{total}} tocaron Listo. ¿Empezar sin esperar?",
+  'lobby.confirmStart': "Empezar",
+  'lobby.confirmWait': "Esperar",
   'account.title': 'Cuenta',
   'account.subtitle':
     'Has iniciado sesión con Firebase Auth. Las sesiones usan tu ID de usuario para el anfitrión y sincronización en tiempo real cuando está configurado.',

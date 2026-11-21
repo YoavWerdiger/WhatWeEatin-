@@ -137,7 +137,8 @@ interface SessionState {
     userId: string,
     userName: string,
   ) => Promise<boolean>;
-  startSwiping: () => void;
+  /** `force`: the host starts before everyone tapped Ready (after confirming) */
+  startSwiping: (force?: boolean) => void;
   /** Host-only: pick a restaurant and sync so the group sees the same roulette winner. */
   /** `pool`: draw only from these (map roulette: restaurants with a pin). */
   spinRoulette: (pool?: Restaurant[]) => Restaurant | null;
@@ -657,7 +658,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     return true;
   },
 
-  startSwiping: () => {
+  startSwiping: (force) => {
     const { session } = get();
     if (!session) return;
 
@@ -667,7 +668,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       return;
     }
 
-    if (session.requireLobbyReady) {
+    if (session.requireLobbyReady && !force) {
       const ready = new Set(session.lobbyReadyIds ?? []);
       const allReady = session.users.every((u) => ready.has(u.id));
       if (!allReady) {

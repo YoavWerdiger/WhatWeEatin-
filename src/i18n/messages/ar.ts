@@ -66,6 +66,11 @@ export const ar: Messages = {
   'profile.emptyTitle': "لا شيء هنا بعد",
   'profile.emptySub': "ستظهر تطابقاتك والأصدقاء الذين أكلت معهم هنا بعد أول لعبة.",
   'profile.settings': "الإعدادات",
+  'lobby.btnStartAnyway': "ابدأ الآن ({{ready}}/{{total}} جاهزون)",
+  'lobby.confirmTitle': "ليس الجميع جاهزًا",
+  'lobby.confirmBody': "{{ready}} من {{total}} ضغطوا «جاهز». البدء دون انتظار؟",
+  'lobby.confirmStart': "ابدأ",
+  'lobby.confirmWait': "انتظر",
   'account.title': 'الحساب',
   'account.subtitle':
     'أنت مسجّل عبر Firebase Auth. الجلسات تستخدم معرف المستخدم للمضيف والمزامنة الفورية عند التفعيل.',

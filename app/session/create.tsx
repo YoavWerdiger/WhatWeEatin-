@@ -35,8 +35,6 @@ import { GlassButton } from '../../src/components/native/GlassButton';
 import { Glass } from '../../src/components/ui/Glass';
 import { TimeDial } from '../../src/components/TimeDial';
 import {
-  HostStartPreview,
-  ReadyPreview,
   RoulettePreview,
   FingerPreview,
   SwipePreview,
@@ -53,7 +51,6 @@ type Step =
   | 'name'
   | 'mode'
   | 'timer'
-  | 'start'
   | 'cuisine'
   | 'mood'
   | 'ready';
@@ -119,7 +116,8 @@ export default function CreateSessionScreen() {
   const [gameMode, setGameMode] = useState<GameMode>('swipe');
   const [timerDuration, setTimerDuration] = useState(120);
   const [requireUnanimousKeepBrowsing, setRequireUnanimousKeepBrowsing] = useState(true);
-  const [requireLobbyReady, setRequireLobbyReady] = useState(true);
+  // Always show who's ready in the lobby; the host can still start early (with a confirm)
+  const requireLobbyReady = true;
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
 
@@ -132,7 +130,6 @@ export default function CreateSessionScreen() {
             ...(signedInName ? [] : (['name'] as const)),
             'mode',
             ...(gameMode === 'swipe' ? (['timer'] as const) : []),
-            'start',
             'mood',
           ],
     [gameMode, sessionCode, signedInName],
@@ -278,28 +275,6 @@ export default function CreateSessionScreen() {
                   unlimitedLabel={t('create.timerUnlimited')}
                   accessibilityLabel={t('create.qTimer')}
                 />
-              </Question>
-            )}
-
-            {step === 'start' && (
-              <Question title={t('create.qStart')} sub={t('create.qStartSub')}>
-                {/* Each option plays out how the game would start */}
-                <View style={styles.modeRow}>
-                  <DemoTile
-                    preview={<ReadyPreview />}
-                    title={t('create.readyYes')}
-                    hint={t('create.startWaitHint')}
-                    selected={requireLobbyReady}
-                    onPress={() => choose(() => setRequireLobbyReady(true))}
-                  />
-                  <DemoTile
-                    preview={<HostStartPreview />}
-                    title={t('create.readyNo')}
-                    hint={t('create.readyNoHint')}
-                    selected={!requireLobbyReady}
-                    onPress={() => choose(() => setRequireLobbyReady(false))}
-                  />
-                </View>
               </Question>
             )}
 

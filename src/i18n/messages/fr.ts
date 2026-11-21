@@ -69,6 +69,11 @@ export const fr: Messages = {
   'profile.emptyTitle': "Rien pour l’instant",
   'profile.emptySub': "Tes matchs et les amis avec qui tu as mangé apparaîtront ici après ta première partie.",
   'profile.settings': "Réglages",
+  'lobby.btnStartAnyway': "Lancer ({{ready}}/{{total}} prêts)",
+  'lobby.confirmTitle': "Tout le monde n’est pas prêt",
+  'lobby.confirmBody': "{{ready}} sur {{total}} ont touché Prêt. Lancer sans attendre ?",
+  'lobby.confirmStart': "Lancer",
+  'lobby.confirmWait': "Attendre",
   'account.title': 'Compte',
   'account.subtitle':
     'Vous êtes connecté avec Firebase Auth. Les sessions utilisent votre ID utilisateur pour l’hôte et la synchro temps réel quand c’est configuré.',

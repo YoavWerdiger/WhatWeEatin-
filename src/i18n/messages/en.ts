@@ -65,6 +65,11 @@ export const en = {
   'profile.emptyTitle': "Nothing here yet",
   'profile.emptySub': "Your matches and the friends you ate with will show up here after your first game.",
   'profile.settings': "Settings",
+  'lobby.btnStartAnyway': "Start now ({{ready}}/{{total}} ready)",
+  'lobby.confirmTitle': "Not everyone is ready",
+  'lobby.confirmBody': "{{ready}} of {{total}} tapped Ready. Start without waiting?",
+  'lobby.confirmStart': "Start",
+  'lobby.confirmWait': "Wait",
   'account.title': 'Account',
   'account.subtitle':
     "You're signed in with Firebase Auth. Sessions use your user ID for the host and real-time sync when configured.",
