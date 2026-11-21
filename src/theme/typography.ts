@@ -1,12 +1,11 @@
 import { Platform, TextStyle } from 'react-native';
 
-// System font (SF Pro on iOS, Roboto on Android). Leaving fontFamily unset lets
-// iOS apply SF's size-specific tracking and optical sizes, so no style here sets
-// letterSpacing. Sizes and leading follow Apple's default Dynamic Type scale.
+// SF Pro Rounded on iOS (Roboto on Android). No style here sets letterSpacing.
+// Sizes and leading follow Apple's default Dynamic Type scale.
 export const fontFamilies = {
   /** SF Mono / Roboto Mono — codes, counts, timers. */
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
-  /** SF Pro Rounded — reserved for big, friendly numbers. */
+  /** SF Pro Rounded — the app's typeface (every text style below uses it). */
   rounded: Platform.select({ ios: 'ui-rounded', default: undefined }),
 } as const;
 
@@ -15,7 +14,7 @@ const MEDIUM = '500' as const;
 const SEMIBOLD = '600' as const;
 const BOLD = '700' as const;
 
-export const typography = {
+const scale = {
   // — Apple text styles —
   /** One per app at most — the home screen title. */
   display: { fontSize: 40, lineHeight: 46, fontWeight: BOLD },
@@ -33,7 +32,6 @@ export const typography = {
 
   /** Session codes and other figures that must line up. */
   code: {
-    fontFamily: fontFamilies.mono,
     fontSize: 34,
     lineHeight: 41,
     fontWeight: SEMIBOLD,
@@ -53,3 +51,9 @@ export const typography = {
   button: { fontSize: 17, lineHeight: 22, fontWeight: SEMIBOLD },
   buttonSmall: { fontSize: 15, lineHeight: 20, fontWeight: SEMIBOLD },
 } satisfies Record<string, TextStyle>;
+
+// One typeface across the app: SF Pro Rounded (as on the session code and the home title).
+// Hebrew/Arabic glyphs fall back to the system font for those scripts.
+export const typography = Object.fromEntries(
+  Object.entries(scale).map(([k, v]) => [k, { fontFamily: fontFamilies.rounded, ...v }]),
+) as { [K in keyof typeof scale]: (typeof scale)[K] & { fontFamily?: string } };
