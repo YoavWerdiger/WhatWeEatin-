@@ -49,7 +49,7 @@ export function LobbyPlayers({ users, readyIds, hostId, hostLabel, onInvite, inv
 
       {onInvite ? (
         <Animated.View layout={LinearTransition.duration(220)} style={styles.cardWrap}>
-          <Pressable onPress={onInvite} style={[styles.card, styles.invite]} accessibilityRole="button" accessibilityLabel={inviteLabel}>
+          <Pressable onPress={onInvite} style={[styles.card, styles.cardFill, styles.invite]} accessibilityRole="button" accessibilityLabel={inviteLabel}>
             <View style={styles.inviteIcon}>
               <Ionicons name="add" size={26} color={colors.primary} />
             </View>
@@ -64,13 +64,18 @@ export function LobbyPlayers({ users, readyIds, hostId, hostLabel, onInvite, inv
 }
 
 const CARD_W = '30%';
+const CARD_H = 134;
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
-  cardWrap: { width: CARD_W },
+  cardWrap: { width: CARD_W, height: CARD_H },
+  cardFill: { width: '100%', height: '100%' },
+  // Same size for every card (players with or without the host line, and the invite card)
   card: {
     width: CARD_W,
+    height: CARD_H,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
     paddingVertical: spacing.md,
     paddingHorizontal: 6,
@@ -96,7 +101,7 @@ const styles = StyleSheet.create({
   badgeWaiting: { backgroundColor: colors.textMuted },
   name: { ...typography.subheadline, fontWeight: '600', color: colors.text, maxWidth: '100%' },
   host: { ...typography.caption, color: colors.primaryDark, fontWeight: '600' },
-  invite: { width: '100%', borderStyle: 'dashed', borderColor: colors.primary, backgroundColor: 'transparent' },
+  invite: { borderStyle: 'dashed', borderColor: colors.primary, backgroundColor: 'transparent' },
   inviteIcon: {
     width: 52,
     height: 52,
