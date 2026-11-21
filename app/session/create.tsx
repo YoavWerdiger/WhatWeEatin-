@@ -192,6 +192,8 @@ export default function CreateSessionScreen() {
   const restaurantCount = session?.restaurants.length || 0;
   const isReady = !!sessionCode && !isLoadingRestaurants && restaurantCount > 0;
   const questionCount = steps.length;
+  // Questions in the flow (the code screen counts as one more step after them)
+  const flowLength = (signedInName ? 0 : 1) + 1 + (gameMode === 'swipe' ? 1 : 0) + 1;
 
   const modeTitle = (mode: GameMode) =>
     mode === 'roulette' ? t('create.modeRoulette') : mode === 'finger' ? t('create.modeFinger') : t('create.modeSwipe');
@@ -210,7 +212,12 @@ export default function CreateSessionScreen() {
       <Stack.Screen
         options={{
           headerTitle: () =>
-            sessionCode ? null : <Progress current={stepIndex} total={questionCount} />,
+            // On the code screen the bar is full: every question answered, plus this last step
+            sessionCode ? (
+              <Progress current={flowLength} total={flowLength + 1} />
+            ) : (
+              <Progress current={stepIndex} total={questionCount + 1} />
+            ),
         }}
       />
       <Stack.Toolbar placement="left">
@@ -294,7 +301,7 @@ export default function CreateSessionScreen() {
               <Question title={t('create.readyTitle')} sub={t('create.readySub')}>
                 <TableReady
                   code={sessionCode}
-                  count={restaurantCount}
+                  restaurants={session?.restaurants ?? []}
                   loading={isLoadingRestaurants}
                   city={userLocation?.city}
                   error={loadError}

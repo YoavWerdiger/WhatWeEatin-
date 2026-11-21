@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import type { Restaurant } from '../types';
 import { colors } from '../theme/colors';
 import { typography, fontFamilies } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
@@ -10,20 +13,28 @@ import { Glass } from './ui/Glass';
 import { useTranslation } from '../i18n/t';
 
 const RESTING_TINT = 'rgba(255, 255, 255, 0.6)';
+const FACES = 5;
 
 interface Props {
   code: string;
-  count: number;
+  restaurants: Restaurant[];
   loading: boolean;
   city?: string;
   error?: string | null;
   onShare: () => void;
 }
 
-/** The table exists: the code, share / copy, and one quiet line about the places found. */
-export function TableReady({ code, count, loading, city, error, onShare }: Props) {
+/**
+ * The moment the table exists: the code deals in letter by letter, then two glass actions
+ * (share / copy) and a peek at the places tonight's game will draw from.
+ */
+export function TableReady({ code, restaurants, loading, city, error, onShare }: Props) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
 
   const copy = async () => {
     await Clipboard.setStringAsync(code);
@@ -32,60 +43,105 @@ export function TableReady({ code, count, loading, city, error, onShare }: Props
     setTimeout(() => setCopied(false), 1600);
   };
 
+  const faces = restaurants.slice(0, FACES);
+  const more = restaurants.length - faces.length;
+
   return (
-    <Glass radius={borderRadius.xl} tint={RESTING_TINT} style={styles.card}>
-      <Text style={styles.label}>{t('create.sessionCode')}</Text>
-      <Text style={styles.code} selectable accessibilityLabel={code.split('').join(' ')}>
-        {code}
-      </Text>
+    <View style={styles.root}>
+      {/* The code, one tile per character */}
+      <View style={styles.codeRow} accessible accessibilityLabel={code.split('').join(' ')}>
+        {code.split('').map((ch, i) => (
+          // Glass stays still (it skips its effect under an animating ancestor); the letter pops in
+          <Glass key={i} radius={borderRadius.md} tint={RESTING_TINT} style={styles.tile}>
+            <Animated.Text entering={ZoomIn.delay(200 + i * 80).springify().damping(14)} style={styles.tileText}>
+              {ch}
+            </Animated.Text>
+          </Glass>
+        ))}
+      </View>
 
+      {/* Share / copy */}
       <View style={styles.actions}>
-        <Pressable onPress={onShare} hitSlop={8} style={styles.action} accessibilityRole="button">
-          <Ionicons name="share-outline" size={18} color={colors.primaryDark} />
-          <Text style={styles.actionText}>{t('create.shareCode')}</Text>
+        <Pressable onPress={onShare} style={styles.actionCell} accessibilityRole="button">
+          <Glass radius={borderRadius.full} interactive tint="rgba(255, 107, 53, 0.9)" style={styles.action}>
+            <Ionicons name="share-outline" size={18} color="#FFFFFF" />
+            <Text style={[styles.actionText, styles.actionTextOn]}>{t('create.shareCode')}</Text>
+          </Glass>
         </Pressable>
-        <View style={styles.actionDivider} />
-        <Pressable onPress={copy} hitSlop={8} style={styles.action} accessibilityRole="button">
-          <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={18} color={copied ? colors.accentDark : colors.primaryDark} />
-          <Text style={[styles.actionText, copied && styles.actionTextDone]}>
-            {copied ? t('tableReady.copied') : t('tableReady.copy')}
-          </Text>
+        <Pressable onPress={copy} style={styles.actionCell} accessibilityRole="button">
+          <Glass radius={borderRadius.full} interactive tint={RESTING_TINT} style={styles.action}>
+            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={18} color={copied ? colors.accentDark : colors.primary} />
+            <Text style={styles.actionText}>{copied ? t('tableReady.copied') : t('tableReady.copy')}</Text>
+          </Glass>
         </Pressable>
       </View>
 
-      <View style={styles.separator} />
-      <View style={styles.status}>
-        {loading ? <ActivityIndicator size="small" color={colors.primary} /> : <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />}
-        <Text style={styles.statusText}>
-          {loading
-            ? t('create.findingRestaurants')
-            : `${t('create.restaurantsFound', { count })}${city ? ` · ${city}` : ''}`}
-        </Text>
+      {/* What's on the table tonight */}
+      <View>
+        <Glass radius={borderRadius.lg} tint={RESTING_TINT} style={styles.places}>
+          {loading ? (
+            <View style={styles.placesRow}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.placesText}>{t('create.findingRestaurants')}</Text>
+            </View>
+          ) : (
+            <Animated.View entering={FadeIn.duration(250)} style={styles.placesRow}>
+              <View style={styles.faces}>
+                {faces.map((r, i) => (
+                  <Animated.View key={r.id} entering={ZoomIn.delay(i * 60)} style={[styles.face, i > 0 && styles.faceOverlap]}>
+                    <Image source={{ uri: r.image }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
+                  </Animated.View>
+                ))}
+                {more > 0 ? (
+                  <View style={[styles.face, styles.faceOverlap, styles.faceMore]}>
+                    <Text style={styles.faceMoreText}>+{more}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <View style={styles.placesTextCol}>
+                <Text style={styles.placesTitle}>{t('create.restaurantsFound', { count: restaurants.length })}</Text>
+                {city ? <Text style={styles.placesText}>{city}</Text> : null}
+              </View>
+            </Animated.View>
+          )}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </Glass>
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </Glass>
+    </View>
   );
 }
 
+const FACE = 40;
+
 const styles = StyleSheet.create({
-  card: { alignItems: 'center', gap: spacing.md, padding: spacing.lg },
-  label: { ...typography.footnote, color: colors.textSecondary },
-  code: {
-    fontFamily: fontFamilies.rounded,
-    fontSize: 52,
-    lineHeight: 58,
-    fontWeight: '900',
-    letterSpacing: 6,
-    fontVariant: ['tabular-nums'],
-    color: colors.text,
+  root: { gap: spacing.lg },
+  codeRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, direction: 'ltr' },
+  tile: { width: 48, height: 64, alignItems: 'center', justifyContent: 'center' },
+  tileText: { fontFamily: fontFamilies.rounded, fontSize: 34, fontWeight: '900', color: colors.text },
+
+  actions: { flexDirection: 'row', gap: spacing.sm },
+  actionCell: { flex: 1 },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50 },
+  actionText: { ...typography.headline, color: colors.text },
+  actionTextOn: { color: '#FFFFFF' },
+
+  places: { padding: spacing.md, gap: spacing.sm },
+  placesRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  faces: { flexDirection: 'row', direction: 'ltr' },
+  face: {
+    width: FACE,
+    height: FACE,
+    borderRadius: FACE / 2,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: colors.primaryMuted,
   },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
-  actionText: { ...typography.headline, color: colors.primaryDark },
-  actionTextDone: { color: colors.accentDark },
-  actionDivider: { width: StyleSheet.hairlineWidth, height: 18, backgroundColor: colors.border },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, alignSelf: 'stretch' },
-  status: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  statusText: { ...typography.subheadline, color: colors.textSecondary },
-  error: { ...typography.footnote, color: colors.danger, textAlign: 'center' },
+  faceOverlap: { marginLeft: -12 },
+  faceMore: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  faceMoreText: { ...typography.caption, fontWeight: '800', color: '#FFFFFF' },
+  placesTextCol: { flex: 1, gap: 2 },
+  placesTitle: { ...typography.headline, color: colors.text },
+  placesText: { ...typography.footnote, color: colors.textSecondary },
+  error: { ...typography.footnote, color: colors.danger },
 });

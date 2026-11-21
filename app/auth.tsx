@@ -254,7 +254,7 @@ export default function AuthScreen() {
   return (
     <View style={styles.container}>
       {/* Same hero as the session lobby: the orange grid drifting at the top, fading into the page */}
-      <HomeMosaic heightRatio={0.5} />
+      <HomeMosaic heightRatio={0.4} />
     <SafeAreaView style={styles.flex}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView
@@ -375,7 +375,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   // The header lands where the grid has faded, like the code on the lobby
-  scroll: { flexGrow: 1, justifyContent: 'flex-end', paddingTop: SCREEN_H * 0.24, paddingBottom: spacing.lg },
+  // The header starts below the grid's orange (it has faded by ~0.25 of the screen), so dark text stays readable
+  scroll: { flexGrow: 1, justifyContent: 'flex-end', paddingTop: SCREEN_H * 0.27, paddingBottom: spacing.lg },
   content: { paddingHorizontal: spacing.md, gap: spacing.md },
   header: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
   logo: { width: 64, height: 64, marginBottom: spacing.sm },
