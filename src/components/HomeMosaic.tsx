@@ -84,8 +84,8 @@ export function HomeMosaic() {
         </View>
         {/* Orange wash over the photos, then a fade into the page background (the text sits there) */}
         <LinearGradient
-          colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.6)', colors.background]}
-          locations={[0, 0.6, 1]}
+          colors={['rgba(255,107,53,0.35)', 'rgba(255,107,53,0.6)', 'rgba(242,242,247,0.85)', colors.background]}
+          locations={[0, 0.5, 0.78, 1]}
           style={StyleSheet.absoluteFill}
         />
       </View>
@@ -104,8 +104,11 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: H * 0.48,
+    // Reaches down to the buttons; the title sits in the fade
+    height: H * 0.74,
     overflow: 'hidden',
+    // Orange between the photos
+    backgroundColor: colors.primary,
   },
   grid: {
     position: 'absolute',
