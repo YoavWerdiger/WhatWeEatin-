@@ -32,6 +32,8 @@ interface MatchAnimationProps {
   result: MatchResult;
   onContinue: () => void;
   onOrderNow: () => void;
+  /** After the order link opened: the game is over for this player */
+  onOrdered?: () => void;
   /** Leave the session from the result screen (the overlay hides the screen's own header). */
   onLeave?: () => void;
   /** When true, show who still needs to confirm "keep browsing". */
@@ -58,6 +60,7 @@ export function MatchAnimation({
   result,
   onContinue,
   onOrderNow,
+  onOrdered,
   onLeave,
   requireUnanimousKeepBrowsing = false,
   sessionUsers = [],
@@ -223,7 +226,14 @@ export function MatchAnimation({
             <GlassButton
               title={r.externalUrl ? sourceLabels[r.source] : t('match.orderNow')}
               onPress={
-                r.externalUrl ? () => openRestaurantLink(r.externalUrl, r.source) : onOrderNow
+                r.externalUrl
+                  ? () => {
+                      // Ordering ends the game: open the app, then move on to the "enjoy" screen
+                      void openRestaurantLink(r.externalUrl, r.source);
+                      useHistoryStore.getState().markOrdered(r.id);
+                      onOrdered?.();
+                    }
+                  : onOrderNow
               }
             />
             {/* Secondary choices share one row, split evenly */}

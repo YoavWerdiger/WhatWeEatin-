@@ -11,6 +11,10 @@ export interface PastMatch {
     source: RestaurantSource;
   };
   players: Pick<SessionUser, 'id' | 'name' | 'avatar'>[];
+  /** Tapped "order" from the match screen */
+  ordered?: boolean;
+  /** How it was: 1 loved it, 0 okay, -1 not again */
+  rating?: -1 | 0 | 1;
 }
 
 const MAX = 60;
@@ -18,6 +22,9 @@ const MAX = 60;
 interface HistoryState {
   matches: PastMatch[];
   addMatch: (restaurant: Restaurant, players: SessionUser[]) => void;
+  /** The latest entry for this restaurant was ordered */
+  markOrdered: (restaurantId: string) => void;
+  rate: (key: string, rating: -1 | 0 | 1) => void;
 }
 
 export const useHistoryStore = create<HistoryState>()(
@@ -47,6 +54,16 @@ export const useHistoryStore = create<HistoryState>()(
           };
           return { matches: [entry, ...state.matches].slice(0, MAX) };
         }),
+      markOrdered: (restaurantId) =>
+        set((state) => {
+          const i = state.matches.findIndex((m) => m.restaurant.id === restaurantId);
+          if (i < 0) return state;
+          const matches = [...state.matches];
+          matches[i] = { ...matches[i], ordered: true };
+          return { matches };
+        }),
+      rate: (key, rating) =>
+        set((state) => ({ matches: state.matches.map((m) => (m.key === key ? { ...m, rating } : m)) })),
     }),
     { name: 'wwe-history', storage: createJSONStorage(() => AsyncStorage) },
   ),

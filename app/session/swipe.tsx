@@ -473,6 +473,11 @@ export default function SwipeScreen() {
           result={displayedMatch}
           onContinue={handleMatchContinue}
           onOrderNow={handleOrderNow}
+          onOrdered={() => {
+            const id = matchResult?.restaurant.id;
+            leaveSession(participantId);
+            router.replace({ pathname: '/enjoy', params: { restaurantId: id ?? '' } });
+          }}
           onLeave={handleLeave}
           requireUnanimousKeepBrowsing={session.requireUnanimousKeepBrowsing}
           sessionUsers={session.users}

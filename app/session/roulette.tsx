@@ -345,6 +345,11 @@ export default function RouletteScreen() {
           result={displayedMatch}
           onContinue={handleKeepBrowsing}
           onOrderNow={handleOrderNow}
+          onOrdered={() => {
+            const id = displayedMatch?.restaurant.id;
+            leaveSession(participantId);
+            router.replace({ pathname: '/enjoy', params: { restaurantId: id ?? '' } });
+          }}
           onLeave={handleLeave}
           requireUnanimousKeepBrowsing={session.requireUnanimousKeepBrowsing}
           sessionUsers={session.users}

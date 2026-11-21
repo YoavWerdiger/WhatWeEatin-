@@ -309,6 +309,11 @@ export default function FingerScreen() {
           result={displayedMatch}
           onContinue={() => approveKeepBrowsing(participantId)}
           onOrderNow={handleOrderNow}
+          onOrdered={() => {
+            const id = displayedMatch?.restaurant.id;
+            leaveSession(participantId);
+            router.replace({ pathname: '/enjoy', params: { restaurantId: id ?? '' } });
+          }}
           onLeave={handleLeave}
           requireUnanimousKeepBrowsing={session.requireUnanimousKeepBrowsing}
           sessionUsers={session.users}
